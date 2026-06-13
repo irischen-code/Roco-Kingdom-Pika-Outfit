@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>洛克王国 · 随机商店概率与许愿星规划工具</title>
+  <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap');
+
+    :root {
+      --bg:             #FBC839;
+      --panel-bg:       #FBF7EE;
+      --surface:        #F3EADC;
+      --surface2:       #F3EADC;
+      --surface3:       #E3DAC8;
+      --border:         #313131;
+      --border-soft:    #97938C;
+      --text:           #313131;
+      --text-muted:     #97938C;
+      --text-dim:       #97938C;
+      --yellow:         #FBC839;
+      --dark-btn:       #2B2B2B;
+      --purple:         #9A73F9;
+      --purple-bg:      rgba(154,115,249,0.12);
+      --purple-border:  rgba(154,115,249,0.35);
+      --gold:           #F0AA5E;
+      --gold-bg:        rgba(240,170,94,0.15);
+      --gold-border:    rgba(240,170,94,0.4);
+      --green:          #059669;
+      --green-bg:       #ecfdf5;
+      --green-border:   rgba(5,150,105,0.25);
+      --red:            #dc2626;
+      --red-bg:         #fef2f2;
+      --red-border:     rgba(220,38,38,0.25);
+      --amber:          #F0AA5E;
+      --amber-bg:       rgba(240,170,94,0.15);
+      --amber-border:   rgba(240,170,94,0.4);
+      --warm-pale:      #FBF7EE;
+      --warm-inactive:  #E3DAC8;
+      --warm-yellow:    #FBC839;
+      --r:              15px;
+      --shadow-sm:      none;
+      --shadow:         none;
+      --accent:         #9A73F9;
+      --accent2:        #9A73F9;
+    }
+
+    @font-face {
+      font-family: 'LuokeFont';
+      src: url('./ttf/洛克官方字体.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'LuokeFont';
+      src: url('./ttf/洛克官方字体.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'RoundFont';
+      src: url('./ttf/圆体.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      font-family: 'LuokeFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    }
+
+    body {
+      font-family: 'LuokeFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      background: #FBC839;
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      padding-top: 56px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #3A3775;
+      border-bottom: none;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: 56px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .header-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .header-icon  { width: 28px; height: 28px; object-fit: contain; }
+    .header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FBF7EE;
+      white-space: nowrap;
+    }
+
+    /* ── Top nav tabs ── */
+    .top-nav {
+      display: flex;
+      gap: 2px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .nav-tab {
+      padding: 5px 14px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: rgba(251,247,238,0.65);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { color: #FBF7EE; }
+    .nav-tab.active {
+      background: #FBC839;
+      color: #313131;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .header-badges { display: flex; gap: 6px; margin-left: auto; }
+    .badge {
+      background: #FBC839;
+      border: none;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #313131;
+      white-space: nowrap;
+    }
+    /* ── Two-column layout ── */
+    .layout { display: flex; gap: 12px; padding: 12px; min-height: calc(100vh - 56px); background: #FBC839; }
+    .left-column { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 56px; height: calc(100vh - 56px - 24px); align-self: flex-start; overflow: hidden; }
+    .left-panel { background: #FBF7EE; border: 1.5px solid #313131; border-radius: 20px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 12px; background: #FBF7EE; border: 1.5px solid #313131; border-radius: 20px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    @media (max-width: 860px) {
+      .layout { flex-direction: column; }
+      .left-column { width: 100%; position: static; height: auto; align-self: auto; overflow: visible; }
+      .right-panel  { overflow-y: visible; }
+    }
+
+    /* ── Pool stats card ── */
+    .pool-stats-card {
+      background: #FBF7EE;
+      border: 1.5px solid #313131;
+      border-radius: 20px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .ps-item {
+      border: 2px solid #313131;
+      border-radius: 30px;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      min-height: 36px;
+    }
+    .ps-lbl {
+      background: #313131;
+      color: #FBF7EE;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-sizing: border-box;
+      width: 92px;
+      flex-shrink: 0;
+      order: -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 22px 22px 0;
+      margin-right: -3px;
+    }
+    .ps-val {
+      flex: 1;
+      padding: 4px 8px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #313131;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Step tabs ── */
+    .step-tabs {
+      display: flex;
+      align-items: center;
+      border-bottom: 1.5px solid #313131;
+      background: transparent;
+      padding: 12px 16px;
+      flex-shrink: 0;
+      gap: 0;
+    }
+    .step-tab {
+      flex: 0 0 auto;
+      padding: 8px 4px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      color: #C4BFB8;          /* inactive: visibly grayed */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: color 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+    .step-tab:hover { color: #97938C; }
+    .step-tab.active  { color: #313131; font-weight: 700; }
+    .step-tab.visited { color: #97938C; font-weight: 500; }
+    .step-connector {
+      flex: 1;
+      height: 0;
+      align-self: center;
+      border-top: 2px dashed #C4BFB8;
+      min-width: 12px;
+      margin: 0 4px;
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #D0CABE;      /* inactive: dim beige */
+      color: #97938C;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      border: 1.5px solid #C4BFB8;
+    }
+    .step-tab.active .step-num  { background: #FBC839; color: #313131; border-color: #313131; }
+    .step-tab.visited .step-num { background: #FBC839; color: #313131; border-color: #313131; opacity: 0.75; }
+
+    /* ── Step pane ── */
+    .step-pane { padding: 12px 16px; flex: 1; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+
+    /* ── Step bottom nav ── */
+    .step-nav-btns {
+      display: flex; gap: 8px;
+      padding: 12px 16px;           /* matches step-pane horizontal padding */
+      border-top: 1.5px solid #313131;
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .step-nav-btn {
+      flex: 1; padding: 11px;
+      border-radius: 12px;
+      border: 2px solid #313131;
+      background: transparent;
+      color: #313131;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .step-nav-btn:hover { background: #F3EADC; }
+    .step-nav-btn.primary {
+      background: #2B2B2B;
+      border-color: #2B2B2B; color: #FBF7EE; font-weight: 700;
+      font-size: 14px;
+      box-shadow: none;
+    }
+    .step-nav-btn.primary:hover { opacity: 0.88; }
+
+    /* ── Cards ── */
+    .card {
+      background: #F3EADC;
+      border: 1.5px solid #97938C;
+      border-radius: var(--r);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: none;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700;
+      color: #313131;
+      letter-spacing: 0.2px;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title img { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+
+    /* ── Notice ── */
+    .notice {
+      background: #E3DAC8;
+      border: 1.5px solid #313131;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #313131;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    /* ── Theme group ── */
+    .theme-group { margin-bottom: 8px; }
+    .theme-hdr {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #F3EADC;
+      border: 1.5px solid #313131;
+      border-radius: 12px;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .theme-hdr:hover { background: #E3DAC8; }
+    .theme-hdr-name { font-weight: 700; font-size: 13px; color: #313131; }
+    .theme-hdr-date { font-size: 11px; color: #97938C; }
+    .theme-hdr-count {
+      margin-left: auto;
+      font-size: 11px; font-weight: 700;
+      background: #313131;
+      border-radius: 20px; padding: 2px 10px;
+      color: #FBF7EE;
+      flex-shrink: 0;
+    }
+    .theme-toggle { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
+    .theme-toggle.open { transform: rotate(180deg); }
+    .theme-body { padding: 6px 0 0 0; display: none; }
+
+    /* ── Suit row ── */
+    .suit-row {
+      background: #F3EADC;
+      border: 1.5px solid #313131;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .suit-row:hover { border-color: #313131; box-shadow: none; }
+    .suit-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .suit-img {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: #97938C;
+      border: none;
+      border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #FBF7EE; font-size: 7px; text-align: center; gap: 1px;
+    }
+    .suit-img span { font-size: 14px; }
+    .suit-name-wrap { flex: 1; min-width: 0; }
+    .suit-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rarity-tag {
+      display: inline-block; padding: 2px 7px; border-radius: 4px;
+      font-size: 10px; font-weight: 700;
+    }
+    .rarity-tag.gold   { background: #F0AA5E; color: #fff; border: 1px solid #F0AA5E; }
+    .rarity-tag.purple { background: #9A73F9; color: #fff; border: 1px solid #9A73F9; }
+
+    /* ── Ownership selector ── */
+    .own-sel { display: flex; gap: 4px; }
+    .own-btn {
+      flex: 1; padding: 5px 4px;
+      border-radius: 8px; border: none;
+      background: #97938C; color: #FBF7EE;
+      font-size: 11px; cursor: pointer; transition: all 0.15s;
+    }
+    .own-btn:hover { background: #7a7772; color: #FBF7EE; border-color: transparent; }
+    .own-btn.on-none  { background: var(--red); border: none; color: #fff; }
+    .own-btn.on-part  { background: #FBC839; border: none; color: #313131; font-weight: 600; }
+    .own-btn.on-full  { background: #FBC839; border: none; color: #313131; font-weight: 600; }
+
+    /* ── Parts grid ── */
+    .parts-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-top: 8px; }
+    .part-btn {
+      padding: 5px 2px; border-radius: 8px;
+      border: none; background: #D0CABE;
+      color: #313131; font-size: 10px; text-align: center;
+      cursor: pointer; transition: all 0.15s; line-height: 1.4;
+    }
+    .part-btn:hover { background: #BDB3A8; }
+    .part-btn.on     { background: #FBC839; border: none; color: #313131; font-weight: 600; }
+    .part-btn.target { background: #9A73F9; border: none; color: #FBF7EE; font-weight: 600; }
+
+    /* ── Target section ── */
+    .target-row {
+      background: #F3EADC; border-radius: 9px;
+      padding: 10px 12px; margin-bottom: 6px;
+      border: 1.5px solid #97938C;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .target-row.selected { border-color: #313131; box-shadow: none; background: #F3EADC; }
+    .target-hdr { display: flex; align-items: center; gap: 8px; }
+    .target-cb { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .target-name { font-weight: 500; font-size: 13px; cursor: pointer; flex: 1; }
+    .all-tag {
+      padding: 2px 8px; border-radius: 4px;
+      border: 1.5px solid #97938C; background: #E3DAC8;
+      color: #313131; font-size: 10px; cursor: pointer; transition: all 0.15s;
+    }
+    .all-tag:hover { border-color: #313131; color: #313131; }
+    .all-tag.on { background: #FBC839; border-color: #FBC839; color: #313131; }
+
+    /* ── Resource inputs ── */
+    .res-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .res-label { font-size: 13px; width: 80px; flex-shrink: 0; color: #313131; font-weight: 500; }
+    .res-input {
+      flex: 1; background: #F3EADC;
+      border: 1.5px solid #97938C; border-radius: 8px;
+      padding: 9px 12px; color: #313131; font-size: 14px;
+      transition: border-color 0.15s;
+    }
+    .res-input:focus { outline: none; border-color: #313131; box-shadow: none; }
+    .res-unit { font-size: 12px; color: #313131; white-space: nowrap; width: 44px; flex-shrink: 0; }
+
+    /* ── Calc button ── */
+    .calc-btn {
+      width: 100%; padding: 14px;
+      background: #2B2B2B;
+      border: none; border-radius: 12px;
+      color: #FBF7EE; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.3px;
+      box-shadow: none;
+    }
+    .calc-btn:hover  { opacity: 0.92; }
+    .calc-btn:active { transform: scale(0.99); opacity: 0.85; }
+    .calc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Placeholder ── */
+    .placeholder-wrap { text-align: center; padding: 48px 20px 20px; }
+    .placeholder-icon  { font-size: 52px; margin-bottom: 14px; }
+    .placeholder-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .placeholder-sub   { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+    .img-ph {
+      background: #ffffff; border: 2px solid #313131; border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #97938C; font-size: 12px; gap: 8px; flex-shrink: 0;
+    }
+    .img-ph-icon { font-size: 28px; }
+
+    /* ── Result cards ── */
+    .result-card {
+      background: #ffffff; border: 1.5px solid #313131;
+      border-radius: 16px; padding: 18px 20px;
+      margin-bottom: 0; box-shadow: none; flex-shrink: 0;
+      /* 结果卡片内容用系统字体提升易读性 */
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    }
+    .result-card-title {
+      font-size: 13px; font-weight: 700; color: #313131;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      /* 仅标题保留洛克字体 */
+      font-family: 'LuokeFont', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+    }
+    .result-card-title img { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+
+    /* ── Noto Sans SC：结果区正文说明文字，统一 regular 字重 ── */
+    .prob-detail,
+    .notice,
+    .strat-note,
+    .tip-box,
+    .feas-box,
+    .result-footnote,
+    .strat-desc,
+    .strat-diag-hook,
+    .strat-account-row,
+    .strat-advice,
+    .strat-tip-item,
+    .padDao-item,
+    .strat-alert-row {
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      font-weight: 400;
+    }
+    .prob-detail strong,
+    .notice strong,
+    .strat-note strong,
+    .tip-box strong,
+    .feas-box strong,
+    .result-footnote strong,
+    .strat-desc strong,
+    .strat-diag-hook strong,
+    .strat-account-row strong,
+    .strat-tip-item strong,
+    .strat-alert-row strong {
+      font-weight: 400;
+    }
+
+    /* ── Strategy sub-cards (清小件 / 避坑 / 爆率诊断) ── */
+    .strat-sub-card {
+      border-radius: 11px; padding: 13px 15px;
+      margin-bottom: 9px; font-size: 12px; line-height: 1.75;
+    }
+    .strat-sub-card:last-child { margin-bottom: 0; }
+    .strat-sub-title {
+      font-family: 'LuokeFont', 'PingFang SC', sans-serif;
+      font-size: 12.5px; font-weight: 700; color: #313131;
+      margin-bottom: 9px;
+    }
+    .strat-card-a { background: rgba(251,200,57,0.13); border: 1.5px solid #FBC839; }
+    .strat-card-b { background: rgba(240,170,94,0.13); border: 1.5px solid #F0AA5E; }
+    .strat-card-c { background: rgba(154,115,249,0.10); border: 1.5px solid rgba(154,115,249,0.38); }
+    .strat-desc { font-size: 12px; color: #313131; margin-bottom: 8px; }
+    .padDao-list { display: flex; flex-direction: column; gap: 5px; margin: 6px 0 10px; }
+    .padDao-item { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+    .strat-badge {
+      display: inline-block; padding: 1px 8px; border-radius: 20px;
+      font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+    }
+    .strat-badge-green { background: #059669; color: #fff; }
+    .strat-badge-amber { background: #F0AA5E; color: #fff; }
+    .strat-account {
+      background: rgba(255,255,255,0.65); border-radius: 9px;
+      padding: 10px 12px; margin-top: 6px;
+    }
+    .strat-account-title {
+      font-family: 'LuokeFont', 'PingFang SC', sans-serif;
+      font-size: 12px; font-weight: 700; color: #313131; margin-bottom: 5px;
+    }
+    .strat-account-row { font-size: 12px; color: #313131; margin-bottom: 3px; }
+    .strat-account-row:last-child { margin-bottom: 0; }
+    .strat-prob-old { color: #97938C; }
+    .strat-prob-new { color: #059669; font-weight: 700; }
+    .strat-cost { color: var(--gold); font-weight: 700; }
+    .strat-advice {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(49,49,49,0.1);
+      font-size: 11px; color: #97938C;
+    }
+    .strat-alert-row {
+      background: rgba(220,38,38,0.08); border-radius: 8px;
+      padding: 7px 10px; margin-bottom: 8px; font-size: 12px; color: #313131;
+    }
+    .strat-tip-item { margin-bottom: 8px; font-size: 12px; color: #313131; }
+    .strat-tip-item:last-child { margin-bottom: 0; }
+    .strat-orange { color: var(--red); font-weight: 700; }
+    .strat-purple { color: var(--purple); font-weight: 700; }
+    .strat-warn-val { color: var(--red); font-weight: 700; }
+    .strat-diag-hook {
+      background: rgba(49,49,49,0.06); border-radius: 8px;
+      padding: 9px 12px; margin-bottom: 10px;
+      font-size: 12px; color: #313131; line-height: 1.7;
+    }
+    .strat-cheapest {
+      display: inline-block; font-size: 9px; font-weight: 600;
+      background: #059669; color: #fff;
+      padding: 1px 6px; border-radius: 4px; margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    /* ── Sub-card pair (two equal cards sharing one border) ── */
+    .sub-cards-pair {
+      display: flex;
+      border: 2px solid #313131;
+      border-radius: 16px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .sub-card-l, .sub-card-r {
+      flex: 1;
+      background: #ffffff;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 16px;
+      font-size: 12px; color: #97938C; gap: 8px;
+      min-height: 140px;
+    }
+    .sub-card-l { border-right: 2px solid #313131; }
+    .sub-card-icon { font-size: 28px; }
+    .big-num { font-size: 38px; font-weight: 900; line-height: 1; }
+    .big-num.gold-color   { color: #F0AA5E; }
+    .big-num.purple-color { color: #9A73F9; }
+    .big-unit { font-size: 13px; color: var(--text-muted); margin-left: 4px; }
+    .prob-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+    .prog-wrap { height: 8px; background: #E3DAC8; border-radius: 99px; overflow: hidden; }
+    .prog-bar  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #FBC839, #F0AA5E); transition: width 0.6s ease; }
+    .prob-detail { margin-top: 10px; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── Strategy table ── */
+    .strat-table { width: 100%; border-collapse: collapse; }
+    .strat-table th {
+      text-align: left; padding: 8px 10px;
+      font-size: 11px; color: #313131;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600; background: #E3DAC8;
+    }
+    .strat-table th:first-child { border-radius: 6px 0 0 0; }
+    .strat-table th:last-child  { border-radius: 0 6px 0 0; }
+    .strat-table td { padding: 11px 10px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .strat-table tr:last-child td { border-bottom: none; }
+    .strat-table tr.best-row td  { background: rgba(251,200,57,0.15); }
+    .strat-note { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+    .tag-best {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      background: var(--green-bg); color: var(--green);
+      border: 1px solid var(--green-border);
+      font-size: 9px; font-weight: 700; margin-left: 4px;
+    }
+    .num-gold { font-weight: 700; color: var(--gold); }
+
+    /* ── Cost / feasibility ── */
+    .cost-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cost-label { font-size: 11px; color: #313131; margin-bottom: 4px; }
+    .cost-num   { font-size: 28px; font-weight: 800; }
+    .cost-unit  { font-size: 11px; color: #313131; margin-top: 2px; }
+    .feas-box { border-radius: 9px; padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.6; }
+    .feas-ok   { background: var(--green-bg);  border: 1px solid var(--green-border);  color: var(--green); }
+    .feas-warn { background: var(--amber-bg);  border: 1px solid var(--amber-border);  color: var(--amber); }
+    .feas-bad  { background: var(--red-bg);    border: 1px solid var(--red-border);    color: var(--red); }
+
+    /* ── Tips ── */
+    .tip-box {
+      background: rgba(251,200,57,0.15); border-left: 3px solid #FBC839;
+      border-radius: 0 8px 8px 0; padding: 10px 12px;
+      margin-bottom: 8px; font-size: 12px; line-height: 1.7; color: #313131;
+    }
+    .tip-box:last-child { margin-bottom: 0; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: #97938C; margin: 12px 0; }
+
+    /* ── Alt-color badge ── */
+    .alt-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      font-size: 9px; font-weight: 700;
+      background: rgba(154,115,249,0.12); color: #9A73F9; border: 1px solid rgba(154,115,249,0.35);
+      margin-left: 4px; vertical-align: middle;
+    }
+
+    /* ── Theme all-full button ── */
+    .theme-all-btn {
+      padding: 2px 8px; border-radius: 5px;
+      border: none; background: #97938C;
+      color: #FBF7EE; font-size: 10px; font-weight: 600;
+      cursor: pointer; margin-left: 4px;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .theme-all-btn:hover { opacity: 0.75; }
+    .theme-all-btn.on {
+      background: #FBC839; color: #313131; border: none;
+    }
+    .theme-all-btn.on:hover { opacity: 0.85; }
+
+    /* ── Target toolbar ── */
+    .target-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; padding: 0 2px;
+    }
+    .target-sel-count {
+      font-size: 11px; color: var(--text-muted); font-weight: 500;
+    }
+    .target-quick-btn {
+      padding: 4px 11px; border-radius: 8px;
+      border: 1.5px solid #313131; background: transparent;
+      color: #313131; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .target-quick-btn:hover { background: #F3EADC; }
+    .target-quick-btn.ghost {
+      border-color: #97938C; color: #97938C;
+    }
+    .target-quick-btn.ghost:hover { background: var(--surface); }
+
+    /* ── Target section divider ── */
+    .target-section-label {
+      font-size: 11px; color: var(--text-muted); font-weight: 600;
+      letter-spacing: 0.4px; padding: 0 2px; margin: 16px 0 8px;
+    }
+
+    /* ── Future / phase banners ── */
+    .future-banner {
+      background: rgba(251,200,57,0.15); border: 1.5px solid #FBC839;
+      border-radius: 9px; padding: 10px 14px;
+      font-size: 12px; color: #313131; line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .warn-banner {
+      background: rgba(240,170,94,0.15); border: 1.5px solid #F0AA5E;
+      border-radius: 9px; padding: 10px 14px;
+      font-size: 12px; color: #313131; line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .phase-label {
+      font-size: 11px; font-weight: 700; color: #313131;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      margin-bottom: 14px;
+    }
+    .phase-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 20px 0; color: var(--text-muted); font-size: 12px;
+      text-align: center;
+    }
+    .phase-divider::before, .phase-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.65s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #97938C; border-radius: 3px; }
+
+    /* ── Pool timeline ── */
+    .timeline-wrap { overflow-x: auto; padding-bottom: 6px; }
+    .timeline-track { display: flex; gap: 8px; padding: 4px 0; min-width: max-content; }
+    .timeline-item {
+      background: #FBF7EE; border-radius: 8px;
+      padding: 8px 12px; border: 1.5px solid #313131;
+      font-size: 11px; text-align: center; min-width: 100px;
+      box-shadow: none;
+    }
+    .timeline-item .tl-date  { color: var(--text-muted); margin-bottom: 3px; }
+    .timeline-item .tl-name  { font-weight: 600; color: var(--text); font-size: 12px; }
+    .timeline-item .tl-count { color: #9A73F9; margin-top: 3px; }
+
+    /* ── Pool overview page ── */
+    #view-pool { background: #FBC839; min-height: calc(100vh - 56px); }
+    .pool-view { padding: 20px; max-width: 960px; margin: 0 auto; background: transparent; }
+    #view-pool .card { border-color: #313131; }
+
+    .theme-summary {
+      background: #FBF7EE; border: 1.5px solid #313131;
+      border-radius: var(--r); padding: 14px 16px;
+      margin-bottom: 10px; box-shadow: none;
+    }
+    .theme-summary-hdr {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .theme-summary-name   { font-weight: 700; font-size: 14px; }
+    .theme-summary-date   { font-size: 11px; color: #313131; background: #E3DAC8; border-radius: 4px; padding: 2px 8px; }
+    .theme-direct-yes     { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .theme-direct-no      { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+    .theme-expand-btn {
+      margin-left: auto; padding: 3px 12px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      background: transparent; border: 1.5px solid #313131; color: #313131;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .theme-expand-btn:hover { background: #313131; color: #fff; }
+    .theme-suits-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .suit-card-wrap { display: flex; flex-direction: column; align-items: flex-start; }
+    .suit-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      cursor: pointer; border: none; outline: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .suit-chip:active { transform: scale(0.96); }
+    .suit-chip.gold   { background: #F0AA5E; color: #fff; }
+    .suit-chip.purple { background: #9A73F9; color: #fff; }
+    .suit-chip::after { content: ' ▾'; font-size: 10px; opacity: 0.7; }
+    .suit-chip.open::after { content: ' ▴'; }
+    .suit-preview-drawer {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
+      opacity: 0; margin-top: 0;
+    }
+    .suit-preview-drawer.open {
+      max-height: 220px; opacity: 1; margin-top: 6px;
+    }
+    .suit-preview-drawer img {
+      width: 140px; height: auto; display: block;
+      border-radius: 10px; border: 1.5px solid #313131;
+      box-shadow: 2px 3px 8px rgba(0,0,0,0.13);
+      cursor: zoom-in;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .suit-preview-drawer img:hover {
+      transform: scale(1.04);
+      box-shadow: 4px 6px 16px rgba(0,0,0,0.22);
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(30,26,50,0.82);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; animation: lb-in 0.22s ease; }
+    @keyframes lb-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .lightbox-inner {
+      position: relative; cursor: default;
+      animation: lb-scale-in 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes lb-scale-in {
+      from { transform: scale(0.82); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .lightbox-inner img {
+      max-width: 88vw; max-height: 88vh;
+      border-radius: 16px; border: 2px solid #313131;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      display: block;
+    }
+    .lightbox-close {
+      position: absolute; top: -14px; right: -14px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #313131; color: #FBF7EE;
+      border: none; cursor: pointer;
+      font-size: 16px; line-height: 32px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: background 0.15s;
+    }
+    .lightbox-close:hover { background: #555; }
+
+    /* ══════════════════════════════════════════
+       手机端适配 (≤ 600px)
+    ══════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      /* 顶部导航栏 */
+      .header { padding: 0 10px; gap: 8px; height: 52px; }
+      body { padding-top: 52px; }
+      .header-icon { width: 24px; height: 24px; }
+      .header h1 { font-size: 12px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .header-badges { display: none; }
+      .nav-tab { padding: 5px 10px; font-size: 12px; }
+
+      /* 整体布局间距 */
+      .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); }
+      .pool-stats-card { padding: 8px; gap: 6px; }
+      .ps-lbl { font-size: 10px; width: 72px; }
+      .ps-val { font-size: 17px; }
+
+      /* 步骤标签栏 */
+      .step-tabs { padding: 8px 10px; }
+      .step-tab { font-size: 11px; padding: 6px 2px; gap: 3px; }
+      .step-connector { min-width: 4px; margin: 0 2px; }
+      .step-num { width: 18px; height: 18px; font-size: 10px; }
+
+      /* 步骤内容区 */
+      .step-pane { padding: 10px 12px; }
+
+      /* 步骤底部按钮 */
+      .step-nav-btns { padding: 10px 12px; gap: 6px; }
+      .step-nav-btn { font-size: 12px; padding: 10px 6px; border-radius: 10px; }
+      .step-nav-btn.primary { font-size: 13px; }
+
+      /* 卡片 */
+      .card { padding: 12px; margin-bottom: 8px; }
+      .card-title { font-size: 14px; }
+
+      /* 套装行 */
+      .suit-hdr { gap: 8px; }
+      .suit-img { width: 42px; height: 42px; font-size: 11px; }
+      .suit-name { font-size: 12px; }
+      .rarity-tag { font-size: 10px; }
+      .own-btn { padding: 5px 6px; font-size: 10px; }
+      .parts-grid { grid-template-columns: repeat(3,1fr); gap: 3px; }
+      .part-btn { font-size: 9px; padding: 4px 2px; }
+
+      /* 目标列表 */
+      .target-row { padding: 8px 10px; }
+      .target-name { font-size: 12px; }
+      .all-tag { font-size: 10px; padding: 2px 6px; }
+
+      /* 资源输入 */
+      .res-label { width: 68px; font-size: 12px; }
+      .res-input { padding: 8px 10px; font-size: 13px; }
+      .res-unit { font-size: 11px; width: 38px; }
+      .calc-btn { padding: 13px; font-size: 14px; }
+
+      /* 结果卡片 */
+      .result-card { padding: 14px 12px; border-radius: 12px; }
+      .result-card-title { font-size: 12px; margin-bottom: 12px; gap: 6px; }
+      .result-card-title img { width: 17px; height: 17px; }
+
+      /* 大数字 + 描述 */
+      .big-num { font-size: 30px; }
+      .big-unit { font-size: 11px; line-height: 1.5; }
+      .prob-row { flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+
+      /* 进度条 */
+      .prog-wrap { height: 6px; }
+
+      /* 策略表 - 字号收紧使四列能排进去 */
+      .strat-table th { padding: 7px 5px; font-size: 10px; }
+      .strat-table td { padding: 8px 5px; font-size: 11px; }
+
+      /* 成本区 */
+      .cost-row { gap: 10px; }
+      .cost-num { font-size: 22px; }
+      .cost-label { font-size: 10px; }
+      .cost-unit { font-size: 10px; }
+      .feas-box { font-size: 12px; padding: 10px 12px; }
+
+      /* 建议条目 */
+      .tip-box { font-size: 12px; padding: 8px 10px; }
+      .padDao-item { font-size: 11px; }
+      .strat-badge { padding: 1px 5px; font-size: 11px; }
+
+      /* 卡池总览 */
+      #view-pool { min-height: calc(100vh - 52px); }
+      .pool-view { padding: 8px; }
+      .theme-summary { padding: 10px 12px; }
+      .theme-summary-name { font-size: 13px; }
+      .theme-expand-btn { padding: 3px 8px; font-size: 10px; }
+      .suit-chip { font-size: 11px; padding: 3px 8px; }
+      .suit-preview-drawer img { width: 100px; }
+      .suit-preview-drawer.open { max-height: 160px; }
+
+      /* Lightbox - 更大的点击区域 */
+      .lightbox-close {
+        width: 36px; height: 36px; line-height: 36px;
+        font-size: 18px; top: -18px; right: -18px;
+      }
+      .lightbox-inner img { max-width: 94vw; max-height: 82vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-brand">
+    <img class="header-icon" src="Favicon/Favicon.png" alt="">
+    <h1>洛克王国 · 随机商店规划工具</h1>
+  </div>
+  <nav class="top-nav">
+    <button class="nav-tab active" onclick="switchView('planner')">✨ 规划工具</button>
+    <button class="nav-tab"        onclick="switchView('pool')">🎴 卡池总览</button>
+  </nav>
+  <div class="header-badges">
+    <span class="badge">数据快照 v1.1</span>
+    <span class="badge">29 套（含待入池）</span>
+  </div>
+</header>
+
+<!-- ════════════════════════ PLANNER VIEW ════════════════════════ -->
+<div id="view-planner" class="layout">
+
+  <!-- ── LEFT COLUMN ── -->
+  <div class="left-column">
+
+    <!-- Pool stats card -->
+    <div class="pool-stats-card">
+      <div class="ps-item"><div class="ps-lbl">卡池总卡数</div><div class="ps-val" id="stat-n">203</div></div>
+      <div class="ps-item"><div class="ps-lbl">在池套装数</div><div class="ps-val" id="stat-suits">29</div></div>
+      <div class="ps-item"><div class="ps-lbl">每日翻牌</div><div class="ps-val">5</div></div>
+      <div class="ps-item"><div class="ps-lbl">每日星上限</div><div class="ps-val">25</div></div>
+    </div>
+
+    <!-- Left panel -->
+    <div class="left-panel">
+
+    <!-- Step tabs -->
+    <div class="step-tabs">
+      <button class="step-tab active" data-tab="owned"     onclick="switchStep('owned')">
+        <span class="step-num">1</span>已持有
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-tab"        data-tab="targets"   onclick="switchStep('targets')">
+        <span class="step-num">2</span>目标套装
+      </button>
+      <div class="step-connector"></div>
+      <button class="step-tab"        data-tab="resources" onclick="switchStep('resources')">
+        <span class="step-num">3</span>资源与计算
+      </button>
+    </div>
+
+    <!-- Step 1: Owned -->
+    <div class="step-pane" id="sc-owned">
+      <div class="notice">展开套装 → 点「持有部分」→ 勾选已拥有的部件。已集齐整套可直接点「已集齐」，该套整体退出卡池。</div>
+      <div id="owned-list"></div>
+    </div>
+
+    <!-- Step 2: Targets -->
+    <div class="step-pane hidden" id="sc-targets">
+      <div class="notice">勾选想要的套装。默认「整套」目标——套装卡视为目标卡；点部件可切换为「只要部分」模式（套装卡不可拆，不计入）。</div>
+      <div class="target-toolbar">
+        <span class="target-sel-count" id="target-sel-count">已选 0 套</span>
+        <div style="display:flex;gap:6px">
+          <button class="target-quick-btn" onclick="selectAllTargets()">全选未集齐</button>
+          <button class="target-quick-btn ghost" onclick="clearAllTargets()">取消全选</button>
+        </div>
+      </div>
+      <div id="target-list"></div>
+    </div>
+
+    <!-- Step 3: Resources -->
+    <div class="step-pane hidden" id="sc-resources">
+      <div class="card">
+        <div class="card-title">💫 许愿星资源</div>
+        <div class="res-row">
+          <span class="res-label">当前余额</span>
+          <input type="number" id="star-balance" class="res-input" value="0" min="0" placeholder="0" oninput="saveState()">
+          <span class="res-unit">颗</span>
+        </div>
+        <div class="res-row">
+          <span class="res-label">每日收入</span>
+          <input type="number" id="daily-income" class="res-input" value="25" min="1" max="200" placeholder="25" oninput="saveState()">
+          <span class="res-unit">颗/天</span>
+        </div>
+        <div class="notice" style="margin-bottom:14px">⚡ 活动、任务等额外产出不计入，实际到手可能更快。</div>
+        <button class="calc-btn" id="calc-btn" onclick="onCalc()">✨ 开始计算规划</button>
+      </div>
+    </div>
+
+    <!-- Bottom nav buttons -->
+    <div class="step-nav-btns" id="step-nav-owned">
+      <button class="step-nav-btn primary" onclick="switchStep('targets')">下一步：选目标套装 →</button>
+    </div>
+    <div class="step-nav-btns hidden" id="step-nav-targets">
+      <button class="step-nav-btn"         onclick="switchStep('owned')">← 返回</button>
+      <button class="step-nav-btn primary" onclick="switchStep('resources')">下一步：输入资源 →</button>
+    </div>
+    <div class="step-nav-btns hidden" id="step-nav-resources">
+      <button class="step-nav-btn"         onclick="switchStep('targets')">← 返回</button>
+    </div>
+
+  </div><!-- /left-panel -->
+  </div><!-- /left-column -->
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel" id="right-panel">
+
+    <!-- Placeholder -->
+    <div id="result-placeholder" style="display:flex;flex-direction:column;gap:10px;flex:1">
+      <div class="img-ph" style="flex:1;min-height:200px">
+        <div class="placeholder-wrap" style="padding:0">
+          <div class="placeholder-icon">🎴</div>
+          <div class="placeholder-title">选好目标后点击计算</div>
+          <div class="placeholder-sub">
+            填写已持有部件、勾选目标套装<br>
+            输入许愿星余额，即可查看规划结果
+          </div>
+        </div>
+      </div>
+      <div class="sub-cards-pair">
+        <div class="sub-card-l">
+          <div class="sub-card-icon">📊</div>
+          <div>概率卡示意</div>
+        </div>
+        <div class="sub-card-r">
+          <div class="sub-card-icon">⏱️</div>
+          <div>周期卡示意</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Area -->
+    <div id="result-area" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+
+      <div id="r-banner" class="hidden"></div>
+
+      <div class="result-card">
+        <div class="result-card-title" id="r-prob-card-title"><img src="assets/icon/analysis.png" alt="">今日目标卡命中概率</div>
+        <div class="prob-row">
+          <span class="big-num gold-color" id="r-prob-pct">—</span>
+          <span class="big-unit">今日 5 次翻牌中翻出至少 1 张目标卡的概率</span>
+        </div>
+        <div class="prog-wrap"><div class="prog-bar" id="r-prob-bar" style="width:0"></div></div>
+        <div class="prob-detail" id="r-prob-detail"></div>
+        <div class="result-footnote" style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 目标卡 = 目标缺失部件对应的部件卡；整套目标下，套装卡也计为目标卡（买套装卡等效于用差价补齐所有缺失部件）。</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-title"><img src="assets/icon/calendar.png" alt="">集齐时间预测（3000 次随机模拟）</div>
+        <div class="prob-row" style="margin-bottom:10px">
+          <span class="big-num gold-color" id="r-strat-days">—</span>
+          <span class="big-unit">天 · 正常进度（套装卡没翻出、散件一件件凑的情况）</span>
+        </div>
+        <div class="notice" style="margin-bottom:12px">天数已结合你填写的许愿星余额和每日收入计算（翻到买不起时会等攒够再买）。"正常进度"代表恰好 50% 的玩家在此天数内集齐；"欧皇进度"代表运气极好的 10% 玩家能在此天数内集齐；"非酋保底"代表 90% 的玩家在此天数内集齐，只有极少数运气特别差的人需要更久。</div>
+        <table class="strat-table">
+          <thead>
+            <tr><th>翻牌情况</th><th>正常进度</th><th>欧皇进度</th><th>非酋保底</th></tr>
+          </thead>
+          <tbody id="r-strat-body"></tbody>
+        </table>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-title"><img src="assets/icon/star.png" alt="">许愿星成本与收支</div>
+        <div class="cost-row">
+          <div class="cost-item">
+            <div class="cost-label">目标总成本（确定值）</div>
+            <div class="cost-num gold-color" id="r-cost">—</div>
+            <div class="cost-unit">颗许愿星</div>
+          </div>
+          <div class="cost-item">
+            <div class="cost-label">届时累计获得星 <span style="font-size:10px;color:var(--text-dim)">(余额＋收入)</span></div>
+            <div class="cost-num purple-color" id="r-income">—</div>
+            <div class="cost-unit" id="r-income-detail">颗许愿星</div>
+          </div>
+        </div>
+        <div class="feas-box" id="r-feas"></div>
+        <div class="result-footnote" style="margin-top:10px;font-size:11px;color:var(--text-dim)">* 无论翻到散件还是套装卡，总花费相同——套装卡按所缺散件差价计算。</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-title">💡 策略建议</div>
+        <div id="r-tips"></div>
+      </div>
+
+      <div id="r-phase2-section" class="hidden"></div>
+
+    </div><!-- /result-area -->
+
+  </div><!-- /right-panel -->
+
+</div><!-- /view-planner -->
+
+<!-- ════════════════════════ POOL OVERVIEW VIEW ════════════════════════ -->
+<div id="view-pool" class="hidden">
+  <div class="pool-view">
+
+    <div class="card">
+      <div class="card-title"><img src="assets/icon/card.png" alt="">主题时装进入随机商店时间轴</div>
+      <div class="timeline-wrap">
+        <div class="timeline-track" id="timelineTrack"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><img src="assets/icon/picashop.png" alt="">全部专题套装</div>
+      <div id="pool-theme-list"></div>
+    </div>
+
+  </div>
+</div><!-- /view-pool -->
+
+<script>
+// ════════════════════════════════════════════════════
+// VIEW / STEP NAVIGATION
+// ════════════════════════════════════════════════════
+
+function switchView(view) {
+  document.getElementById('view-planner').classList.toggle('hidden', view !== 'planner');
+  document.getElementById('view-pool').classList.toggle('hidden', view !== 'pool');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && view === 'planner') || (i === 1 && view === 'pool'));
+  });
+}
+
+const _visitedSteps = new Set(['owned']);
+function switchStep(step) {
+  _visitedSteps.add(step);
+  ['owned', 'targets', 'resources'].forEach(s => {
+    document.getElementById('sc-' + s).classList.toggle('hidden', s !== step);
+    document.getElementById('step-nav-' + s).classList.toggle('hidden', s !== step);
+  });
+  document.querySelectorAll('.step-tab').forEach(t => {
+    const tab = t.dataset.tab;
+    t.classList.toggle('active', tab === step);
+    t.classList.toggle('visited', _visitedSteps.has(tab) && tab !== step);
+  });
+  if (step === 'targets') renderTargetList();
+}
+
+// ════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════
+
+const PART_NAMES = ['头饰','连体服装','背包','手套','袜子','鞋子'];
+const GOLD_PARTS  = {头饰:41, 连体服装:74, 背包:34, 手套:17, 袜子:9, 鞋子:20};
+const PURP_PARTS  = {头饰:20, 连体服装:42, 背包:18, 手套:6,  袜子:4, 鞋子:8 };
+
+const THEMES_RAW = [
+  { theme:'毛绒巡林者',    date:'2026-03-26', direct:true,  suits:[
+    {id:'s01', sub:'音速犬印象',    rarity:'gold'},
+    {id:'s02', sub:'厉毒修萝印象',  rarity:'gold'},
+    {id:'s03', sub:'岚鸟印象',      rarity:'gold'},
+  ]},
+  { theme:'重逢圆舞曲',    date:'2026-04-10', direct:true,  suits:[
+    {id:'s04', sub:'翠顶夫人印象',  rarity:'gold'},
+    {id:'s05', sub:'花魁蜂后印象',  rarity:'gold'},
+    {id:'s06', sub:'卡洛儿印象',    rarity:'gold'},
+  ]},
+  { theme:'雪山研究员',    date:'2026-04-24', direct:true,  suits:[
+    {id:'s07', sub:'雪灵印象',        rarity:'purple'},
+    {id:'s08', sub:'獠牙猪印象',      rarity:'purple'},
+    {id:'s09', sub:'蒲公英娃娃印象',  rarity:'purple'},
+    {id:'s10', sub:'圣代甜甜印象',    rarity:'purple'},
+  ]},
+  { theme:'誓约圣骑士',    date:'2026-05-08', direct:true,  suits:[
+    {id:'s11', sub:'星光狮印象',    rarity:'gold'},
+    {id:'s12', sub:'烈火守护印象',  rarity:'gold'},
+    {id:'s13', sub:'皇家狮鹫印象', rarity:'gold'},
+  ]},
+  { theme:'壁炉边伙伴',    date:'2026-05-21', direct:true,  suits:[
+    {id:'s27', sub:'蹦蹦花印象',    rarity:'gold'},
+    {id:'s28', sub:'熔岩布丁印象',  rarity:'gold'},
+    {id:'s29', sub:'爵士鹿印象',    rarity:'gold'},
+  ]},
+  { theme:'治愈童话书',    date:'2026-05-21', direct:false, suits:[
+    {id:'s14', sub:'花衣蝶印象',      rarity:'gold'},
+    {id:'s15', sub:'白金独角兽印象',  rarity:'gold'},
+    {id:'s16', sub:'红绒十字印象',    rarity:'gold'},
+  ]},
+  { theme:'晚安睡衣派对',  date:'2026-06-05', direct:false, suits:[
+    {id:'s17', sub:'雪影娃娃印象',  rarity:'purple'},
+    {id:'s18', sub:'梦悠悠印象',    rarity:'purple'},
+    {id:'s19', sub:'电球咩咩印象',  rarity:'purple'},
+    {id:'s20', sub:'幽冥眼印象',    rarity:'purple'},
+  ]},
+  { theme:'嘭！炼金药剂',  date:'2026-06-19', direct:false, suits:[
+    {id:'s21', sub:'琉璃水母印象',  rarity:'gold'},
+    {id:'s22', sub:'九幽菇印象',    rarity:'gold'},
+    {id:'s23', sub:'嘟嘟锅印象',    rarity:'gold'},
+  ]},
+  { theme:'野外考察队', date:'2026-07-03', direct:false, suspended:true, suits:[
+    {id:'s30', sub:'魔草巫灵印象', rarity:'purple'},
+    {id:'s31', sub:'奇丽花印象',   rarity:'purple'},
+    {id:'s32', sub:'高脚鹬印象',   rarity:'purple'},
+    {id:'s33', sub:'魔眷鸟印象',   rarity:'purple'},
+  ]},
+  { theme:'深海的馈赠',    date:'2026-07-17', direct:false, suits:[
+    {id:'s24', sub:'海豹船长印象',  rarity:'gold'},
+    {id:'s25', sub:'千棘盔印象',    rarity:'gold'},
+    {id:'s26', sub:'迷迷箱怪印象',  rarity:'gold'},
+  ]},
+  { theme:'魔法嘉年华', date:'2026-07-31', direct:false, suspended:true, suits:[
+    {id:'s34', sub:'烟花伯爵印象', rarity:'purple'},
+    {id:'s35', sub:'巨鼓象印象',   rarity:'purple'},
+    {id:'s36', sub:'咕德帽帽印象', rarity:'purple'},
+    {id:'s37', sub:'小丑公爵印象', rarity:'purple'},
+  ]},
+];
+
+// Flatten suits with full data
+const SUITS = [];
+for (const th of THEMES_RAW) {
+  if (th.suspended) continue; // 价格未知，规划工具不使用
+  for (const s of th.suits) {
+    const parts = s.rarity === 'gold' ? {...GOLD_PARTS} : {...PURP_PARTS};
+    const setPrice = s.rarity === 'gold' ? 195 : 98;
+    SUITS.push({
+      id: s.id,
+      theme: th.theme,
+      sub: s.sub,
+      name: th.theme + '·' + s.sub,
+      rarity: s.rarity,
+      parts,
+      setPrice,
+      enterDate: th.date,
+      direct: th.direct,
+    });
+  }
+}
+
+// Suits with alternate-color variants (异色)
+const ALTS = new Set([
+  '白金独角兽印象', '红绒十字印象',
+  '雪影娃娃印象',  '嘟嘟锅印象',  '獠牙猪印象',
+]);
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+
+const st = {
+  owned:    {},   // suitId -> Set<partName>
+  fullOwned: new Set(), // suitId fully collected
+  targets:  {},   // suitId -> 'ALL' | Set<partName>  (undefined = not targeted)
+};
+
+// ════════════════════════════════════════════════════
+// MATH UTILS
+// ════════════════════════════════════════════════════
+
+function comb(n, k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  let r = 1;
+  for (let i = 0; i < k; i++) {
+    r = r * (n - i) / (i + 1);
+  }
+  return r;
+}
+
+function probAtLeast1(N, u) {
+  if (N <= 0 || u <= 0) return 0;
+  if (u >= N) return 1;
+  // P(at least 1 useful in 5 draws without replacement)
+  const total5 = comb(N, 5);
+  const none5  = comb(N - u, 5);
+  return Math.max(0, Math.min(1, 1 - none5 / total5));
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ════════════════════════════════════════════════════
+// POOL BUILDER
+// ════════════════════════════════════════════════════
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-'
+    + String(d.getMonth()+1).padStart(2,'0') + '-'
+    + String(d.getDate()).padStart(2,'0');
+}
+
+function buildPool(ownedMap, fullOwnedSet, snapshotDate) {
+  const cutoff = snapshotDate || todayStr();
+  const cards = [];
+  for (const s of SUITS) {
+    if (fullOwnedSet.has(s.id)) continue;
+    if (s.enterDate > cutoff) continue;
+    const owned = ownedMap[s.id] || new Set();
+    for (const p of PART_NAMES) {
+      if (!owned.has(p)) {
+        cards.push({ id: s.id+':p:'+p, suitId: s.id, type: 'part', part: p });
+      }
+    }
+    cards.push({ id: s.id+':set', suitId: s.id, type: 'set' });
+  }
+  return cards;
+}
+
+function poolSize(ownedMap, fullOwnedSet, snapshotDate) {
+  return buildPool(ownedMap, fullOwnedSet, snapshotDate).length;
+}
+
+// ════════════════════════════════════════════════════
+// MONTE CARLO
+// ════════════════════════════════════════════════════
+
+function runMC(targetSuits, ownedMap, fullOwnedSet, strategy, iters, snapshotDate, startBal, dayInc) {
+  // targetSuits: [{suitId, parts:'ALL'|Set<string>}]
+  // startBal/dayInc: optional star budget tracking; omit for unlimited
+  const tracked = Number.isFinite(startBal) && Number.isFinite(dayInc);
+  const results = [];
+
+  for (let i = 0; i < iters; i++) {
+    // Copy state
+    const curOwned = {};
+    for (const [sid, ps] of Object.entries(ownedMap)) curOwned[sid] = new Set(ps);
+    const curFull = new Set(fullOwnedSet);
+
+    // Build "remaining" needed parts per suit
+    const rem = new Map(); // suitId -> Set<partName>
+    const isFullTarget = new Map();
+    for (const {suitId, parts} of targetSuits) {
+      const owned = curOwned[suitId] || new Set();
+      const needed = parts === 'ALL'
+        ? new Set(PART_NAMES.filter(p => !owned.has(p)))
+        : new Set([...parts].filter(p => !owned.has(p)));
+      isFullTarget.set(suitId, parts === 'ALL');
+      if (needed.size > 0) rem.set(suitId, needed);
+    }
+
+    let days = 0;
+    const maxDays = 500;
+    let stars = tracked ? startBal : Infinity;
+
+    while (rem.size > 0 && days < maxDays) {
+      days++;
+      if (tracked) stars += dayInc; // earn today's income before shopping
+      const pool = buildPool(curOwned, curFull, snapshotDate);
+      if (!pool.length) break;
+      const drawn = shuffle(pool).slice(0, Math.min(5, pool.length));
+
+      for (const card of drawn) {
+        const sid = card.suitId;
+        const needed = rem.get(sid);
+        if (!needed) continue;
+
+        const suit = SUITS.find(s => s.id === sid);
+
+        if (card.type === 'part') {
+          if (strategy === 'setonly') continue;
+          if (needed.has(card.part)) {
+            const price = suit ? (suit.parts[card.part] || 0) : 0;
+            if (stars < price) continue; // can't afford today, skip
+            stars -= price;
+            if (!curOwned[sid]) curOwned[sid] = new Set();
+            curOwned[sid].add(card.part);
+            needed.delete(card.part);
+            if (needed.size === 0) { rem.delete(sid); curFull.add(sid); }
+          }
+        } else if (card.type === 'set') {
+          if (strategy === 'partonly') continue;
+          if (!isFullTarget.get(sid)) continue; // partial target: set card useless
+          const price = suit ? (suit.setPrice || 0) : 0;
+          if (stars < price) continue; // can't afford today, skip
+          stars -= price;
+          if (!curOwned[sid]) curOwned[sid] = new Set();
+          for (const p of needed) curOwned[sid].add(p);
+          rem.delete(sid);
+          curFull.add(sid);
+        }
+      }
+    }
+    results.push(Math.min(days, maxDays));
+  }
+
+  results.sort((a, b) => a - b);
+  const mean = Math.round(results.reduce((a,b)=>a+b,0) / results.length);
+  return { mean, p10: results[Math.floor(iters * 0.1)], p50: results[Math.floor(iters * 0.5)], p90: results[Math.floor(iters * 0.9)] };
+}
+
+// ════════════════════════════════════════════════════
+// CALC HELPERS
+// ════════════════════════════════════════════════════
+
+function daysBetween(d1, d2) {
+  return Math.round((new Date(d2+'T00:00:00') - new Date(d1+'T00:00:00')) / 86400000);
+}
+
+function computePhase(targets, snapshotDate, startBal, dayInc) {
+  const ITERS   = 3000;
+  const pool    = buildPool(st.owned, st.fullOwned, snapshotDate);
+  const N       = pool.length;
+  const poolIds = new Set(pool.map(c => c.id));
+  const usefulIds = new Set();
+  for (const {suitId, parts} of targets) {
+    const owned = st.owned[suitId] || new Set();
+    if (parts === 'ALL') {
+      for (const p of PART_NAMES) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+      usefulIds.add(suitId+':set');
+    } else {
+      for (const p of parts) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+    }
+  }
+  const u         = [...usefulIds].filter(id => poolIds.has(id)).length;
+  const dailyProb = probAtLeast1(N, u);
+  const expUseful = N > 0 ? 5 * u / N : 0;
+  const hasAll    = targets.some(t => t.parts === 'ALL');
+  const mcMixed   = runMC(targets, st.owned, st.fullOwned, 'mixed',    ITERS, snapshotDate, startBal, dayInc);
+  const mcParts   = runMC(targets, st.owned, st.fullOwned, 'partonly', ITERS, snapshotDate, startBal, dayInc);
+  const mcSet     = hasAll ? runMC(targets, st.owned, st.fullOwned, 'setonly', ITERS, snapshotDate, startBal, dayInc) : null;
+  return { N, u, dailyProb, expUseful, hasAll, mcMixed, mcParts, mcSet };
+}
+
+function stratRowsHTML(res) {
+  const rows = [
+    { name:'散件＋套装卡都翻到，出现就买', best:false, data:res.mcMixed },
+    { name:'套装卡没翻出，散件一件件凑',   best:true,  data:res.mcParts },
+  ];
+  if (res.mcSet) rows.splice(1, 0, { name:'套装卡先出，直接一张集齐全套', best:false, data:res.mcSet });
+  return rows.map(r => `
+    <tr${r.best?' class="best-row"':''}>
+      <td>${r.name}</td>
+      <td>${r.data.p50} 天</td>
+      <td style="color:var(--green)">${r.data.p10} 天</td>
+      <td style="color:var(--text-muted)">${r.data.p90} 天</td>
+    </tr>`).join('');
+}
+
+// ── 垫刀部件扫描 ──
+function buildPadDaoItems(targetedIds, today) {
+  const items = [];
+  for (const s of SUITS) {
+    if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today) continue;
+    const ownedP = st.owned[s.id] || new Set();
+    for (const p of PART_NAMES) {
+      if (ownedP.has(p)) continue;
+      if (s.parts[p] <= 20)
+        items.push({ suitId: s.id, suitSub: s.sub, rarity: s.rarity, part: p, price: s.parts[p] });
+    }
+  }
+  items.sort((a, b) => a.price - b.price);
+  return items;
+}
+
+// ── 新版策略建议：三子面板 ──
+function buildStrategyPanels(p1Targets, today) {
+  const targetedIds = new Set(p1Targets.map(t => t.suitId));
+  const pool    = buildPool(st.owned, st.fullOwned, today);
+  const N       = pool.length;
+  const poolIds = new Set(pool.map(c => c.id));
+
+  // u = 当前池中目标卡数（含套装卡）
+  const usefulIds = new Set();
+  for (const {suitId, parts} of p1Targets) {
+    const owned = st.owned[suitId] || new Set();
+    if (parts === 'ALL') {
+      for (const p of PART_NAMES) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+      usefulIds.add(suitId+':set');
+    } else {
+      for (const p of parts) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+    }
+  }
+  const u = [...usefulIds].filter(id => poolIds.has(id)).length;
+
+  // U = 玩家还缺失的目标部件件数（不含套装卡，用于诊断文案）
+  let U = 0;
+  for (const {suitId, parts} of p1Targets) {
+    const owned = st.owned[suitId] || new Set();
+    U += parts === 'ALL'
+      ? PART_NAMES.filter(p => !owned.has(p)).length
+      : [...parts].filter(p => !owned.has(p)).length;
+  }
+
+  // 垫刀清单
+  const allPadDao = buildPadDaoItems(targetedIds, today);
+  const topItems  = allPadDao.slice(0, 5);
+  const kRem      = topItems.length;
+  const M         = topItems.reduce((s, c) => s + c.price, 0);
+  const recDays   = Math.ceil(M / 25);
+
+  const A    = probAtLeast1(N, u);
+  const B    = probAtLeast1(Math.max(0, N - kRem), u);
+  const Apct = (A * 100).toFixed(1);
+  const Bpct = (B * 100).toFixed(1);
+  const Y    = A > 0 ? (1 / A).toFixed(1) : null;
+
+  // ── 面板一：清小件方案（诊断 hook + 清单 + 账单）──
+  const diagHook = (u > 0 && Y !== null)
+    ? `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，你的目标卡只有 <strong>${u}</strong> 张——每天翻出的概率只有 <strong>${Apct}%</strong>，平均每 <strong class="strat-warn-val">${Y}</strong> 天才能"看一眼"你的目标。</div>`
+    : `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，你的所有目标部件已全部持有或不在当前池中。</div>`;
+
+  let panel1;
+  if (topItems.length > 0) {
+    const itemList = topItems.map((c, i) => {
+      const cls   = c.price <= 8 ? 'strat-badge-green' : 'strat-badge-amber';
+      const label = i === 0 ? '<span class="strat-cheapest">全池最便宜</span>' : '';
+      return `<div class="padDao-item"><span class="strat-badge ${cls}">${c.price}★</span><span><strong>${c.suitSub}</strong> - ${c.part} ${label}</span></div>`;
+    }).join('');
+    panel1 = `
+      <div class="strat-sub-card strat-card-a">
+        <div class="strat-sub-title">🔍 建议执行的「清小件」方案</div>
+        ${diagHook}
+        <div class="strat-desc">利用游戏"售罄退池"机制，把这几个全池最便宜的非目标散件买断，让它们永久滚出卡池：</div>
+        <div class="padDao-list">${itemList}</div>
+        <div class="strat-account">
+          <div class="strat-account-title">📈 算一笔账：值不值得买？</div>
+          <div class="strat-account-row">你需要花：总共 <strong class="strat-cost">${M} 颗许愿星</strong>（满勤只需 <strong>${recDays} 天</strong>就能攒够）</div>
+          <div class="strat-account-row">你能得到：卡池永久变浅，今日命中概率从 <span class="strat-prob-old">${Apct}%</span> 提升到 <strong class="strat-prob-new">${Bpct}%</strong>！</div>
+          <div class="strat-advice">每天刷新看到了就直接顺手买断，给本命腾位置。非常划算。</div>
+        </div>
+      </div>`;
+  } else {
+    panel1 = `
+      <div class="strat-sub-card strat-card-a">
+        <div class="strat-sub-title">🔍 建议执行的「清小件」方案</div>
+        ${diagHook}
+        <div class="strat-desc">当前池子里已经没有 ≤20星的非目标散件可以清了，<strong>卡池已达最简状态！</strong></div>
+      </div>`;
+  }
+
+  // ── 面板二：避坑 ──
+  // 动态警告：推荐列表里有金色散件时额外提醒
+  const hasGoldTrap = topItems.some(c => c.rarity === 'gold' && (c.part === '手套' || c.part === '鞋子'));
+  const goldWarn = hasGoldTrap
+    ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装的 <span class="strat-orange">手套（17星）</span>或<span class="strat-orange">鞋子（20星）</span>，注意：这套的<span class="strat-orange">连体服（74星）</span>和套装卡依然留在池中。出手前请结合下方说明权衡。</div>`
+    : '';
+
+  // 动态提示：已零星持有部分部件的非目标紫色套装
+  const nearPurple = [];
+  for (const s of SUITS) {
+    if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today || s.rarity !== 'purple') continue;
+    const ownedP   = st.owned[s.id] || new Set();
+    const ownedCnt = PART_NAMES.filter(p => ownedP.has(p)).length;
+    if (ownedCnt > 0) {
+      const missCost = PART_NAMES.filter(p => !ownedP.has(p)).reduce((s, p) => s + PURP_PARTS[p], 0);
+      nearPurple.push({ suitSub: s.sub, ownedCnt, missCost });
+    }
+  }
+  const purpleReco = nearPurple.length > 0
+    ? `<div class="strat-alert-row" style="margin-top:8px;background:rgba(154,115,249,0.08);border-left:3px solid var(--purple);border-radius:0 8px 8px 0">
+        💜 <strong>强烈推荐立刻买断：</strong>你已零星歪到
+        ${nearPurple.map(s => `<span class="strat-purple">「${s.suitSub}」</span>（已有 ${s.ownedCnt} 件，补齐仅需 <strong>${s.missCost} 星</strong>）`).join('，')}
+        ——补齐整套后，所有散件卡 + 套装卡一起彻底退池！
+       </div>`
+    : '';
+
+  const panel2 = `
+    <div class="strat-sub-card strat-card-b">
+      <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
+      ${goldWarn}
+      <div class="strat-tip-item">🚫 <strong>别单独买金色套装的便宜散件：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但金色套装共 6 个部件——只买这两件，昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局，花了星却没彻底给卡池减负，性价比很低。</div>
+      <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4-8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
+      ${purpleReco}
+    </div>`;
+
+  // ── 面板三：底线诊断（只有实际有目标缺口时才显示）──
+  const panel3 = (U > 0 && u > 0 && Y !== null) ? `
+    <div class="strat-sub-card strat-card-c">
+      <div class="strat-sub-title">🎯 你的本命「真实等待成本」</div>
+      <div class="strat-desc">
+        除去你已经有的，你目前还缺 <strong>${U}</strong> 个具体部件。<br>
+        面对当前 <strong>${N}</strong> 张卡的深水池，在什么都不做的情况下，每天翻出至少一件本命的概率只有 <strong>${Apct}%</strong>——平均每隔 <strong class="strat-warn-val">${Y} 天</strong>才能在商店里"碰到"你的目标一次。<br><br>
+        如果觉得这个等待太折磨，立刻执行上面的<strong>【清小件方案】</strong>，主动把概率拉上来。
+      </div>
+    </div>` : '';
+
+  return panel1 + panel2 + panel3;
+}
+
+// ── Case 2 专属：目标待入池时的「预清池」策略面板 ──
+function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
+  const targetedIds = new Set(nearTargets.map(t => t.suitId));
+  const nearFmt     = nearDate.slice(5).replace('-', '/');
+  const targetNames = nearTargets.map(t => SUITS.find(s => s.id === t.suitId).sub).join('、');
+
+  // 今日卡池
+  const poolToday = buildPool(st.owned, st.fullOwned, today);
+  const N = poolToday.length;
+
+  // 入池当天卡池（buildPool 会自动把 nearDate 之前的所有套装算进去）
+  const poolEntry    = buildPool(st.owned, st.fullOwned, nearDate);
+  const N_entry      = poolEntry.length;
+  const poolEntryIds = new Set(poolEntry.map(c => c.id));
+
+  // 入池当天的目标目标卡数
+  const usefulAtEntry = new Set();
+  for (const {suitId, parts} of nearTargets) {
+    const owned = st.owned[suitId] || new Set();
+    if (parts === 'ALL') {
+      for (const p of PART_NAMES) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
+      usefulAtEntry.add(suitId+':set');
+    } else {
+      for (const p of parts) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
+    }
+  }
+  const u_entry = [...usefulAtEntry].filter(id => poolEntryIds.has(id)).length;
+
+  // 垫刀清单（从今日在池的非目标散件中找）
+  const allPadDao = buildPadDaoItems(targetedIds, today);
+  const topItems  = allPadDao.slice(0, 5);
+  const kRem      = topItems.length;
+  const M         = topItems.reduce((s, c) => s + c.price, 0);
+  const recDays   = Math.ceil(M / 25);
+
+  // 提前清池后入池当天卡池大小
+  const N_entry_after = Math.max(0, N_entry - kRem);
+  const A_entry  = probAtLeast1(N_entry, u_entry);
+  const B_entry  = probAtLeast1(N_entry_after, u_entry);
+  const Apct_e   = (A_entry * 100).toFixed(1);
+  const Bpct_e   = (B_entry * 100).toFixed(1);
+  const Y_entry  = A_entry > 0 ? (1 / A_entry).toFixed(1) : null;
+
+  // ── 面板一：预清池方案 ──
+  const newCards = Math.max(0, N_entry - N);
+  const diagHook = `<div class="strat-diag-hook">
+    你的目标「${targetNames}」将在 <strong>${nearFmt}</strong> 入池，还需等待 <strong>${waitDays} 天</strong>。<br>
+    入池当天，卡池将在现有 <strong>${N}</strong> 张基础上新增约 <strong>${newCards}</strong> 张目标卡，
+    届时共 <strong>${N_entry}</strong> 张——${Y_entry ? `你的本命平均每 <strong class="strat-warn-val">${Y_entry} 天</strong>才能在商店碰到一次。` : ''}
+  </div>`;
+
+  let panel1;
+  if (topItems.length > 0) {
+    const itemList = topItems.map((c, i) => {
+      const cls   = c.price <= 8 ? 'strat-badge-green' : 'strat-badge-amber';
+      const label = i === 0 ? '<span class="strat-cheapest">全池最便宜</span>' : '';
+      return `<div class="padDao-item"><span class="strat-badge ${cls}">${c.price}★</span><span><strong>${c.suitSub}</strong> - ${c.part} ${label}</span></div>`;
+    }).join('');
+    panel1 = `
+      <div class="strat-sub-card strat-card-a">
+        <div class="strat-sub-title">🔍 趁等待期提前「预清池」方案</div>
+        ${diagHook}
+        <div class="strat-desc">别白等！把这几个当前在池的便宜非目标散件买断，让入池当天的卡池更浅：</div>
+        <div class="padDao-list">${itemList}</div>
+        <div class="strat-account">
+          <div class="strat-account-title">📈 算一笔账：提前清有多划算？</div>
+          <div class="strat-account-row">你需要花：总共 <strong class="strat-cost">${M} 颗许愿星</strong>（满勤只需 <strong>${recDays} 天</strong>就能攒够）</div>
+          <div class="strat-account-row">入池当天卡池：<span class="strat-prob-old">${N_entry} 张</span> → <strong class="strat-prob-new">${N_entry_after} 张</strong>，命中概率：<span class="strat-prob-old">${Apct_e}%</span> → <strong class="strat-prob-new">${Bpct_e}%</strong>！</div>
+          <div class="strat-advice">等待期间刷新看到就顺手买断，入池当天见本命的概率更高。</div>
+        </div>
+      </div>`;
+  } else {
+    panel1 = `
+      <div class="strat-sub-card strat-card-a">
+        <div class="strat-sub-title">🔍 趁等待期提前「预清池」方案</div>
+        ${diagHook}
+        <div class="strat-desc">当前在池里已没有 ≤20星的非目标散件可以提前清了，<strong>等待期间无需额外操作。</strong></div>
+      </div>`;
+  }
+
+  // ── 面板二：避坑（与正常状态相同逻辑）──
+  const hasGoldTrap = topItems.some(c => c.rarity === 'gold' && (c.part === '手套' || c.part === '鞋子'));
+  const goldWarn = hasGoldTrap
+    ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装的 <span class="strat-orange">手套（17星）</span>或<span class="strat-orange">鞋子（20星）</span>，注意：这套的<span class="strat-orange">连体服（74星）</span>和套装卡依然留在池中。出手前请结合下方说明权衡。</div>`
+    : '';
+
+  const nearPurple = [];
+  for (const s of SUITS) {
+    if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today || s.rarity !== 'purple') continue;
+    const ownedP   = st.owned[s.id] || new Set();
+    const ownedCnt = PART_NAMES.filter(p => ownedP.has(p)).length;
+    if (ownedCnt > 0) {
+      const missCost = PART_NAMES.filter(p => !ownedP.has(p)).reduce((s, p) => s + PURP_PARTS[p], 0);
+      nearPurple.push({ suitSub: s.sub, ownedCnt, missCost });
+    }
+  }
+  const purpleReco = nearPurple.length > 0
+    ? `<div class="strat-alert-row" style="margin-top:8px;background:rgba(154,115,249,0.08);border-left:3px solid var(--purple);border-radius:0 8px 8px 0">
+        💜 <strong>强烈推荐立刻买断：</strong>你已零星歪到
+        ${nearPurple.map(s => `<span class="strat-purple">「${s.suitSub}」</span>（已有 ${s.ownedCnt} 件，补齐仅需 <strong>${s.missCost} 星</strong>）`).join('，')}
+        ——补齐整套后，所有散件卡 + 套装卡一起彻底退池，让入池当天的卡池更干净！
+       </div>`
+    : '';
+
+  const panel2 = `
+    <div class="strat-sub-card strat-card-b">
+      <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
+      ${goldWarn}
+      <div class="strat-tip-item">🚫 <strong>别单独买金色套装的便宜散件：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但金色套装共 6 个部件——只买这两件，昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局，花了星却没彻底给卡池减负，性价比很低。</div>
+      <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4-8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
+      ${purpleReco}
+    </div>`;
+
+  return panel1 + panel2;
+}
+
+// ── 实时刷新策略面板（不跑蒙特卡洛）──
+function maybeLiveRefreshStrategy() {
+  if (document.getElementById('result-area').classList.contains('hidden')) return;
+  const today = todayStr();
+  const allTargets = [];
+  for (const [suitId, tval] of Object.entries(st.targets)) {
+    if (!tval) continue;
+    if (tval === 'ALL' || (tval instanceof Set && tval.size > 0))
+      allTargets.push({ suitId, parts: tval });
+  }
+  if (!allTargets.length) return;
+
+  const currentTargets = allTargets.filter(t => SUITS.find(x => x.id === t.suitId).enterDate <= today);
+  const futureTargets  = allTargets.filter(t => SUITS.find(x => x.id === t.suitId).enterDate >  today);
+  const isCase2 = currentTargets.length === 0 && futureTargets.length > 0;
+
+  if (!isCase2) {
+    if (!currentTargets.length) return;
+    document.getElementById('r-tips').innerHTML = buildStrategyPanels(currentTargets, today);
+  } else {
+    const futureDates = [...new Set(futureTargets.map(t => SUITS.find(x=>x.id===t.suitId).enterDate))].sort();
+    const nearDate    = futureDates[0];
+    const nearTs      = futureTargets.filter(t => SUITS.find(x=>x.id===t.suitId).enterDate === nearDate);
+    const wDays       = daysBetween(today, nearDate);
+    document.getElementById('r-tips').innerHTML = buildStrategyPanelsCase2(nearTs, nearDate, wDays, today);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// CALCULATION ENTRY POINT
+// ════════════════════════════════════════════════════
+
+function onCalc() {
+  const btn = document.getElementById('calc-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 模拟计算中…';
+  setTimeout(doCalc, 60);
+}
+
+function doCalc() {
+  const btn = document.getElementById('calc-btn');
+  try { _doCalc(); } catch(e) { alert('计算出错：' + e.message); }
+  btn.disabled = false;
+  btn.innerHTML = '✨ 重新计算';
+}
+
+// ── 数字滚动动画 ──
+const _animVer = {};
+function animateCount(el, target, duration, fmt) {
+  const key = el.id;
+  _animVer[key] = (_animVer[key] || 0) + 1;
+  const ver = _animVer[key];
+  const t0 = performance.now();
+  function step(now) {
+    if (_animVer[key] !== ver) return;
+    const p = Math.min((now - t0) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    el.textContent = fmt(target * eased);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = fmt(target);
+  }
+  requestAnimationFrame(step);
+}
+
+function _doCalc() {
+  const balance = parseInt(document.getElementById('star-balance').value) || 0;
+  const daily   = parseInt(document.getElementById('daily-income').value) || 25;
+  const today   = todayStr();
+
+  // 1. Collect all targets
+  const allTargets = [];
+  for (const [suitId, tval] of Object.entries(st.targets)) {
+    if (!tval) continue;
+    if (tval === 'ALL' || (tval instanceof Set && tval.size > 0))
+      allTargets.push({ suitId, parts: tval });
+  }
+  if (!allTargets.length) { alert('请先在「目标套装」中勾选至少一套！'); return; }
+
+  // 2. Classify into current (in-pool) and future
+  const currentTargets = allTargets.filter(t => SUITS.find(x=>x.id===t.suitId).enterDate <= today);
+  const futureTargets  = allTargets.filter(t => SUITS.find(x=>x.id===t.suitId).enterDate >  today);
+
+  // Nearest future date and targets
+  const futureDates = [...new Set(futureTargets.map(t => SUITS.find(x=>x.id===t.suitId).enterDate))].sort();
+  const nearDate    = futureDates[0] || null;
+  const nearTargets = nearDate ? futureTargets.filter(t => SUITS.find(x=>x.id===t.suitId).enterDate === nearDate) : [];
+  const farTargets  = futureTargets.filter(t => SUITS.find(x=>x.id===t.suitId).enterDate !== nearDate);
+
+  const isCase1 = futureTargets.length === 0;                          // all in-pool
+  const isCase2 = currentTargets.length === 0 && futureTargets.length > 0; // all future
+  const isCase3 = currentTargets.length > 0 && futureTargets.length > 0;   // mixed
+
+  // 3. Total cost across all targets
+  let totalCost = 0;
+  for (const {suitId, parts} of allTargets) {
+    const suit  = SUITS.find(s=>s.id===suitId);
+    const owned = st.owned[suitId] || new Set();
+    if (parts === 'ALL') {
+      totalCost += suit.setPrice - [...owned].reduce((a,p)=>a+suit.parts[p],0);
+    } else {
+      for (const p of parts) if (!owned.has(p)) totalCost += suit.parts[p];
+    }
+  }
+
+  // 4. Compute Phase 1 stats
+  // Case 1/3: current pool, current targets
+  // Case 2:   snapshot at nearDate, nearest future targets
+  const waitDays   = nearDate ? daysBetween(today, nearDate) : 0;
+  const p1Targets  = isCase2 ? nearTargets : currentTargets;
+  const p1Snapshot = isCase2 ? nearDate    : null;
+  // For Case 2, player accumulates income during the wait before cards enter pool
+  const p1StartBal = isCase2 ? balance + waitDays * daily : balance;
+  const p1         = computePhase(p1Targets, p1Snapshot, p1StartBal, daily);
+
+  // 5. Compute Phase 2 stats (Case 3 only; post-Phase-1 balance unknown, so no budget constraint)
+  const p2 = isCase3 && nearTargets.length > 0
+    ? computePhase(nearTargets, nearDate)
+    : null;
+
+  // 6. Total elapsed days for feasibility — use p50 (正常进度) to match the table's primary metric
+  let D;
+  if (isCase1) {
+    D = p1.mcMixed.p50;
+  } else if (isCase2) {
+    D = waitDays + p1.mcMixed.p50;
+  } else {
+    // Case 3: Phase 1 may overlap with waiting; Phase 2 starts after both
+    D = Math.max(p1.mcMixed.p50, waitDays) + (p2 ? p2.mcMixed.p50 : 0);
+  }
+  const incomeAtD = balance + daily * D;
+
+  // ════ RENDER ════
+  document.getElementById('result-placeholder').classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+
+  // ── Banner ──
+  const banner = document.getElementById('r-banner');
+  {
+    let html = '';
+    if (isCase2) {
+      if (farTargets.length > 0) {
+        const farNames  = farTargets.map(t=>SUITS.find(x=>x.id===t.suitId).sub).join('、');
+        const nearTheme = SUITS.find(x=>x.id===nearTargets[0].suitId).theme;
+        const nearFmt   = nearDate.slice(5).replace('-','/');
+        html += `<div class="warn-banner">⚠️ 目标跨多个待入池主题，仅展示最近一期【${nearTheme}（${nearFmt} 入池）】的预估结果。【${farNames}】请等入池后重新规划，届时卡池持有情况未知，无法提前估算。</div>`;
+      }
+      const nearFmt = nearDate.slice(5).replace('-','/');
+      html += `<div class="future-banner">🔮 <strong>以下为预估数据（${nearFmt} 入池后）</strong> · 还需等待 ${waitDays} 天入池 · 基于当前持有状态保守估算，实际命中率可能更高。</div>`;
+      banner.innerHTML = html;
+      banner.classList.remove('hidden');
+    } else if (isCase3) {
+      banner.innerHTML = `<div class="phase-label">🎯 当前阶段目标（已入池套装）</div>`;
+      banner.classList.remove('hidden');
+    } else {
+      banner.innerHTML = '';
+      banner.classList.add('hidden');
+    }
+  }
+
+  // ── Probability card ──
+  {
+    const nearFmt = nearDate ? nearDate.slice(5).replace('-','/') : '';
+    document.getElementById('r-prob-card-title').innerHTML =
+      `<img src="assets/icon/analysis.png" alt="" style="width:20px;height:20px;object-fit:contain;flex-shrink:0">` +
+      (isCase2 ? `入池当天命中率预估（${nearFmt} 卡池）` : '今日目标卡命中概率');
+    animateCount(document.getElementById('r-prob-pct'), p1.dailyProb * 100, 1200, v => v.toFixed(1) + '%');
+    document.getElementById('r-prob-bar').style.width  = (p1.dailyProb * 100) + '%';
+    const uNote = p1.hasAll ? '（部件卡＋套装卡）' : '（部件卡）';
+    document.getElementById('r-prob-detail').innerHTML =
+      `卡池共 <strong>${p1.N}</strong> 张卡 &nbsp;·&nbsp; 其中目标卡 <strong>${p1.u}</strong> 张${uNote} &nbsp;·&nbsp; 每天平均翻到目标卡 <strong>${p1.expUseful.toFixed(2)} 张</strong>`;
+  }
+
+  // ── Strategy table ──
+  animateCount(document.getElementById('r-strat-days'), p1.mcParts.p50, 1200, v => Math.round(v).toString());
+  document.getElementById('r-strat-body').innerHTML = stratRowsHTML(p1);
+
+  // ── Cost & feasibility ──
+  document.getElementById('r-cost').textContent = totalCost;
+  document.getElementById('r-income').textContent = Math.round(incomeAtD);
+  document.getElementById('r-income-detail').textContent =
+    `颗（当前余额 ${balance} ＋ ${D} 天收入 ${daily * D}）`;
+  {
+    const feas = document.getElementById('r-feas');
+    if (incomeAtD >= totalCost) {
+      const surplus = Math.round(incomeAtD - totalCost);
+      feas.className = 'feas-box feas-ok';
+      feas.innerHTML = `✅ 许愿星充足。全部目标约 ${D} 天集齐，届时累计获得星 ${Math.round(incomeAtD)} 颗，完成后余 <strong>${surplus} 颗</strong>。`;
+    } else {
+      const gap = Math.ceil(totalCost - incomeAtD);
+      feas.className = 'feas-box feas-warn';
+      feas.innerHTML = `⚠️ 略有缺口 <strong>${gap} 颗</strong>，按每天 ${daily} 颗，约需额外 <strong>${Math.ceil(gap/daily)} 天</strong>补足（或活动额外产出补充）。`;
+    }
+  }
+
+  // ── Tips ──
+  {
+    if (!isCase2) {
+      document.getElementById('r-tips').innerHTML = buildStrategyPanels(p1Targets, today);
+    } else {
+      document.getElementById('r-tips').innerHTML = buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today);
+    }
+  }
+
+  // ── Phase 2 section (Case 3) ──
+  {
+    const p2section = document.getElementById('r-phase2-section');
+    if (isCase3 && p2) {
+      const nearFmt   = nearDate.slice(5).replace('-','/');
+      const nearTheme = SUITS.find(x=>x.id===nearTargets[0].suitId).theme;
+      const p1Done    = p1.mcMixed.mean;
+      const actualWait = Math.max(0, waitDays - p1Done); // extra wait after Phase 1
+      let farWarning = '';
+      if (farTargets.length > 0) {
+        const farNames = farTargets.map(t=>SUITS.find(x=>x.id===t.suitId).sub).join('、');
+        farWarning = `<div class="warn-banner" style="margin-bottom:12px">⚠️ 入池后目标跨多个主题，仅展示最近一期【${nearTheme}（${nearFmt}）】的预估结果。【${farNames}】请届时重新规划。</div>`;
+      }
+      const p2uNote = p2.hasAll ? '（部件卡＋套装卡）' : '（部件卡）';
+      const dividerNote = actualWait > 0
+        ? `完成当前目标后，再等 ${actualWait} 天入池`
+        : `当前目标完成时，「${nearTheme}」已入池`;
+      // Phase 2 tips
+      const p2tips = [];
+      if (p2.hasAll) {
+        const gain = p2.mcParts.mean > 0
+          ? Math.round((p2.mcParts.mean - p2.mcMixed.mean) / p2.mcParts.mean * 100) : 0;
+        p2tips.push(`🎴 <strong>套装卡策略：</strong>混合策略平均可快 <strong>${gain}%（约节省 ${p2.mcParts.mean - p2.mcMixed.mean} 天）</strong>。`);
+      }
+      p2section.innerHTML = `
+        <div class="phase-divider">「${nearTheme}」${nearFmt} 入池 · ${dividerNote}</div>
+        <div class="phase-label">🔮 入池后阶段目标（预估，${nearFmt} 起）</div>
+        ${farWarning}
+        <div class="result-card">
+          <div class="result-card-title">📊 入池当天命中率预估（${nearFmt} 卡池）</div>
+          <div class="prob-row">
+            <span class="big-num gold-color">${(p2.dailyProb*100).toFixed(1)}%</span>
+            <span class="big-unit">翻到至少 1 张目标卡的概率</span>
+          </div>
+          <div class="prog-wrap"><div class="prog-bar" style="width:${(p2.dailyProb*100).toFixed(1)}%"></div></div>
+          <div class="prob-detail">卡池共 <strong>${p2.N}</strong> 张卡 &nbsp;·&nbsp; 其中目标卡 <strong>${p2.u}</strong> 张${p2uNote} &nbsp;·&nbsp; 每天平均翻到目标卡 <strong>${p2.expUseful.toFixed(2)} 张</strong></div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 基于当前持有状态保守估算，不含等待期间的购买行为，实际入池时命中率可能更高。</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-title">⏱️ 入池后集齐时间预估（3000 次随机模拟）</div>
+          <div class="notice" style="margin-bottom:12px">从 ${nearFmt} 入池当天起算，不含入池前的等待天数。</div>
+          <table class="strat-table">
+            <thead><tr><th>策略</th><th>平均天数</th><th>正常进度</th><th>非酋保底</th></tr></thead>
+            <tbody>${stratRowsHTML(p2)}</tbody>
+          </table>
+        </div>
+        ${p2tips.length ? `<div class="result-card"><div class="result-card-title">💡 策略建议</div>${p2tips.map(t=>`<div class="tip-box">${t}</div>`).join('')}</div>` : ''}
+      `;
+      p2section.classList.remove('hidden');
+    } else {
+      p2section.innerHTML = '';
+      p2section.classList.add('hidden');
+    }
+  }
+
+  // Scroll to results on mobile
+  if (window.innerWidth < 860) {
+    document.getElementById('right-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ════════════════════════════════════════════════════
+// UI: OWNED LIST
+// ════════════════════════════════════════════════════
+
+function renderOwnedList() {
+  const el = document.getElementById('owned-list');
+  el.innerHTML = '';
+  const today = todayStr();
+  for (let i = 0; i < THEMES_RAW.length; i++) {
+    const th = THEMES_RAW[i];
+    if (th.suspended) continue;
+    const inPool = th.date <= today;
+    const wrap = document.createElement('div');
+    wrap.className = 'theme-group';
+    const dateStr = th.date.slice(5).replace('-','/');
+    const pendingBadge = inPool ? '' : `<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);margin-left:4px">待入池</span>`;
+    wrap.innerHTML = `
+      <div class="theme-hdr" onclick="toggleBody(this)">
+        <span class="theme-toggle">▼</span>
+        <span class="theme-hdr-name">${th.theme}</span>
+        <span class="theme-hdr-date">${dateStr}</span>
+        ${pendingBadge}
+        <button id="thbtn-${i}" class="theme-all-btn" onclick="event.stopPropagation();setThemeAllFull('${th.theme}')">全 ${th.suits.length} 套已集齐</button>
+        <span class="theme-hdr-count">${th.suits.length} 套</span>
+      </div>
+      <div class="theme-body"></div>
+    `;
+    const body = wrap.querySelector('.theme-body');
+    for (const raw of th.suits) {
+      const s = SUITS.find(x => x.id === raw.id);
+      const row = document.createElement('div');
+      row.className = 'suit-row';
+      if (!inPool) row.style.opacity = '0.7';
+      const rarityLabel = s.rarity==='gold'?'金色·195':'紫色·98';
+      const pendingSuitTag = inPool ? '' : `<span style="font-size:10px;color:var(--amber);margin-left:4px">待入池</span>`;
+      const altBadge = ALTS.has(s.sub) ? '<span class="alt-badge">有异色</span>' : '';
+      row.innerHTML = `
+        <div class="suit-hdr">
+          <div class="suit-img"><span>🖼️</span>图片</div>
+          <div class="suit-name-wrap">
+            <div class="suit-name">${s.sub}${pendingSuitTag}</div>
+            <span class="rarity-tag ${s.rarity}">${rarityLabel}</span>${altBadge}
+          </div>
+        </div>
+        <div class="own-sel">
+          <button class="own-btn on-none" data-sid="${s.id}" data-state="none"  onclick="setOwn('${s.id}','none')">未持有</button>
+          <button class="own-btn"          data-sid="${s.id}" data-state="part"  onclick="setOwn('${s.id}','part')">持有部分</button>
+          <button class="own-btn"          data-sid="${s.id}" data-state="full"  onclick="setOwn('${s.id}','full')">已集齐</button>
+        </div>
+        <div class="parts-grid" id="og-${s.id}" style="display:none">
+          ${PART_NAMES.map(p=>`
+            <button class="part-btn" id="op-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleOwnPart('${s.id}','${p}')">
+              ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+      body.appendChild(row);
+    }
+    el.appendChild(wrap);
+  }
+}
+
+function setThemeAllFull(themeName) {
+  const th = THEMES_RAW.find(t => t.theme === themeName);
+  if (!th) return;
+  const allFull = th.suits.every(raw => st.fullOwned.has(raw.id));
+  const newState = allFull ? 'none' : 'full';
+  for (const raw of th.suits) setOwn(raw.id, newState);
+  updateThemeAllBtn(themeName);
+}
+
+function updateThemeAllBtn(themeName) {
+  const idx = THEMES_RAW.findIndex(t => t.theme === themeName);
+  if (idx < 0) return;
+  const btn = document.getElementById('thbtn-' + idx);
+  if (!btn) return;
+  const th = THEMES_RAW[idx];
+  const allFull = th.suits.every(raw => st.fullOwned.has(raw.id));
+  btn.classList.toggle('on', allFull);
+}
+
+// ════════════════════════════════════════════════════
+// UI: TARGET LIST
+// ════════════════════════════════════════════════════
+
+function renderTargetList() {
+  const el = document.getElementById('target-list');
+  el.innerHTML = '';
+  const today = todayStr();
+
+  // Split suits into uncollected and fully-collected
+  const uncollected = [];
+  const collected   = [];
+  for (const th of THEMES_RAW) {
+    if (th.suspended) continue;
+    for (const raw of th.suits) {
+      const s = SUITS.find(x => x.id === raw.id);
+      if (st.fullOwned.has(s.id)) collected.push({ s, th });
+      else                         uncollected.push({ s, th });
+    }
+  }
+
+  // Flat list: uncollected suits (no collapsible)
+  if (uncollected.length === 0) {
+    const done = document.createElement('div');
+    done.className = 'notice';
+    done.textContent = '🎉 全部套装均已集齐，无需设定目标！';
+    el.appendChild(done);
+  } else {
+    for (const { s, th } of uncollected) {
+      el.appendChild(buildTargetRow(s, th, th.date <= today));
+    }
+  }
+
+  // Already-collected section at bottom — collapsible
+  if (collected.length > 0) {
+    const list = document.createElement('div');
+    list.style.display = 'none';
+
+    for (const { s, th } of collected) {
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:12px;color:var(--text-muted);border-radius:6px;';
+      item.innerHTML = `
+        <span style="flex-shrink:0">✅</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.sub}</span>
+        <span class="rarity-tag ${s.rarity}" style="font-size:9px">${s.rarity==='gold'?'金':'紫'}</span>
+        <span style="font-size:10px;color:var(--text-dim);flex-shrink:0">${th.theme}</span>
+      `;
+      list.appendChild(item);
+    }
+
+    const arrow = document.createElement('span');
+    arrow.textContent = '▶';
+    arrow.style.cssText = 'font-size:9px;transition:transform 0.2s;display:inline-block;margin-right:4px;';
+
+    const sep = document.createElement('div');
+    sep.className = 'target-section-label';
+    sep.style.cssText += ';cursor:pointer;display:flex;align-items:center;user-select:none;';
+    sep.appendChild(arrow);
+    sep.appendChild(document.createTextNode(`已集齐 ${collected.length} 套（无需设为目标，点击展开）`));
+    sep.onclick = () => {
+      const open = list.style.display !== 'none';
+      list.style.display = open ? 'none' : 'block';
+      arrow.style.transform = open ? '' : 'rotate(90deg)';
+    };
+
+    el.appendChild(sep);
+    el.appendChild(list);
+  }
+
+  updateTargetSelCount();
+}
+
+function buildTargetRow(s, th, inPool) {
+  const prev       = st.targets[s.id];
+  const isSelected = prev === 'ALL' || (prev instanceof Set);
+  const isAll      = prev === 'ALL' || prev === undefined;
+
+  const row = document.createElement('div');
+  row.className = 'target-row' + (isSelected ? ' selected' : '');
+  row.id = 'tr-' + s.id;
+  if (!inPool) row.style.opacity = '0.7';
+
+  row.innerHTML = `
+    <div class="target-hdr">
+      <input type="checkbox" class="target-cb" id="tc-${s.id}"
+        ${isSelected ? 'checked' : ''}
+        onchange="toggleTarget('${s.id}', this.checked)">
+      <label class="target-name" for="tc-${s.id}">${s.sub}</label>
+      <span class="rarity-tag ${s.rarity}">${s.rarity==='gold'?'金':'紫'}</span>
+      ${!inPool ? `<span style="font-size:10px;color:var(--amber)">待入池</span>` : ''}
+      <button class="all-tag ${isAll ? 'on' : ''}" id="ta-${s.id}" onclick="toggleAllTag('${s.id}')">整套</button>
+    </div>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;padding-left:22px">${th.theme}</div>
+    <div class="parts-grid" id="tg-${s.id}" style="display:${isSelected && !isAll ? 'grid' : 'none'};margin-top:8px">
+      ${PART_NAMES.map(p => {
+        const targeted = prev instanceof Set && prev.has(p);
+        return `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleTargetPart('${s.id}','${p}')">
+          ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  return row;
+}
+
+// ════════════════════════════════════════════════════
+// UI: TARGET INTERACTIONS
+// ════════════════════════════════════════════════════
+
+function updateTargetSelCount() {
+  const count = Object.values(st.targets).filter(v => v && (v === 'ALL' || (v instanceof Set && v.size > 0))).length;
+  const el = document.getElementById('target-sel-count');
+  if (el) el.textContent = `已选 ${count} 套`;
+}
+
+function selectAllTargets() {
+  for (const s of SUITS) {
+    if (st.fullOwned.has(s.id)) continue;
+    st.targets[s.id] = 'ALL';
+    const row = document.getElementById('tr-' + s.id);
+    if (!row) continue;
+    row.classList.add('selected');
+    const cb = document.getElementById('tc-' + s.id);
+    if (cb) cb.checked = true;
+    const ta = document.getElementById('ta-' + s.id);
+    if (ta) ta.classList.add('on');
+    const tg = document.getElementById('tg-' + s.id);
+    if (tg) tg.style.display = 'none';
+  }
+  updatePoolStats();
+  updateTargetSelCount();
+}
+
+function clearAllTargets() {
+  for (const sid of Object.keys(st.targets)) {
+    st.targets[sid] = undefined;
+    const row = document.getElementById('tr-' + sid);
+    if (!row) continue;
+    row.classList.remove('selected');
+    const cb = document.getElementById('tc-' + sid);
+    if (cb) cb.checked = false;
+    const tg = document.getElementById('tg-' + sid);
+    if (tg) {
+      tg.style.display = 'none';
+      tg.querySelectorAll('.part-btn').forEach(b => b.className = 'part-btn');
+    }
+  }
+  updatePoolStats();
+  updateTargetSelCount();
+}
+
+function toggleTarget(sid, checked) {
+  const row = document.getElementById('tr-' + sid);
+  if (checked) {
+    st.targets[sid] = 'ALL';
+    row.classList.add('selected');
+    document.getElementById('ta-' + sid).classList.add('on');
+    document.getElementById('tg-' + sid).style.display = 'none';
+  } else {
+    st.targets[sid] = undefined;
+    row.classList.remove('selected');
+    document.getElementById('tg-' + sid).style.display = 'none';
+    document.querySelectorAll(`#tg-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
+  }
+  updatePoolStats();
+  updateTargetSelCount();
+}
+
+function toggleAllTag(sid) {
+  const cb = document.getElementById('tc-' + sid);
+  if (!cb.checked) return;
+  const tag = document.getElementById('ta-' + sid);
+  const grid = document.getElementById('tg-' + sid);
+  const isAll = tag.classList.contains('on');
+  if (isAll) {
+    // Switch to partial
+    tag.classList.remove('on');
+    grid.style.display = 'grid';
+    st.targets[sid] = new Set();
+  } else {
+    // Switch back to all
+    tag.classList.add('on');
+    grid.style.display = 'none';
+    st.targets[sid] = 'ALL';
+    document.querySelectorAll(`#tg-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
+  }
+  updatePoolStats();
+}
+
+function toggleTargetPart(sid, part) {
+  if (!st.targets[sid] || st.targets[sid] === 'ALL') return;
+  const btn = document.getElementById(`tp-${sid}-${part}`);
+  if (st.targets[sid].has(part)) {
+    st.targets[sid].delete(part);
+    btn.className = 'part-btn';
+  } else {
+    st.targets[sid].add(part);
+    btn.className = 'part-btn target';
+  }
+  maybeLiveRefreshStrategy();
+}
+
+// ════════════════════════════════════════════════════
+// UI: OWNED INTERACTIONS
+// ════════════════════════════════════════════════════
+
+function setOwn(sid, state) {
+  document.querySelectorAll(`[data-sid="${sid}"][data-state]`).forEach(b => {
+    b.className = 'own-btn' + (b.dataset.state === state ? ` on-${state}` : '');
+  });
+  const grid = document.getElementById('og-' + sid);
+
+  if (state === 'none') {
+    st.owned[sid] = new Set();
+    st.fullOwned.delete(sid);
+    grid.style.display = 'none';
+  } else if (state === 'part') {
+    st.owned[sid] = new Set();
+    st.fullOwned.delete(sid);
+    grid.style.display = 'grid';
+    document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
+  } else {
+    st.owned[sid] = new Set(PART_NAMES);
+    st.fullOwned.add(sid);
+    st.targets[sid] = undefined; // no point targeting a fully-owned suit
+    grid.style.display = 'none';
+    document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn on');
+  }
+  updatePoolStats();
+  const sData = SUITS.find(x => x.id === sid);
+  if (sData) updateThemeAllBtn(sData.theme);
+}
+
+function toggleOwnPart(sid, part) {
+  if (!st.owned[sid]) st.owned[sid] = new Set();
+  const btn = document.getElementById(`op-${sid}-${part}`);
+  if (st.owned[sid].has(part)) {
+    st.owned[sid].delete(part);
+    btn.className = 'part-btn';
+  } else {
+    st.owned[sid].add(part);
+    btn.className = 'part-btn on';
+  }
+  updatePoolStats();
+}
+
+// ════════════════════════════════════════════════════
+// UI: TIMELINE
+// ════════════════════════════════════════════════════
+
+function renderTimeline() {
+  const track = document.getElementById('timelineTrack');
+  const today = todayStr();
+  let cumCards = 0;
+  for (const th of THEMES_RAW) {
+    const cards = th.suits.length * 7;
+    const inPool = th.date <= today;
+    if (inPool) cumCards += cards;
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    const dt = th.date.slice(5).replace('-','/');
+    if (inPool) {
+      item.innerHTML = `
+        <div class="tl-date">${dt}</div>
+        <div class="tl-name">${th.theme}</div>
+        <div class="tl-count">+${cards} 张 · 累计 ${cumCards}</div>
+      `;
+    } else {
+      item.style.opacity = '0.55';
+      item.style.borderStyle = 'dashed';
+      item.innerHTML = `
+        <div class="tl-date">${dt}</div>
+        <div class="tl-name">${th.theme}</div>
+        <div class="tl-count" style="color:var(--amber)">待入池 · +${cards} 张</div>
+      `;
+    }
+    track.appendChild(item);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// UI: POOL OVERVIEW THEME LIST
+// ════════════════════════════════════════════════════
+
+function renderPoolThemes() {
+  const el = document.getElementById('pool-theme-list');
+  for (const th of THEMES_RAW) {
+    const div = document.createElement('div');
+    div.className = 'theme-summary';
+    const dateStr = th.date.slice(5).replace('-', '/');
+    const tagCls  = th.direct ? 'theme-direct-yes' : 'theme-direct-no';
+    const tagTxt  = th.direct ? '直接入池' : '月刊下架后入池';
+    const chips = th.suits.map(s => `
+      <div class="suit-card-wrap">
+        <button class="suit-chip ${s.rarity} open" onclick="toggleSuitPreview(this)">${s.sub}</button>
+        <div class="suit-preview-drawer open">
+          <img src="assets/images/suit/${s.sub}.png" alt="${s.sub}" onclick="openLightbox(this.src,this.alt)">
+        </div>
+      </div>`).join('');
+    div.innerHTML = `
+      <div class="theme-summary-hdr">
+        <span class="theme-summary-name">${th.theme}</span>
+        <span class="theme-summary-date">${dateStr} 入池</span>
+        <span class="${tagCls}">${tagTxt}</span>
+        <button class="theme-expand-btn" onclick="toggleThemeAllPreviews(this)">收起全部</button>
+      </div>
+      <div class="theme-suits-chips">${chips}</div>
+    `;
+    el.appendChild(div);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════
+
+function toggleSuitPreview(btn) {
+  const drawer = btn.nextElementSibling;
+  const isOpen = drawer.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+
+function toggleThemeAllPreviews(btn) {
+  const card    = btn.closest('.theme-summary');
+  const drawers = card.querySelectorAll('.suit-preview-drawer');
+  const chips   = card.querySelectorAll('.suit-chip');
+  const allOpen = [...drawers].every(d => d.classList.contains('open'));
+  drawers.forEach(d => d.classList.toggle('open', !allOpen));
+  chips.forEach(c => c.classList.toggle('open', !allOpen));
+  btn.textContent = allOpen ? '展开全部' : '收起全部';
+}
+
+function toggleBody(hdr) {
+  const body   = hdr.nextElementSibling;
+  const toggle = hdr.querySelector('.theme-toggle');
+  const open   = body.style.display !== 'none' && body.style.display !== '';
+  body.style.display  = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+function updatePoolStats() {
+  const today = todayStr();
+  const N = poolSize(st.owned, st.fullOwned);
+  const activeSuits = SUITS.filter(s =>
+    !st.fullOwned.has(s.id) && s.enterDate <= today
+  ).length;
+  document.getElementById('stat-n').textContent = N;
+  document.getElementById('stat-suits').textContent = activeSuits;
+  maybeLiveRefreshStrategy();
+  saveState();
+}
+
+// ════════════════════════════════════════════════════
+// PERSISTENCE (localStorage)
+// ════════════════════════════════════════════════════
+
+const _SAVE_KEY = 'luoke_planner_v1';
+
+function saveState() {
+  try {
+    const data = {
+      owned:     {},
+      fullOwned: [...st.fullOwned],
+      targets:   {},
+      balance:   document.getElementById('star-balance')?.value ?? '0',
+      daily:     document.getElementById('daily-income')?.value ?? '25',
+    };
+    for (const [sid, parts] of Object.entries(st.owned)) {
+      if (parts && parts.size > 0) data.owned[sid] = [...parts];
+    }
+    for (const [sid, tval] of Object.entries(st.targets)) {
+      if (tval === 'ALL') data.targets[sid] = 'ALL';
+      else if (tval instanceof Set && tval.size > 0) data.targets[sid] = [...tval];
+    }
+    localStorage.setItem(_SAVE_KEY, JSON.stringify(data));
+  } catch(e) { /* 无痕模式等场景不支持 localStorage，静默忽略 */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(_SAVE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+
+    for (const [sid, parts] of Object.entries(data.owned || {})) {
+      st.owned[sid] = new Set(parts);
+    }
+    st.fullOwned = new Set(data.fullOwned || []);
+    for (const [sid, tval] of Object.entries(data.targets || {})) {
+      if (tval === 'ALL')           st.targets[sid] = 'ALL';
+      else if (Array.isArray(tval)) st.targets[sid] = new Set(tval);
+    }
+
+    const balEl = document.getElementById('star-balance');
+    const dlyEl = document.getElementById('daily-income');
+    if (balEl && data.balance != null) balEl.value = data.balance;
+    if (dlyEl && data.daily  != null) dlyEl.value = data.daily;
+
+    return true;
+  } catch(e) { return false; }
+}
+
+// renderOwnedList 每次都从头渲染（按钮默认全 none），
+// loadState 恢复了 st 之后需要把视觉状态补回来
+function applyOwnedDom(sid) {
+  const isFull = st.fullOwned.has(sid);
+  const ownedP = st.owned[sid];
+  const state   = isFull ? 'full' : (ownedP && ownedP.size > 0 ? 'part' : 'none');
+  if (state === 'none') return;
+
+  document.querySelectorAll(`[data-sid="${sid}"][data-state]`).forEach(b => {
+    b.className = 'own-btn' + (b.dataset.state === state ? ` on-${state}` : '');
+  });
+  const grid = document.getElementById('og-' + sid);
+  if (!grid) return;
+
+  if (state === 'part') {
+    grid.style.display = 'grid';
+    for (const p of PART_NAMES) {
+      const btn = document.getElementById(`op-${sid}-${p}`);
+      if (btn) btn.className = 'part-btn' + (ownedP && ownedP.has(p) ? ' on' : '');
+    }
+  } else {
+    grid.querySelectorAll('.part-btn').forEach(b => b.className = 'part-btn on');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+
+const _hadSaved = loadState();   // 先恢复 st，再渲染
+renderOwnedList();
+if (_hadSaved) {
+  // renderOwnedList 总是以 none 状态渲染按钮，需手动补回视觉状态
+  for (const s of SUITS) applyOwnedDom(s.id);
+  for (const th of THEMES_RAW) updateThemeAllBtn(th.theme);
+}
+renderTargetList();
+renderTimeline();
+renderPoolThemes();
+updatePoolStats();
+
+// All theme bodies collapsed by default
+document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
+
+// ── Lightbox ──
+function openLightbox(src, alt) {
+  const lb = document.getElementById('lightbox');
+  const img = lb.querySelector('.lightbox-inner img');
+  img.src = src;
+  img.alt = alt || '';
+  lb.classList.add('open');
+  document.addEventListener('keydown', _lbKey);
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.removeEventListener('keydown', _lbKey);
+}
+function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
+</script>
+
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-inner" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img src="" alt="">
+  </div>
+</div>
+</body>
+</html>
