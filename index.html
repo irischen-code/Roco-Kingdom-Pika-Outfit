@@ -68,6 +68,8 @@
       font-display: swap;
     }
 
+    html { scrollbar-gutter: stable; }
+
     *, *::before, *::after {
       box-sizing: border-box; margin: 0; padding: 0;
       font-family: 'LuokeFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
@@ -134,6 +136,11 @@
       font-weight: 700;
       box-shadow: none;
     }
+    .nav-tab .tab-icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 5px; }
+    .nav-tab .tab-icon-on  { display: none; }
+    .nav-tab .tab-icon-off { display: inline; }
+    .nav-tab.active .tab-icon-on  { display: inline; }
+    .nav-tab.active .tab-icon-off { display: none; }
 
     .header-badges { display: flex; gap: 6px; margin-left: auto; }
     .badge {
@@ -146,6 +153,7 @@
       color: #313131;
       white-space: nowrap;
     }
+    .badge-short { display: none; }
     /* ── Two-column layout ── */
     .layout { display: flex; gap: 12px; padding: 12px; min-height: calc(100vh - 56px); background: #FBC839; }
     .left-column { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 56px; height: calc(100vh - 56px - 24px); align-self: flex-start; overflow: hidden; }
@@ -154,7 +162,7 @@
     @media (max-width: 860px) {
       .layout { flex-direction: column; }
       .left-column { width: 100%; position: static; height: auto; align-self: auto; overflow: visible; }
-      .right-panel  { overflow-y: visible; }
+      .right-panel { overflow-y: visible; }
     }
 
     /* ── Pool stats card ── */
@@ -255,6 +263,10 @@
 
     /* ── Step pane ── */
     .step-pane { padding: 12px 16px; flex: 1; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+    @media (max-width: 860px) {
+      .left-panel { overflow: visible; height: auto; }
+      .step-pane  { overflow-y: visible; overflow-x: visible; flex: none; overscroll-behavior: auto; }
+    }
 
     /* ── Step bottom nav ── */
     .step-nav-btns {
@@ -326,15 +338,7 @@
     .theme-hdr:hover { background: #E3DAC8; }
     .theme-hdr-name { font-weight: 700; font-size: 13px; color: #313131; }
     .theme-hdr-date { font-size: 11px; color: #97938C; }
-    .theme-hdr-count {
-      margin-left: auto;
-      font-size: 11px; font-weight: 700;
-      background: #313131;
-      border-radius: 20px; padding: 2px 10px;
-      color: #FBF7EE;
-      flex-shrink: 0;
-    }
-    .theme-toggle { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
+.theme-toggle { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
     .theme-toggle.open { transform: rotate(180deg); }
     .theme-body { padding: 6px 0 0 0; display: none; }
 
@@ -391,6 +395,11 @@
     .part-btn:hover { background: #BDB3A8; }
     .part-btn.on     { background: #FBC839; border: none; color: #313131; font-weight: 600; }
     .part-btn.target { background: #9A73F9; border: none; color: #FBF7EE; font-weight: 600; }
+    .part-btn:disabled, .part-btn[disabled] {
+      background: #E8E4DC; color: #B5AFA8;
+      cursor: not-allowed; opacity: 0.6;
+    }
+    .part-btn:disabled:hover, .part-btn[disabled]:hover { background: #E8E4DC; }
 
     /* ── Target section ── */
     .target-row {
@@ -584,6 +593,11 @@
     .prog-wrap { height: 8px; background: #E3DAC8; border-radius: 99px; overflow: hidden; }
     .prog-bar  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #FBC839, #F0AA5E); transition: width 0.6s ease; }
     .prob-detail { margin-top: 10px; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+    #r-prob-detail strong { font-size: 15px; color: var(--text); font-weight: 600; }
+    .strat-note strong, .strat-desc strong, .strat-diag-hook strong,
+    .strat-account-row strong, .strat-tip-item strong, .strat-alert-row strong {
+      font-size: 15px; color: var(--text); font-weight: 600;
+    }
 
     /* ── Strategy table ── */
     .strat-table { width: 100%; border-collapse: collapse; }
@@ -613,8 +627,8 @@
     .cost-num   { font-size: 28px; font-weight: 800; }
     .cost-unit  { font-size: 11px; color: #313131; margin-top: 2px; }
     .feas-box { border-radius: 9px; padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.6; }
-    .feas-ok   { background: var(--green-bg);  border: 1px solid var(--green-border);  color: var(--green); }
-    .feas-warn { background: var(--amber-bg);  border: 1px solid var(--amber-border);  color: var(--amber); }
+    .feas-ok   { background: rgba(251,200,57,0.13); border: 1.5px solid #FBC839; color: #313131; }
+    .feas-warn { background: rgba(251,200,57,0.13); border: 1.5px solid #FBC839; color: #313131; }
     .feas-bad  { background: var(--red-bg);    border: 1px solid var(--red-border);    color: var(--red); }
 
     /* ── Tips ── */
@@ -832,107 +846,376 @@
     }
     .lightbox-close:hover { background: #555; }
 
+    /* ── 更新日志弹窗 ── */
+    .changelog-modal {
+      display: none;
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(30,26,50,0.82);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .changelog-modal.open { display: flex; animation: lb-in 0.22s ease; }
+    .changelog-inner {
+      background: #FBF7EE;
+      border: 1.5px solid #313131;
+      border-radius: 20px;
+      width: 460px;
+      max-width: 92vw;
+      max-height: 82vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: lb-scale-in 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative;
+    }
+    .cl-header {
+      padding: 16px 20px 14px;
+      border-bottom: 1.5px solid #e8dfc8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .cl-header-left { display: flex; align-items: center; gap: 10px; }
+    .cl-header-title { font-size: 15px; font-weight: 700; color: #313131; }
+    .cl-header-sub { font-size: 11px; color: var(--text-muted); }
+    .cl-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #313131; color: #FBF7EE;
+      border: none; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .cl-close:hover { background: #555; }
+    .cl-body {
+      overflow-y: auto;
+      padding: 18px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .cl-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 18px;
+    }
+    .cl-block + .cl-block {
+      padding-top: 18px;
+      border-top: 1px solid #e8dfc8;
+    }
+    .cl-version-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cl-badge {
+      font-size: 11px; font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 6px;
+      background: #FBC839; color: #313131;
+      white-space: nowrap;
+    }
+    .cl-badge.latest {
+      background: #313131; color: #FBF7EE;
+    }
+    .cl-date { font-size: 11px; color: var(--text-muted); }
+    .cl-tag-current {
+      font-size: 10px; font-weight: 600;
+      background: rgba(124,58,237,0.12); color: #7c3aed;
+      padding: 1px 7px; border-radius: 10px;
+    }
+    .cl-items { display: flex; flex-direction: column; gap: 5px; }
+    .cl-item {
+      font-size: 12.5px; color: #313131; line-height: 1.55;
+      display: flex; gap: 7px;
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    }
+    .cl-item::before {
+      content: '·';
+      color: #FBC839; font-weight: 700; font-size: 16px;
+      line-height: 1.2; flex-shrink: 0;
+    }
+
+    /* ── 右侧悬浮倒计时面板 ── */
+    /* tab 是唯一锚点，content 绝对定位向左展开 */
+    #countdown-panel {
+      position: fixed;
+      right: var(--sb-w, 0px);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 900;
+      user-select: none;
+    }
+    .cp-tab {
+      width: 28px;
+      background: #313131;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 0;
+      cursor: pointer;
+      border-radius: 10px 0 0 10px;
+      box-shadow: -3px 0 12px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 1;
+    }
+    .cp-tab:hover { background: #444; }
+    .cp-tab-icon {
+      width: 13px;
+      height: 13px;
+      object-fit: contain;
+    }
+    .cp-tab-text {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font-size: 9px;
+      color: #FBF7EE;
+      letter-spacing: 0px;
+      font-weight: 600;
+    }
+    /* 内容面板：紧贴屏幕右边缘，展开时覆盖黑色把手 */
+    .cp-content {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      overflow: hidden;
+      transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+      background: #FFFDF5;
+      border-radius: 10px 0 0 10px;
+      box-shadow: -4px 0 18px rgba(0,0,0,0.15);
+      z-index: 2;
+    }
+    #countdown-panel.open .cp-content { width: 220px; }
+    @media (hover: hover) {
+      #countdown-panel:hover .cp-content { width: 220px; }
+    }
+    .cp-inner {
+      min-width: 200px;
+      padding: 14px 13px;
+    }
+    .cp-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #313131;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e8dfc8;
+      font-family: 'LuokeFont', 'PingFang SC', sans-serif;
+      white-space: nowrap;
+    }
+    .cp-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0e8d8;
+    }
+    .cp-item:last-child { border-bottom: none; }
+    .cp-theme {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #313131;
+      white-space: nowrap;
+    }
+    .cp-date {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .cp-timer {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #F0AA5E;
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    .cp-tab-text {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font-size: 9px;
+      color: #FBF7EE;
+      letter-spacing: 0px;
+      font-weight: 600;
+    }
+
     /* ══════════════════════════════════════════
        手机端适配 (≤ 600px)
     ══════════════════════════════════════════ */
     @media (max-width: 600px) {
-      /* 顶部导航栏 */
-      .header { padding: 0 10px; gap: 8px; height: 52px; }
+      /* ── 顶部导航栏 ── */
+      .header { padding: 0 10px; gap: 6px; height: 52px; }
       body { padding-top: 52px; }
       .header-icon { width: 24px; height: 24px; }
-      .header h1 { font-size: 12px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .header-badges { display: none; }
-      .nav-tab { padding: 5px 10px; font-size: 12px; }
+      .header h1 { font-size: 11px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* 移动端只保留"数据快照"徽章，隐藏"37套"徽章 */
+      .header-badges { margin-left: auto; gap: 4px; display: flex; }
+      .header-badges .badge { font-size: 10px; padding: 2px 7px; }
+      .header-badges .badge:last-child { display: none; }
+      .badge-long { display: none; }
+      .badge-short { display: inline; }
+      .nav-tab { padding: 5px 9px; font-size: 11px; }
+      .nav-tab .tab-icon { width: 15px !important; height: 15px !important; margin-right: 3px !important; }
 
-      /* 整体布局间距 */
+      /* ── 整体布局 ── */
       .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); }
+      .right-panel { padding: 8px; gap: 8px; }
       .pool-stats-card { padding: 8px; gap: 6px; }
-      .ps-lbl { font-size: 10px; width: 72px; }
+      .ps-lbl { font-size: 10px; width: 70px; }
       .ps-val { font-size: 17px; }
 
-      /* 步骤标签栏 */
+      /* ── 步骤标签栏 ── */
       .step-tabs { padding: 8px 10px; }
       .step-tab { font-size: 11px; padding: 6px 2px; gap: 3px; }
       .step-connector { min-width: 4px; margin: 0 2px; }
       .step-num { width: 18px; height: 18px; font-size: 10px; }
 
-      /* 步骤内容区 */
+      /* ── 步骤内容区 ── */
       .step-pane { padding: 10px 12px; }
 
-      /* 步骤底部按钮 */
+      /* ── 步骤底部按钮 ── */
       .step-nav-btns { padding: 10px 12px; gap: 6px; }
       .step-nav-btn { font-size: 12px; padding: 10px 6px; border-radius: 10px; }
       .step-nav-btn.primary { font-size: 13px; }
 
-      /* 卡片 */
+      /* ── 卡片 ── */
       .card { padding: 12px; margin-bottom: 8px; }
       .card-title { font-size: 14px; }
 
-      /* 套装行 */
+      /* ── 步骤1 已持有：套装行 ── */
       .suit-hdr { gap: 8px; }
       .suit-img { width: 42px; height: 42px; font-size: 11px; }
       .suit-name { font-size: 12px; }
       .rarity-tag { font-size: 10px; }
-      .own-btn { padding: 5px 6px; font-size: 10px; }
-      .parts-grid { grid-template-columns: repeat(3,1fr); gap: 3px; }
-      .part-btn { font-size: 9px; padding: 4px 2px; }
+      .own-btn { padding: 5px 6px; font-size: 10px; min-height: 32px; }
+      .parts-grid { grid-template-columns: repeat(3, 1fr); gap: 3px; }
+      .part-btn { font-size: 9px; padding: 5px 2px; min-height: 34px; }
 
-      /* 目标列表 */
+      /* ── 步骤2 目标套装 ── */
+      .target-toolbar { flex-wrap: wrap; gap: 6px; }
       .target-row { padding: 8px 10px; }
+      .target-hdr { flex-wrap: wrap; gap: 4px; }
       .target-name { font-size: 12px; }
-      .all-tag { font-size: 10px; padding: 2px 6px; }
+      .all-tag { font-size: 10px; padding: 3px 8px; min-height: 28px; }
+      .target-cb { width: 16px; height: 16px; }
 
-      /* 资源输入 */
+      /* ── 步骤3 资源输入 ── */
       .res-label { width: 68px; font-size: 12px; }
       .res-input { padding: 8px 10px; font-size: 13px; }
       .res-unit { font-size: 11px; width: 38px; }
       .calc-btn { padding: 13px; font-size: 14px; }
 
-      /* 结果卡片 */
-      .result-card { padding: 14px 12px; border-radius: 12px; }
-      .result-card-title { font-size: 12px; margin-bottom: 12px; gap: 6px; }
+      /* ── 结果卡片 ── */
+      .result-card { padding: 12px 12px; border-radius: 12px; }
+      .result-card-title { font-size: 12px; margin-bottom: 10px; gap: 6px; }
       .result-card-title img { width: 17px; height: 17px; }
 
-      /* 大数字 + 描述 */
+      /* ── 大数字 ── */
       .big-num { font-size: 30px; }
       .big-unit { font-size: 11px; line-height: 1.5; }
       .prob-row { flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 
-      /* 进度条 */
+      /* ── 概率文字强调数字：手机上缩小一号 ── */
+      #r-prob-detail strong,
+      .strat-note strong, .strat-desc strong, .strat-diag-hook strong,
+      .strat-account-row strong, .strat-tip-item strong, .strat-alert-row strong {
+        font-size: 13px;
+      }
+
+      /* ── 集齐日期预测文字 ── */
+      #r-strat-dates { font-size: 11px; line-height: 1.9; }
+
+      /* ── 进度条 ── */
       .prog-wrap { height: 6px; }
 
-      /* 策略表 - 字号收紧使四列能排进去 */
-      .strat-table th { padding: 7px 5px; font-size: 10px; }
-      .strat-table td { padding: 8px 5px; font-size: 11px; }
+      /* ── 策略表（4列压缩到手机宽度） ── */
+      .strat-table th { padding: 6px 4px; font-size: 10px; }
+      .strat-table td { padding: 7px 4px; font-size: 11px; }
 
-      /* 成本区 */
+      /* ── 成本与可行性 ── */
       .cost-row { gap: 10px; }
       .cost-num { font-size: 22px; }
       .cost-label { font-size: 10px; }
       .cost-unit { font-size: 10px; }
       .feas-box { font-size: 12px; padding: 10px 12px; }
 
-      /* 建议条目 */
+      /* ── 策略建议子卡 ── */
+      .strat-sub-card { padding: 11px 12px; font-size: 12px; }
+      .strat-sub-title { font-size: 12px; }
       .tip-box { font-size: 12px; padding: 8px 10px; }
       .padDao-item { font-size: 11px; }
-      .strat-badge { padding: 1px 5px; font-size: 11px; }
+      .strat-badge { padding: 1px 5px; font-size: 10px; }
+      .strat-tip-item { font-size: 12px; }
+      .strat-alert-row { font-size: 12px; padding: 6px 9px; }
+      .strat-account-row { font-size: 11px; }
+      .strat-diag-hook { font-size: 11px; padding: 8px 10px; }
 
-      /* 卡池总览 */
+      /* ── Future/Phase 提示条 ── */
+      .future-banner, .warn-banner { font-size: 11px; padding: 9px 12px; }
+
+      /* ── 卡池总览 ── */
       #view-pool { min-height: calc(100vh - 52px); }
-      .pool-view { padding: 8px; }
+      .pool-view { padding: 8px; gap: 8px; }
       .theme-summary { padding: 10px 12px; }
+      .theme-summary-hdr { gap: 4px; }
       .theme-summary-name { font-size: 13px; }
+      .theme-summary-date { font-size: 10px; }
       .theme-expand-btn { padding: 3px 8px; font-size: 10px; }
       .suit-chip { font-size: 11px; padding: 3px 8px; }
       .suit-preview-drawer img { width: 100px; }
       .suit-preview-drawer.open { max-height: 160px; }
 
-      /* Lightbox - 更大的点击区域 */
-      .lightbox-close {
-        width: 36px; height: 36px; line-height: 36px;
-        font-size: 18px; top: -18px; right: -18px;
-      }
+      /* ── Lightbox ── */
+      .lightbox-close { width: 36px; height: 36px; line-height: 36px; font-size: 18px; top: -18px; right: -18px; }
       .lightbox-inner img { max-width: 94vw; max-height: 82vh; }
+
+      /* ── 更新日志弹窗（从底部滑入，底部半屏样式） ── */
+      .changelog-modal { align-items: flex-end; }
+      .changelog-inner {
+        width: 100%;
+        max-width: 100%;
+        max-height: 88vh;
+        border-radius: 20px 20px 0 0;
+        animation: cl-slide-up 0.28s cubic-bezier(0.32,0.72,0,1);
+      }
+      @keyframes cl-slide-up {
+        from { transform: translateY(60px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+      }
+      .cl-header { padding: 14px 16px 12px; }
+      .cl-header-title { font-size: 14px; }
+      .cl-header-sub { font-size: 10px; }
+      .cl-close { width: 32px; height: 32px; }
+      .cl-body { padding: 12px 16px 28px; gap: 0; }
+      .cl-block { padding-bottom: 14px; }
+      .cl-block + .cl-block { padding-top: 14px; }
+      .cl-item { font-size: 12px; }
+      .cl-badge { font-size: 10px; }
+
+      /* ── 占位示意卡（纵向堆叠） ── */
+      .sub-cards-pair { flex-direction: column; }
+      .sub-card-l { border-right: none; border-bottom: 2px solid #313131; min-height: 80px; }
+      .sub-card-r { min-height: 80px; }
+      .placeholder-wrap { padding: 24px 16px 16px; }
+      .placeholder-icon { font-size: 36px; margin-bottom: 10px; }
+      .placeholder-title { font-size: 14px; }
+      .placeholder-sub { font-size: 12px; }
+
+      /* ── 入池倒计时悬浮面板 ── */
+      .cp-tab { width: 24px; padding: 8px 0; gap: 4px; }
+      .cp-tab-icon { width: 11px; height: 11px; }
+      .cp-tab-text { font-size: 8px; }
+      #countdown-panel.open .cp-content { width: 190px; }
+      .cp-inner { min-width: 190px; padding: 11px 12px; }
+      .cp-header { font-size: 11px; margin-bottom: 8px; padding-bottom: 6px; }
+      .cp-theme { font-size: 11px; }
+      .cp-date { font-size: 9px; }
+      .cp-timer { font-size: 11px; }
     }
   </style>
 </head>
@@ -945,12 +1228,20 @@
     <h1>洛克王国 · 随机商店规划工具</h1>
   </div>
   <nav class="top-nav">
-    <button class="nav-tab active" onclick="switchView('planner')">✨ 规划工具</button>
-    <button class="nav-tab"        onclick="switchView('pool')">🎴 卡池总览</button>
+    <button class="nav-tab active" onclick="switchView('planner')">
+      <img class="tab-icon tab-icon-off" src="assets/icon/toolbox-white.png" alt="">
+      <img class="tab-icon tab-icon-on"  src="assets/icon/toolbox.png" alt="">
+      规划工具
+    </button>
+    <button class="nav-tab" onclick="switchView('pool')">
+      <img class="tab-icon tab-icon-off" src="assets/icon/suit-white.png" alt="">
+      <img class="tab-icon tab-icon-on"  src="assets/icon/suit.png" alt="">
+      卡池总览
+    </button>
   </nav>
   <div class="header-badges">
-    <span class="badge">数据快照 v1.1</span>
-    <span class="badge">29 套（含待入池）</span>
+    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.2 ↗</span><span class="badge-short">v1.2 ↗</span></span>
+    <span class="badge" style="cursor:pointer" onclick="switchView('pool');document.getElementById('pool-suits-card').scrollIntoView({behavior:'smooth',block:'start'})">37 套（含待入池）</span>
   </div>
 </header>
 
@@ -1083,12 +1374,13 @@
       </div>
 
       <div class="result-card">
-        <div class="result-card-title"><img src="assets/icon/calendar.png" alt="">集齐时间预测（3000 次随机模拟）</div>
+        <div class="result-card-title" id="r-strat-card-title"><img src="assets/icon/calendar.png" alt="">集齐时间预测（3000 次随机模拟）</div>
         <div class="prob-row" style="margin-bottom:10px">
           <span class="big-num gold-color" id="r-strat-days">—</span>
-          <span class="big-unit">天 · 正常进度（套装卡没翻出、散件一件件凑的情况）</span>
+          <span class="big-unit" id="r-strat-unit">天 · 正常进度（套装卡没翻出、散件一件件凑的情况）</span>
         </div>
-        <div class="notice" style="margin-bottom:12px">天数已结合你填写的许愿星余额和每日收入计算（翻到买不起时会等攒够再买）。"正常进度"代表恰好 50% 的玩家在此天数内集齐；"欧皇进度"代表运气极好的 10% 玩家能在此天数内集齐；"非酋保底"代表 90% 的玩家在此天数内集齐，只有极少数运气特别差的人需要更久。</div>
+        <div id="r-strat-dates" style="display:none;margin:2px 0 12px;font-size:12px;color:var(--text-muted);line-height:1.8"></div>
+        <div class="notice" id="r-strat-notice" style="margin-bottom:12px">天数已结合你填写的许愿星余额和每日收入计算（翻到买不起时会等攒够再买）。"正常进度"代表恰好 50% 的玩家在此天数内集齐；"欧皇进度"代表运气极好的 10% 玩家能在此天数内集齐；"非酋保底"代表 90% 的玩家在此天数内集齐，只有极少数运气特别差的人需要更久。</div>
         <table class="strat-table">
           <thead>
             <tr><th>翻牌情况</th><th>正常进度</th><th>欧皇进度</th><th>非酋保底</th></tr>
@@ -1139,13 +1431,27 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="pool-suits-card">
       <div class="card-title"><img src="assets/icon/picashop.png" alt="">全部专题套装</div>
       <div id="pool-theme-list"></div>
     </div>
 
   </div>
 </div><!-- /view-pool -->
+
+<!-- ── 右侧悬浮倒计时面板 ── -->
+<div id="countdown-panel">
+  <div class="cp-content">
+    <div class="cp-inner">
+      <div class="cp-header">⏱ 入池倒计时</div>
+      <div id="cp-list"></div>
+    </div>
+  </div>
+  <div class="cp-tab" id="cp-tab">
+    <img class="cp-tab-icon" src="assets/icon/picashop-white.png" alt="">
+    <span class="cp-tab-text">入池倒计时</span>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════════════════════
@@ -1471,7 +1777,7 @@ function computePhase(targets, snapshotDate, startBal, dayInc) {
   return { N, N_total, u, u_withSet, dailyProb, dailyProbAll, expUseful, hasAll, mcMixed, mcParts, mcSet };
 }
 
-function stratRowsHTML(res) {
+function stratRowsHTML(res, dayOffset = 0) {
   const rows = [
     { name:'散件＋套装卡都翻到，出现就买', best:false, data:res.mcMixed },
     { name:'套装卡没翻出，散件一件件凑',   best:true,  data:res.mcParts },
@@ -1480,9 +1786,9 @@ function stratRowsHTML(res) {
   return rows.map(r => `
     <tr${r.best?' class="best-row"':''}>
       <td>${r.name}</td>
-      <td>${r.data.p50} 天</td>
-      <td style="color:var(--green)">${r.data.p10} 天</td>
-      <td style="color:var(--text-muted)">${r.data.p90} 天</td>
+      <td>${r.data.p50 + dayOffset} 天</td>
+      <td style="color:var(--gold)">${r.data.p10 + dayOffset} 天</td>
+      <td style="color:var(--text-muted)">${r.data.p90 + dayOffset} 天</td>
     </tr>`).join('');
 }
 
@@ -1492,7 +1798,7 @@ function buildPadDaoItems(targetedIds, today) {
   for (const s of SUITS) {
     if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today) continue;
     const ownedP = st.owned[s.id] || new Set();
-    for (const p of PART_NAMES) {
+    for (const p of (s.partNames || PART_NAMES)) {
       if (ownedP.has(p)) continue;
       if (s.parts[p] <= 20)
         items.push({ suitId: s.id, suitSub: s.sub, rarity: s.rarity, part: p, price: s.parts[p] });
@@ -1513,8 +1819,10 @@ function buildStrategyPanels(p1Targets, today) {
   const usefulIds = new Set();
   for (const {suitId, parts} of p1Targets) {
     const owned = st.owned[suitId] || new Set();
+    const sDef  = SUITS.find(sx => sx.id === suitId);
+    const pNms  = sDef?.partNames || PART_NAMES;
     if (parts === 'ALL') {
-      for (const p of PART_NAMES) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+      for (const p of pNms) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
       usefulIds.add(suitId+':set');
     } else {
       for (const p of parts) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
@@ -1526,8 +1834,10 @@ function buildStrategyPanels(p1Targets, today) {
   let U = 0;
   for (const {suitId, parts} of p1Targets) {
     const owned = st.owned[suitId] || new Set();
+    const sDef2 = SUITS.find(sx => sx.id === suitId);
+    const pNms2 = sDef2?.partNames || PART_NAMES;
     U += parts === 'ALL'
-      ? PART_NAMES.filter(p => !owned.has(p)).length
+      ? pNms2.filter(p => !owned.has(p)).length
       : [...parts].filter(p => !owned.has(p)).length;
   }
 
@@ -1546,7 +1856,9 @@ function buildStrategyPanels(p1Targets, today) {
 
   // ── 面板一：清小件方案（诊断 hook + 清单 + 账单）──
   const diagHook = (u > 0 && Y !== null)
-    ? `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，你的目标卡只有 <strong>${u}</strong> 张——每天翻出的概率只有 <strong>${Apct}%</strong>，平均每 <strong class="strat-warn-val">${Y}</strong> 天才能"看一眼"你的目标。</div>`
+    ? A >= 0.5
+      ? `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，目标卡有 <strong>${u}</strong> 张——每天翻出目标的概率${A >= 0.8 ? '高达' : '为'} <strong>${Apct}%</strong>，平均每 <strong>${Y}</strong> 天即可碰到一次目标。</div>`
+      : `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，你的目标卡只有 <strong>${u}</strong> 张——每天翻出的概率只有 <strong>${Apct}%</strong>，平均每 <strong class="strat-warn-val">${Y}</strong> 天才能"看一眼"你的目标。</div>`
     : `<div class="strat-diag-hook">当前卡池 <strong>${N}</strong> 张，你的所有目标部件已全部持有或不在当前池中。</div>`;
 
   let panel1;
@@ -1578,12 +1890,9 @@ function buildStrategyPanels(p1Targets, today) {
       </div>`;
   }
 
-  // ── 面板二：避坑 ──
-  // 动态警告：推荐列表里有金色散件时额外提醒
-  const hasGoldTrap = topItems.some(c => c.rarity === 'gold' && (c.part === '手套' || c.part === '鞋子'));
-  const goldWarn = hasGoldTrap
-    ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装的 <span class="strat-orange">手套（17星）</span>或<span class="strat-orange">鞋子（20星）</span>，注意：这套的<span class="strat-orange">连体服（74星）</span>和套装卡依然留在池中。出手前请结合下方说明权衡。</div>`
-    : '';
+  // ── 面板二：避坑 / 金色散件评估（三态）──
+  const hasPurpleCheap = allPadDao.some(c => c.rarity === 'purple');
+  const hasGoldCheap   = allPadDao.some(c => c.rarity === 'gold');
 
   // 动态提示：已零星持有部分部件的非目标紫色套装
   const nearPurple = [];
@@ -1605,23 +1914,47 @@ function buildStrategyPanels(p1Targets, today) {
        </div>`
     : '';
 
-  const panel2 = `
-    <div class="strat-sub-card strat-card-b">
-      <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
-      ${goldWarn}
-      <div class="strat-tip-item">🚫 <strong>别单独买金色套装的便宜散件：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但金色套装共 6 个部件——只买这两件，昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局，花了星却没彻底给卡池减负，性价比很低。</div>
-      <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4-8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
-      ${purpleReco}
-    </div>`;
+  let panel2 = '';
+  if (hasPurpleCheap || hasGoldCheap) {
+    if (!hasPurpleCheap && hasGoldCheap) {
+      // 状态二：紫色散件已清完，只剩金色便宜散件——给出性价比评估
+      const improvement = ((B - A) * 100).toFixed(1);
+      const isWorthIt   = (B - A) >= 0.10;
+      const rec = isWorthIt
+        ? `概率提升 <strong class="strat-prob-new">${improvement}%</strong>，提升明显，出手清掉值得。`
+        : `概率提升约 <strong>${improvement}%</strong>，提升有限——手头许愿星充裕可以顺手清，不急也可以留着。`;
+      panel2 = `
+        <div class="strat-sub-card strat-card-b">
+          <div class="strat-sub-title">💡 关于剩余金色散件：值不值得清？</div>
+          <div class="strat-tip-item">买断手套（<span class="strat-orange">17星</span>）、袜子（<span class="strat-orange">9星</span>）、鞋子（<span class="strat-orange">20星</span>）等便宜散件后，该套装的<strong>连体服（<span class="strat-orange">74星</span>）、头饰（<span class="strat-orange">41星</span>）、背包（<span class="strat-orange">34星</span>）以及套装卡</strong>仍会留在池中，无法完全退池。</div>
+          <div class="strat-tip-item">结合上方清小件方案测算：清完后今日命中概率从 <span class="strat-prob-old">${Apct}%</span> 提升至 <strong class="strat-prob-new">${Bpct}%</strong>——${rec}</div>
+          ${purpleReco}
+        </div>`;
+    } else {
+      // 状态三：紫色散件还有（正常状态）——避坑提示，优先清紫色
+      const hasGoldInTop = topItems.some(c => c.rarity === 'gold');
+      const goldWarn = hasGoldInTop
+        ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装散件，注意：买断后该套装的<span class="strat-orange">连体服（74星）</span>等昂贵部件和套装卡依然留在池中，无法完全退池。</div>`
+        : '';
+      panel2 = `
+        <div class="strat-sub-card strat-card-b">
+          <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
+          ${goldWarn}
+          <div class="strat-tip-item">🚫 <strong>优先清紫色套装散件，金色性价比相对更低：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但买断后昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局；而紫色散件（4–8星）清完整套即可彻底退池，性价比远高于金色。</div>
+          <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4–8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
+          ${purpleReco}
+        </div>`;
+    }
+  }
 
   // ── 面板三：底线诊断（只有实际有目标缺口时才显示）──
   const panel3 = (U > 0 && u > 0 && Y !== null) ? `
     <div class="strat-sub-card strat-card-c">
-      <div class="strat-sub-title">🎯 你的本命「真实等待成本」</div>
+      <div class="strat-sub-title">🎯 你的目标「真实等待成本」</div>
       <div class="strat-desc">
         除去你已经有的，你目前还缺 <strong>${U}</strong> 个具体部件。<br>
-        面对当前 <strong>${N}</strong> 张卡的深水池，在什么都不做的情况下，每天翻出至少一件本命的概率只有 <strong>${Apct}%</strong>——平均每隔 <strong class="strat-warn-val">${Y} 天</strong>才能在商店里"碰到"你的目标一次。<br><br>
-        如果觉得这个等待太折磨，立刻执行上面的<strong>【清小件方案】</strong>，主动把概率拉上来。
+        面对当前 <strong>${N}</strong> 张卡的池子，在什么都不做的情况下，每天翻出至少一件本命的概率${A >= 0.5 ? (A >= 0.8 ? '高达' : '为') : '只有'} <strong>${A < 0.5 ? `<span class="strat-warn-val">${Apct}%</span>` : `${Apct}%`}</strong>——平均每隔 <strong${A < 0.5 ? ' class="strat-warn-val"' : ''}>${Y} 天</strong>${A >= 0.5 ? '即可在商店里碰到你的目标一次。' : '才能在商店里"碰到"你的目标一次。'}<br><br>
+        ${A < 0.5 ? '如果觉得这个等待太折磨，立刻执行上面的<strong>【清小件方案】</strong>，主动把概率拉上来。' : '当前概率已相当不错，保持每天翻牌节奏即可！'}
       </div>
     </div>` : '';
 
@@ -1646,9 +1979,11 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
   // 入池当天的目标目标卡数
   const usefulAtEntry = new Set();
   for (const {suitId, parts} of nearTargets) {
-    const owned = st.owned[suitId] || new Set();
+    const owned   = st.owned[suitId] || new Set();
+    const sDefE   = SUITS.find(sx => sx.id === suitId);
+    const pNmsE   = sDefE?.partNames || PART_NAMES;
     if (parts === 'ALL') {
-      for (const p of PART_NAMES) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
+      for (const p of pNmsE) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
       usefulAtEntry.add(suitId+':set');
     } else {
       for (const p of parts) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
@@ -1708,13 +2043,11 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
       </div>`;
   }
 
-  // ── 面板二：避坑（与正常状态相同逻辑）──
-  const hasGoldTrap = topItems.some(c => c.rarity === 'gold' && (c.part === '手套' || c.part === '鞋子'));
-  const goldWarn = hasGoldTrap
-    ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装的 <span class="strat-orange">手套（17星）</span>或<span class="strat-orange">鞋子（20星）</span>，注意：这套的<span class="strat-orange">连体服（74星）</span>和套装卡依然留在池中。出手前请结合下方说明权衡。</div>`
-    : '';
+  // ── 面板二：避坑 / 金色散件评估（三态，与 Case1 相同逻辑）──
+  const hasPurpleCheap2 = allPadDao.some(c => c.rarity === 'purple');
+  const hasGoldCheap2   = allPadDao.some(c => c.rarity === 'gold');
 
-  const nearPurple = [];
+  const nearPurple2 = [];
   for (const s of SUITS) {
     if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today || s.rarity !== 'purple') continue;
     const ownedP   = st.owned[s.id] || new Set();
@@ -1722,27 +2055,62 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
     const ownedCnt = pNames.filter(p => ownedP.has(p)).length;
     if (ownedCnt > 0) {
       const missCost = pNames.filter(p => !ownedP.has(p)).reduce((acc, p) => acc + (s.parts[p] || 0), 0);
-      nearPurple.push({ suitSub: s.sub, ownedCnt, missCost });
+      nearPurple2.push({ suitSub: s.sub, ownedCnt, missCost });
     }
   }
-  const purpleReco = nearPurple.length > 0
+  const purpleReco2 = nearPurple2.length > 0
     ? `<div class="strat-alert-row" style="margin-top:8px;background:rgba(154,115,249,0.08);border-left:3px solid var(--purple);border-radius:0 8px 8px 0">
         💜 <strong>强烈推荐立刻买断：</strong>你已零星歪到
-        ${nearPurple.map(s => `<span class="strat-purple">「${s.suitSub}」</span>（已有 ${s.ownedCnt} 件，补齐仅需 <strong>${s.missCost} 星</strong>）`).join('，')}
+        ${nearPurple2.map(s => `<span class="strat-purple">「${s.suitSub}」</span>（已有 ${s.ownedCnt} 件，补齐仅需 <strong>${s.missCost} 星</strong>）`).join('，')}
         ——补齐整套后，所有散件卡 + 套装卡一起彻底退池，让入池当天的卡池更干净！
        </div>`
     : '';
 
-  const panel2 = `
-    <div class="strat-sub-card strat-card-b">
-      <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
-      ${goldWarn}
-      <div class="strat-tip-item">🚫 <strong>别单独买金色套装的便宜散件：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但金色套装共 6 个部件——只买这两件，昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局，花了星却没彻底给卡池减负，性价比很低。</div>
-      <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4-8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
-      ${purpleReco}
-    </div>`;
+  let panel2 = '';
+  if (hasPurpleCheap2 || hasGoldCheap2) {
+    if (!hasPurpleCheap2 && hasGoldCheap2) {
+      // 状态二：只剩金色便宜散件——性价比评估（用入池当天概率对比）
+      const improvement2 = ((B_entry - A_entry) * 100).toFixed(1);
+      const isWorthIt2   = (B_entry - A_entry) >= 0.10;
+      const rec2 = isWorthIt2
+        ? `入池当天命中概率提升 <strong class="strat-prob-new">${improvement2}%</strong>，提升明显，提前出手清掉值得。`
+        : `入池当天命中概率提升约 <strong>${improvement2}%</strong>，提升有限——手头星数充裕可以顺手清，不急也可以留着。`;
+      panel2 = `
+        <div class="strat-sub-card strat-card-b">
+          <div class="strat-sub-title">💡 关于剩余金色散件：值不值得清？</div>
+          <div class="strat-tip-item">买断手套（<span class="strat-orange">17星</span>）、袜子（<span class="strat-orange">9星</span>）、鞋子（<span class="strat-orange">20星</span>）等便宜散件后，该套装的<strong>连体服（<span class="strat-orange">74星</span>）、头饰（<span class="strat-orange">41星</span>）、背包（<span class="strat-orange">34星</span>）以及套装卡</strong>仍会留在池中，无法完全退池。</div>
+          <div class="strat-tip-item">结合预清池方案测算：清完后入池当天命中概率从 <span class="strat-prob-old">${Apct_e}%</span> 提升至 <strong class="strat-prob-new">${Bpct_e}%</strong>——${rec2}</div>
+          ${purpleReco2}
+        </div>`;
+    } else {
+      // 状态三：紫色散件还有——优先清紫色
+      const hasGoldInTop2 = topItems.some(c => c.rarity === 'gold');
+      const goldWarn2 = hasGoldInTop2
+        ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装散件，注意：买断后该套装的<span class="strat-orange">连体服（74星）</span>等昂贵部件和套装卡依然留在池中，无法完全退池。</div>`
+        : '';
+      panel2 = `
+        <div class="strat-sub-card strat-card-b">
+          <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
+          ${goldWarn2}
+          <div class="strat-tip-item">🚫 <strong>优先清紫色套装散件，金色性价比相对更低：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但买断后昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局；而紫色散件（4–8星）清完整套即可彻底退池，性价比远高于金色。</div>
+          <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4–8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
+          ${purpleReco2}
+        </div>`;
+    }
+  }
 
-  return panel1 + panel2;
+  // ── 面板三：真实等待成本（入池后概率诊断）──
+  const panel3 = (u_entry > 0 && Y_entry !== null) ? `
+    <div class="strat-sub-card strat-card-c">
+      <div class="strat-sub-title">🎯 你的目标「真实等待成本」</div>
+      <div class="strat-desc">
+        目标入池后，卡池共 <strong>${N_entry}</strong> 张，其中本命目标卡 <strong>${u_entry}</strong> 张。<br>
+        每天翻出至少一件本命的概率${A_entry >= 0.5 ? (A_entry >= 0.8 ? '高达' : '为') : '只有'} <strong>${A_entry < 0.5 ? `<span class="strat-warn-val">${Apct_e}%</span>` : `${Apct_e}%`}</strong>——平均每隔 <strong${A_entry < 0.5 ? ' class="strat-warn-val"' : ''}>${Y_entry} 天</strong>${A_entry >= 0.5 ? '即可在商店里碰到你的目标一次。' : '才能在商店里"碰到"你的目标一次。'}<br><br>
+        ${A_entry < 0.5 ? '如果觉得这个等待太折磨，提前执行上方的<strong>【预清池方案】</strong>，把入池当天的概率主动拉上来！' : '入池后概率已相当不错，保持每天翻牌节奏即可！'}
+      </div>
+    </div>` : '';
+
+  return panel1 + panel2 + panel3;
 }
 
 // ── 实时刷新策略面板（不跑蒙特卡洛）──
@@ -1864,15 +2232,15 @@ function _doCalc() {
     ? computePhase(nearTargets, nearDate)
     : null;
 
-  // 6. Total elapsed days for feasibility — use p50 (正常进度) to match the table's primary metric
+  // 6. Total elapsed days for feasibility — use mcParts.p50 to match the headline "正常进度" number
   let D;
   if (isCase1) {
-    D = p1.mcMixed.p50;
+    D = p1.mcParts.p50;
   } else if (isCase2) {
-    D = waitDays + p1.mcMixed.p50;
+    D = waitDays + p1.mcParts.p50;
   } else {
     // Case 3: Phase 1 may overlap with waiting; Phase 2 starts after both
-    D = Math.max(p1.mcMixed.p50, waitDays) + (p2 ? p2.mcMixed.p50 : 0);
+    D = Math.max(p1.mcParts.p50, waitDays) + (p2 ? p2.mcParts.p50 : 0);
   }
   const incomeAtD = balance + daily * D;
 
@@ -1916,12 +2284,45 @@ function _doCalc() {
       ? `&nbsp;·&nbsp; 含套装卡情形：<strong>${(p1.dailyProbAll * 100).toFixed(1)}%</strong>`
       : '';
     document.getElementById('r-prob-detail').innerHTML =
-      `卡池共 <strong>${p1.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p1.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p1.expUseful.toFixed(2)} 张</strong>${setNote}`;
+      `${isCase2 ? '该主题入池后，' : ''}卡池共 <strong>${p1.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p1.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p1.expUseful.toFixed(2)}</strong> 张${setNote}`;
   }
 
   // ── Strategy table ──
-  animateCount(document.getElementById('r-strat-days'), p1.mcParts.p50, 1200, v => Math.round(v).toString());
-  document.getElementById('r-strat-body').innerHTML = stratRowsHTML(p1);
+  {
+    const dOff = isCase2 ? waitDays : 0;
+    const nearFmtEntry = isCase2 && nearDate ? nearDate.slice(5).replace('-','/') : '';
+    // 大数字：Case2 显示总天数（等待期 + 集齐期）
+    animateCount(document.getElementById('r-strat-days'), p1.mcParts.p50 + dOff, 1200, v => Math.round(v).toString());
+    // 副标题和说明文字
+    document.getElementById('r-strat-unit').textContent =
+      isCase2
+        ? `天（从今日起，含 ${waitDays} 天等待期）· 正常进度`
+        : '天 · 正常进度（套装卡没翻出、散件一件件凑的情况）';
+    document.getElementById('r-strat-card-title').innerHTML =
+      `<img src="assets/icon/calendar.png" alt="" style="width:20px;height:20px;object-fit:contain;flex-shrink:0">` +
+      (isCase2 ? `集齐时间预测（含 ${waitDays} 天等待期，3000 次模拟）` : '集齐时间预测（3000 次随机模拟）');
+    document.getElementById('r-strat-notice').textContent =
+      isCase2
+        ? `以上天数从今日起计算，含 ${waitDays} 天入池等待期；入池后的翻牌天数已结合届时许愿星余额和每日收入计算。进度含义同右侧表格。`
+        : '天数已结合你填写的许愿星余额和每日收入计算（翻到买不起时会等攒够再买）。"正常进度"代表恰好 50% 的玩家在此天数内集齐；"欧皇进度"代表运气极好的 10% 玩家能在此天数内集齐；"非酋保底"代表 90% 的玩家在此天数内集齐，只有极少数运气特别差的人需要更久。';
+    // 策略表格：天数统一加上等待期
+    document.getElementById('r-strat-body').innerHTML = stratRowsHTML(p1, dOff);
+    // 预计集齐日期
+    const WD = ['周日','周一','周二','周三','周四','周五','周六'];
+    function dateLabel(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + Math.round(days));
+      return `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+    }
+    const mc = p1.mcParts;
+    const el = document.getElementById('r-strat-dates');
+    el.style.display = '';
+    el.innerHTML =
+      `预计集齐日期 &nbsp;·&nbsp; `
+      + `欧皇进度 <strong style="color:var(--gold)">${dateLabel(mc.p10 + dOff)}</strong>`
+      + ` &nbsp;·&nbsp; 正常进度 <strong style="color:#313131">${dateLabel(mc.p50 + dOff)}</strong>`
+      + ` &nbsp;·&nbsp; 非酋保底 <strong style="color:var(--text-dim)">${dateLabel(mc.p90 + dOff)}</strong>`;
+  }
 
   // ── Cost & feasibility ──
   document.getElementById('r-cost').textContent = totalCost;
@@ -1932,12 +2333,20 @@ function _doCalc() {
     const feas = document.getElementById('r-feas');
     if (incomeAtD >= totalCost) {
       const surplus = Math.round(incomeAtD - totalCost);
+      const daysToSave = balance >= totalCost
+        ? 0
+        : Math.ceil((totalCost - balance) / daily);
+      const saveNote = balance >= totalCost
+        ? `当前余额已足够支付全部目标`
+        : `按每日 ${daily} 颗收入仅需攒 <strong>${daysToSave} 天</strong>即可凑够`;
       feas.className = 'feas-box feas-ok';
-      feas.innerHTML = `✅ 许愿星充足。全部目标约 ${D} 天集齐，届时累计获得星 ${Math.round(incomeAtD)} 颗，完成后余 <strong>${surplus} 颗</strong>。`;
+      feas.innerHTML = `✅ 许愿星充足。目标合计 <strong>${totalCost} 颗</strong>，${saveNote}；而翻牌集齐的正常进度预期为 <strong>${D} 天</strong>，届时累计获得星 <strong>${Math.round(incomeAtD)} 颗</strong>，完成后盈余 <strong>${surplus} 颗</strong>。`;
     } else {
       const gap = Math.ceil(totalCost - incomeAtD);
+      const daysToFull = Math.ceil((totalCost - balance) / daily);
+      const extraDays = daysToFull - D;
       feas.className = 'feas-box feas-warn';
-      feas.innerHTML = `⚠️ 略有缺口 <strong>${gap} 颗</strong>，按每天 ${daily} 颗，约需额外 <strong>${Math.ceil(gap/daily)} 天</strong>补足（或活动额外产出补充）。`;
+      feas.innerHTML = `⚠️ 许愿星有缺口。按集齐正常进度需 <strong>${D} 天</strong>，但要凑够 <strong>${totalCost} 颗</strong>目标合计还需等到第 <strong>${daysToFull} 天</strong>（多等 <strong>${extraDays} 天</strong>）。建议：活动额外收入优先领，或提前减少非目标项目支出。`;
     }
   }
 
@@ -2033,8 +2442,7 @@ function renderOwnedList() {
         <span class="theme-hdr-name">${th.theme}</span>
         <span class="theme-hdr-date">${dateStr}</span>
         ${pendingBadge}
-        <button id="thbtn-${i}" class="theme-all-btn" onclick="event.stopPropagation();setThemeAllFull('${th.theme}')">全 ${th.suits.length} 套已集齐</button>
-        <span class="theme-hdr-count">${th.suits.length} 套</span>
+        <button id="thbtn-${i}" class="theme-all-btn" style="margin-left:auto" onclick="event.stopPropagation();setThemeAllFull('${th.theme}')">全 ${th.suits.length} 套已集齐</button>
       </div>
       <div class="theme-body"></div>
     `;
@@ -2186,12 +2594,18 @@ function buildTargetRow(s, th, inPool) {
       <button class="all-tag ${isAll ? 'on' : ''}" id="ta-${s.id}" onclick="toggleAllTag('${s.id}')">只看整套</button>
     </div>
     <div style="font-size:10px;color:var(--text-dim);margin-top:2px;padding-left:22px">${th.theme}</div>
-    <div class="parts-grid" id="tg-${s.id}" style="display:${isSelected && !isAll ? 'grid' : 'none'};margin-top:8px">
+    <div class="parts-grid" id="tg-${s.id}" style="display:${!isAll ? 'grid' : 'none'};margin-top:8px">
       ${(s.partNames || PART_NAMES).map(p => {
-        const targeted = prev instanceof Set && prev.has(p);
-        return `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleTargetPart('${s.id}','${p}')">
-          ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
-        </button>`;
+        const ownedParts = st.owned[s.id] || new Set();
+        const isOwned  = ownedParts.has(p);
+        const targeted = !isOwned && prev instanceof Set && prev.has(p);
+        return isOwned
+          ? `<button class="part-btn" id="tp-${s.id}-${p}" disabled title="已持有">
+               ${p}<br><span style="font-size:9px">已持有</span>
+             </button>`
+          : `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleTargetPart('${s.id}','${p}')">
+               ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
+             </button>`;
       }).join('')}
     </div>
   `;
@@ -2234,6 +2648,8 @@ function clearAllTargets() {
     row.classList.remove('selected');
     const cb = document.getElementById('tc-' + sid);
     if (cb) cb.checked = false;
+    const ta = document.getElementById('ta-' + sid);
+    if (ta) ta.classList.add('on');
     const tg = document.getElementById('tg-' + sid);
     if (tg) {
       tg.style.display = 'none';
@@ -2262,21 +2678,27 @@ function toggleTarget(sid, checked) {
 }
 
 function toggleAllTag(sid) {
-  const cb = document.getElementById('tc-' + sid);
-  if (!cb.checked) return;
-  const tag = document.getElementById('ta-' + sid);
+  const cb   = document.getElementById('tc-' + sid);
+  const tag  = document.getElementById('ta-' + sid);
   const grid = document.getElementById('tg-' + sid);
+  const row  = document.getElementById('tr-' + sid);
   const isAll = tag.classList.contains('on');
   if (isAll) {
-    // Switch to partial
+    // 切换到"只要部分"模式——展开部件网格，但不自动勾选
+    // 等用户实际选了部件后再激活复选框
     tag.classList.remove('on');
     grid.style.display = 'grid';
     st.targets[sid] = new Set();
+    cb.checked = false;
+    if (row) row.classList.remove('selected');
+    updateTargetSelCount();
   } else {
-    // Switch back to all
+    // 切换回"只看整套"模式
     tag.classList.add('on');
     grid.style.display = 'none';
     st.targets[sid] = 'ALL';
+    cb.checked = true;
+    if (row) row.classList.add('selected');
     document.querySelectorAll(`#tg-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
   }
   updatePoolStats();
@@ -2284,6 +2706,7 @@ function toggleAllTag(sid) {
 
 function toggleTargetPart(sid, part) {
   if (!st.targets[sid] || st.targets[sid] === 'ALL') return;
+  if ((st.owned[sid] || new Set()).has(part)) return; // 已持有部件不可选为目标
   const btn = document.getElementById(`tp-${sid}-${part}`);
   if (st.targets[sid].has(part)) {
     st.targets[sid].delete(part);
@@ -2292,7 +2715,14 @@ function toggleTargetPart(sid, part) {
     st.targets[sid].add(part);
     btn.className = 'part-btn target';
   }
-  maybeLiveRefreshStrategy();
+  // 有部件被选中才激活该套装的复选框；全部取消则反选
+  const hasAny = st.targets[sid].size > 0;
+  const cb  = document.getElementById('tc-' + sid);
+  const row = document.getElementById('tr-' + sid);
+  if (cb)  cb.checked = hasAny;
+  if (row) row.classList.toggle('selected', hasAny);
+  updateTargetSelCount();
+  updatePoolStats();
 }
 
 // ════════════════════════════════════════════════════
@@ -2315,7 +2745,8 @@ function setOwn(sid, state) {
     grid.style.display = 'grid';
     document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
   } else {
-    st.owned[sid] = new Set(PART_NAMES);
+    const sDataFull = SUITS.find(x => x.id === sid);
+    st.owned[sid] = new Set(sDataFull?.partNames || PART_NAMES);
     st.fullOwned.add(sid);
     st.targets[sid] = undefined; // no point targeting a fully-owned suit
     grid.style.display = 'none';
@@ -2348,7 +2779,8 @@ function renderTimeline() {
   const today = todayStr();
   let cumCards = 0;
   for (const th of THEMES_RAW) {
-    const cards = th.suits.length * 7;
+    const cardsPerSuit = th.fieldType ? 8 : 7; // 7部件套装每套 8 张（7部件卡+1套装卡）
+    const cards = th.suits.length * cardsPerSuit;
     const inPool = th.date <= today;
     if (inPool) cumCards += cards;
     const item = document.createElement('div');
@@ -2512,7 +2944,8 @@ function applyOwnedDom(sid) {
 
   if (state === 'part') {
     grid.style.display = 'grid';
-    for (const p of PART_NAMES) {
+    const sDataDom = SUITS.find(x => x.id === sid);
+    for (const p of (sDataDom?.partNames || PART_NAMES)) {
       const btn = document.getElementById(`op-${sid}-${p}`);
       if (btn) btn.className = 'part-btn' + (ownedP && ownedP.has(p) ? ' on' : '');
     }
@@ -2541,6 +2974,16 @@ updatePoolStats();
 document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
 
 // ── Lightbox ──
+function openChangelog() {
+  document.getElementById('changelog-modal').classList.add('open');
+  document.addEventListener('keydown', _clKey);
+}
+function closeChangelog() {
+  document.getElementById('changelog-modal').classList.remove('open');
+  document.removeEventListener('keydown', _clKey);
+}
+function _clKey(e) { if (e.key === 'Escape') closeChangelog(); }
+
 function openLightbox(src, alt) {
   const lb = document.getElementById('lightbox');
   const img = lb.querySelector('.lightbox-inner img');
@@ -2554,7 +2997,130 @@ function closeLightbox() {
   document.removeEventListener('keydown', _lbKey);
 }
 function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
+
+// ── 右侧悬浮倒计时面板（HTML 已在 DOM 中，此处直接操作）──
+(function initCountdownPanel() {
+  const today = todayStr();
+  const seen = new Set();
+  const upcoming = [];
+  for (const th of THEMES_RAW) {
+    if (th.date > today && !seen.has(th.theme)) {
+      seen.add(th.theme);
+      upcoming.push({ theme: th.theme, date: th.date });
+    }
+  }
+  upcoming.sort((a, b) => a.date.localeCompare(b.date));
+
+  const panel = document.getElementById('countdown-panel');
+  if (upcoming.length === 0) { panel.style.display = 'none'; return; }
+
+  function fmt(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const diff = new Date(y, m - 1, d, 4, 0, 0) - Date.now(); // 洛克王国每天 04:00 更新
+    if (diff <= 0) return '即将入池';
+    const days = Math.floor(diff / 86400000);
+    const hh = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+    const mm = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    return days > 0 ? `${days}天 ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+  }
+
+  document.getElementById('cp-list').innerHTML = upcoming.map(u => {
+    const [, m, d] = u.date.split('-').map(Number);
+    return `<div class="cp-item">
+      <div class="cp-theme">${u.theme}</div>
+      <div class="cp-date">${m}月${d}日入池</div>
+      <div class="cp-timer" data-date="${u.date}">${fmt(u.date)}</div>
+    </div>`;
+  }).join('');
+
+  setInterval(() => {
+    document.querySelectorAll('.cp-timer').forEach(el => {
+      el.textContent = fmt(el.dataset.date);
+    });
+  }, 1000);
+
+  const tab = document.getElementById('cp-tab');
+  const content = panel.querySelector('.cp-content');
+
+  // 点击 tab：展开
+  tab.addEventListener('click', () => panel.classList.add('open'));
+
+  // 点击面板外：收起
+  document.addEventListener('click', (e) => {
+    if (panel.classList.contains('open') && !panel.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
+})();
+
+// 消除滚动条宽度缝隙：测量实际滚动条占宽，存为 CSS 变量供固定定位元素使用
+(function syncScrollbarWidth() {
+  function apply() {
+    const w = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--sb-w', w + 'px');
+  }
+  apply();
+  window.addEventListener('resize', apply);
+})();
 </script>
+
+<!-- ── 更新日志弹窗 ── -->
+<div id="changelog-modal" class="changelog-modal" onclick="closeChangelog()">
+  <div class="changelog-inner" onclick="event.stopPropagation()">
+    <div class="cl-header">
+      <div class="cl-header-left">
+        <span class="cl-header-title">更新日志</span>
+        <span class="cl-header-sub">洛克王国随机商店规划工具</span>
+      </div>
+      <button class="cl-close" onclick="closeChangelog()">✕</button>
+    </div>
+    <div class="cl-body">
+
+      <!-- v1.2 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge latest">v1.2</span>
+          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-date">2026 年 6 月</span>
+        </div>
+        <div class="cl-items">
+          <div class="cl-item">全面适配移动端 H5，弹窗底部抽屉化，导航栏紧凑布局</div>
+          <div class="cl-item">取消 7 部件套装挂起（野外考察队、魔法嘉年华），在池套装更新至 37 套</div>
+          <div class="cl-item">目标套装已持有部件灰显不可选，"整套 / 部分"模式切换逻辑修正</div>
+          <div class="cl-item">修复移动端整页无法下滑的 CSS 层叠 Bug，修复右侧滚动条白条缝隙</div>
+        </div>
+      </div>
+
+      <!-- v1.1 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge">v1.1</span>
+          <span class="cl-date">GitHub 首发</span>
+        </div>
+        <div class="cl-items">
+          <div class="cl-item">入池倒计时悬浮面板、集齐日期预测（欧皇 / 正常 / 非酋三档）</div>
+          <div class="cl-item">待入池套装概率估算，按入池日期分 Case / Scenario 分阶段展示</div>
+          <div class="cl-item">散件清池策略建议，多套合并计算，每日收入支持手动覆盖</div>
+          <div class="cl-item">亮色主题 UI，顶部双页签导航，三步引导交互，套装数据 37 套</div>
+        </div>
+      </div>
+
+      <!-- v1.0 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge">v1.0</span>
+          <span class="cl-date">内部 Demo</span>
+        </div>
+        <div class="cl-items">
+          <div class="cl-item">基础概率与许愿星规划工具，单套目标计算</div>
+          <div class="cl-item">三策略（散件 / 套装卡 / 混合）P50 / P90 天数，金色 195 星 / 紫色 98 星</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <div id="lightbox" class="lightbox" onclick="closeLightbox()">
   <div class="lightbox-inner" onclick="event.stopPropagation()">
