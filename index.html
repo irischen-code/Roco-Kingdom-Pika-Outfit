@@ -994,7 +994,7 @@
 
     <!-- Step 2: Targets -->
     <div class="step-pane hidden" id="sc-targets">
-      <div class="notice">勾选想要的套装。默认「整套」目标——套装卡视为目标卡；点部件可切换为「只要部分」模式（套装卡不可拆，不计入）。</div>
+      <div class="notice">勾选想要的套装。默认选中「只看整套」目标；若只需要部分部件，请点击「只看整套」标签（取消选中状态），切换为「只要部分」模式。</div>
       <div class="target-toolbar">
         <span class="target-sel-count" id="target-sel-count">已选 0 套</span>
         <div style="display:flex;gap:6px">
@@ -1079,7 +1079,7 @@
         </div>
         <div class="prog-wrap"><div class="prog-bar" id="r-prob-bar" style="width:0"></div></div>
         <div class="prob-detail" id="r-prob-detail"></div>
-        <div class="result-footnote" style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 目标卡 = 目标缺失部件对应的部件卡；整套目标下，套装卡也计为目标卡（买套装卡等效于用差价补齐所有缺失部件）。</div>
+        <div class="result-footnote" style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 概率基于部件卡计算（不含套装卡），因为套装卡在游戏内实际概率偏低。整套目标下，"含套装卡情形"数值一并注明供参考。</div>
       </div>
 
       <div class="result-card">
@@ -1179,9 +1179,11 @@ function switchStep(step) {
 // DATA
 // ════════════════════════════════════════════════════
 
-const PART_NAMES = ['头饰','连体服装','背包','手套','袜子','鞋子'];
+const PART_NAMES  = ['头饰','连体服装','背包','手套','袜子','鞋子'];
+const PART_NAMES_7 = ['头饰','上衣','裤子','背包','手套','袜子','鞋子'];
 const GOLD_PARTS  = {头饰:41, 连体服装:74, 背包:34, 手套:17, 袜子:9, 鞋子:20};
 const PURP_PARTS  = {头饰:20, 连体服装:42, 背包:18, 手套:6,  袜子:4, 鞋子:8 };
+const FIELD_PARTS = {头饰:20, 上衣:21, 裤子:21, 背包:18, 手套:6, 袜子:4, 鞋子:8};
 
 const THEMES_RAW = [
   { theme:'毛绒巡林者',    date:'2026-03-26', direct:true,  suits:[
@@ -1226,7 +1228,7 @@ const THEMES_RAW = [
     {id:'s22', sub:'九幽菇印象',    rarity:'gold'},
     {id:'s23', sub:'嘟嘟锅印象',    rarity:'gold'},
   ]},
-  { theme:'野外考察队', date:'2026-07-03', direct:false, suspended:true, suits:[
+  { theme:'野外考察队', date:'2026-07-03', direct:false, fieldType:true, suits:[
     {id:'s30', sub:'魔草巫灵印象', rarity:'purple'},
     {id:'s31', sub:'奇丽花印象',   rarity:'purple'},
     {id:'s32', sub:'高脚鹬印象',   rarity:'purple'},
@@ -1237,7 +1239,7 @@ const THEMES_RAW = [
     {id:'s25', sub:'千棘盔印象',    rarity:'gold'},
     {id:'s26', sub:'迷迷箱怪印象',  rarity:'gold'},
   ]},
-  { theme:'魔法嘉年华', date:'2026-07-31', direct:false, suspended:true, suits:[
+  { theme:'魔法嘉年华', date:'2026-07-31', direct:false, fieldType:true, suits:[
     {id:'s34', sub:'烟花伯爵印象', rarity:'purple'},
     {id:'s35', sub:'巨鼓象印象',   rarity:'purple'},
     {id:'s36', sub:'咕德帽帽印象', rarity:'purple'},
@@ -1248,9 +1250,11 @@ const THEMES_RAW = [
 // Flatten suits with full data
 const SUITS = [];
 for (const th of THEMES_RAW) {
-  if (th.suspended) continue; // 价格未知，规划工具不使用
+  if (th.suspended) continue;
   for (const s of th.suits) {
-    const parts = s.rarity === 'gold' ? {...GOLD_PARTS} : {...PURP_PARTS};
+    const isField  = !!th.fieldType;
+    const parts    = isField ? {...FIELD_PARTS} : (s.rarity === 'gold' ? {...GOLD_PARTS} : {...PURP_PARTS});
+    const partNames = isField ? PART_NAMES_7 : PART_NAMES;
     const setPrice = s.rarity === 'gold' ? 195 : 98;
     SUITS.push({
       id: s.id,
@@ -1259,6 +1263,7 @@ for (const th of THEMES_RAW) {
       name: th.theme + '·' + s.sub,
       rarity: s.rarity,
       parts,
+      partNames,
       setPrice,
       enterDate: th.date,
       direct: th.direct,
@@ -1270,6 +1275,8 @@ for (const th of THEMES_RAW) {
 const ALTS = new Set([
   '白金独角兽印象', '红绒十字印象',
   '雪影娃娃印象',  '嘟嘟锅印象',  '獠牙猪印象',
+  '奇丽花印象',
+  '烟花伯爵印象', '巨鼓象印象', '咕德帽帽印象', '小丑公爵印象',
 ]);
 
 // ════════════════════════════════════════════════════
@@ -1332,7 +1339,7 @@ function buildPool(ownedMap, fullOwnedSet, snapshotDate) {
     if (fullOwnedSet.has(s.id)) continue;
     if (s.enterDate > cutoff) continue;
     const owned = ownedMap[s.id] || new Set();
-    for (const p of PART_NAMES) {
+    for (const p of (s.partNames || PART_NAMES)) {
       if (!owned.has(p)) {
         cards.push({ id: s.id+':p:'+p, suitId: s.id, type: 'part', part: p });
       }
@@ -1366,9 +1373,11 @@ function runMC(targetSuits, ownedMap, fullOwnedSet, strategy, iters, snapshotDat
     const rem = new Map(); // suitId -> Set<partName>
     const isFullTarget = new Map();
     for (const {suitId, parts} of targetSuits) {
-      const owned = curOwned[suitId] || new Set();
+      const owned    = curOwned[suitId] || new Set();
+      const suitDef  = SUITS.find(sx => sx.id === suitId);
+      const pNames   = suitDef ? (suitDef.partNames || PART_NAMES) : PART_NAMES;
       const needed = parts === 'ALL'
-        ? new Set(PART_NAMES.filter(p => !owned.has(p)))
+        ? new Set(pNames.filter(p => !owned.has(p)))
         : new Set([...parts].filter(p => !owned.has(p)));
       isFullTarget.set(suitId, parts === 'ALL');
       if (needed.size > 0) rem.set(suitId, needed);
@@ -1435,26 +1444,31 @@ function daysBetween(d1, d2) {
 function computePhase(targets, snapshotDate, startBal, dayInc) {
   const ITERS   = 3000;
   const pool    = buildPool(st.owned, st.fullOwned, snapshotDate);
-  const N       = pool.length;
+  const N_total = pool.length;
+  const N       = pool.filter(c => c.type === 'part').length; // 部件卡数（不含套装卡）
   const poolIds = new Set(pool.map(c => c.id));
   const usefulIds = new Set();
   for (const {suitId, parts} of targets) {
-    const owned = st.owned[suitId] || new Set();
+    const owned   = st.owned[suitId] || new Set();
+    const suitDef = SUITS.find(s => s.id === suitId);
+    const pNames  = suitDef ? (suitDef.partNames || PART_NAMES) : PART_NAMES;
     if (parts === 'ALL') {
-      for (const p of PART_NAMES) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
+      for (const p of pNames) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
       usefulIds.add(suitId+':set');
     } else {
       for (const p of parts) if (!owned.has(p)) usefulIds.add(suitId+':p:'+p);
     }
   }
-  const u         = [...usefulIds].filter(id => poolIds.has(id)).length;
-  const dailyProb = probAtLeast1(N, u);
+  const u            = [...usefulIds].filter(id => poolIds.has(id) && !id.endsWith(':set')).length;
+  const u_withSet    = [...usefulIds].filter(id => poolIds.has(id)).length;
+  const dailyProb    = probAtLeast1(N, u);            // 不含套装卡（大字展示）
+  const dailyProbAll = probAtLeast1(N_total, u_withSet); // 含套装卡（小字标注）
   const expUseful = N > 0 ? 5 * u / N : 0;
   const hasAll    = targets.some(t => t.parts === 'ALL');
   const mcMixed   = runMC(targets, st.owned, st.fullOwned, 'mixed',    ITERS, snapshotDate, startBal, dayInc);
   const mcParts   = runMC(targets, st.owned, st.fullOwned, 'partonly', ITERS, snapshotDate, startBal, dayInc);
   const mcSet     = hasAll ? runMC(targets, st.owned, st.fullOwned, 'setonly', ITERS, snapshotDate, startBal, dayInc) : null;
-  return { N, u, dailyProb, expUseful, hasAll, mcMixed, mcParts, mcSet };
+  return { N, N_total, u, u_withSet, dailyProb, dailyProbAll, expUseful, hasAll, mcMixed, mcParts, mcSet };
 }
 
 function stratRowsHTML(res) {
@@ -1576,9 +1590,10 @@ function buildStrategyPanels(p1Targets, today) {
   for (const s of SUITS) {
     if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today || s.rarity !== 'purple') continue;
     const ownedP   = st.owned[s.id] || new Set();
-    const ownedCnt = PART_NAMES.filter(p => ownedP.has(p)).length;
+    const pNames   = s.partNames || PART_NAMES;
+    const ownedCnt = pNames.filter(p => ownedP.has(p)).length;
     if (ownedCnt > 0) {
-      const missCost = PART_NAMES.filter(p => !ownedP.has(p)).reduce((s, p) => s + PURP_PARTS[p], 0);
+      const missCost = pNames.filter(p => !ownedP.has(p)).reduce((acc, p) => acc + (s.parts[p] || 0), 0);
       nearPurple.push({ suitSub: s.sub, ownedCnt, missCost });
     }
   }
@@ -1703,9 +1718,10 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
   for (const s of SUITS) {
     if (targetedIds.has(s.id) || st.fullOwned.has(s.id) || s.enterDate > today || s.rarity !== 'purple') continue;
     const ownedP   = st.owned[s.id] || new Set();
-    const ownedCnt = PART_NAMES.filter(p => ownedP.has(p)).length;
+    const pNames   = s.partNames || PART_NAMES;
+    const ownedCnt = pNames.filter(p => ownedP.has(p)).length;
     if (ownedCnt > 0) {
-      const missCost = PART_NAMES.filter(p => !ownedP.has(p)).reduce((s, p) => s + PURP_PARTS[p], 0);
+      const missCost = pNames.filter(p => !ownedP.has(p)).reduce((acc, p) => acc + (s.parts[p] || 0), 0);
       nearPurple.push({ suitSub: s.sub, ownedCnt, missCost });
     }
   }
@@ -1896,9 +1912,11 @@ function _doCalc() {
       (isCase2 ? `入池当天命中率预估（${nearFmt} 卡池）` : '今日目标卡命中概率');
     animateCount(document.getElementById('r-prob-pct'), p1.dailyProb * 100, 1200, v => v.toFixed(1) + '%');
     document.getElementById('r-prob-bar').style.width  = (p1.dailyProb * 100) + '%';
-    const uNote = p1.hasAll ? '（部件卡＋套装卡）' : '（部件卡）';
+    const setNote = p1.hasAll
+      ? `&nbsp;·&nbsp; 含套装卡情形：<strong>${(p1.dailyProbAll * 100).toFixed(1)}%</strong>`
+      : '';
     document.getElementById('r-prob-detail').innerHTML =
-      `卡池共 <strong>${p1.N}</strong> 张卡 &nbsp;·&nbsp; 其中目标卡 <strong>${p1.u}</strong> 张${uNote} &nbsp;·&nbsp; 每天平均翻到目标卡 <strong>${p1.expUseful.toFixed(2)} 张</strong>`;
+      `卡池共 <strong>${p1.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p1.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p1.expUseful.toFixed(2)} 张</strong>${setNote}`;
   }
 
   // ── Strategy table ──
@@ -2043,7 +2061,7 @@ function renderOwnedList() {
           <button class="own-btn"          data-sid="${s.id}" data-state="full"  onclick="setOwn('${s.id}','full')">已集齐</button>
         </div>
         <div class="parts-grid" id="og-${s.id}" style="display:none">
-          ${PART_NAMES.map(p=>`
+          ${(s.partNames || PART_NAMES).map(p=>`
             <button class="part-btn" id="op-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleOwnPart('${s.id}','${p}')">
               ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
             </button>
@@ -2165,11 +2183,11 @@ function buildTargetRow(s, th, inPool) {
       <label class="target-name" for="tc-${s.id}">${s.sub}</label>
       <span class="rarity-tag ${s.rarity}">${s.rarity==='gold'?'金':'紫'}</span>
       ${!inPool ? `<span style="font-size:10px;color:var(--amber)">待入池</span>` : ''}
-      <button class="all-tag ${isAll ? 'on' : ''}" id="ta-${s.id}" onclick="toggleAllTag('${s.id}')">整套</button>
+      <button class="all-tag ${isAll ? 'on' : ''}" id="ta-${s.id}" onclick="toggleAllTag('${s.id}')">只看整套</button>
     </div>
     <div style="font-size:10px;color:var(--text-dim);margin-top:2px;padding-left:22px">${th.theme}</div>
     <div class="parts-grid" id="tg-${s.id}" style="display:${isSelected && !isAll ? 'grid' : 'none'};margin-top:8px">
-      ${PART_NAMES.map(p => {
+      ${(s.partNames || PART_NAMES).map(p => {
         const targeted = prev instanceof Set && prev.has(p);
         return `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleTargetPart('${s.id}','${p}')">
           ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
@@ -2417,7 +2435,8 @@ function toggleBody(hdr) {
 
 function updatePoolStats() {
   const today = todayStr();
-  const N = poolSize(st.owned, st.fullOwned);
+  const pool  = buildPool(st.owned, st.fullOwned);
+  const N     = pool.filter(c => c.type === 'part').length; // 部件卡数（不含套装卡）
   const activeSuits = SUITS.filter(s =>
     !st.fullOwned.has(s.id) && s.enterDate <= today
   ).length;
