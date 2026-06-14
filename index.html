@@ -6,7 +6,7 @@
   <title>皮卡随机商店 · 规划助手</title>
   <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap');
+    @import url('https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
 
     :root {
       --bg:             #FBC839;
@@ -940,14 +940,26 @@
     }
     .cl-items { display: flex; flex-direction: column; gap: 5px; }
     .cl-item {
-      font-size: 12.5px; color: #313131; line-height: 1.55;
+      font-size: 12.5px; color: #313131; line-height: 1.75;
       display: flex; gap: 7px;
-      font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
+      font-weight: 300;
+      letter-spacing: 0.015em;
     }
     .cl-item::before {
       content: '·';
       color: #FBC839; font-weight: 700; font-size: 16px;
       line-height: 1.2; flex-shrink: 0;
+    }
+    .cl-section {
+      display: flex; flex-direction: column; gap: 5px;
+      margin-top: 10px;
+    }
+    .cl-section:first-child { margin-top: 0; }
+    .cl-section-title {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.03em;
+      padding-bottom: 3px;
     }
 
     /* ── 右侧悬浮倒计时面板 ── */
@@ -3128,12 +3140,37 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
           <span class="cl-tag-current">当前版本</span>
           <span class="cl-date">2026 年 6 月</span>
         </div>
-        <div class="cl-items">
-          <div class="cl-item">全面适配移动端 H5，弹窗底部抽屉化，导航栏紧凑布局</div>
-          <div class="cl-item">取消 7 部件套装挂起（野外考察队、魔法嘉年华），在池套装更新至 37 套</div>
-          <div class="cl-item">目标套装已持有部件灰显不可选，"整套 / 部分"模式切换逻辑修正</div>
-          <div class="cl-item">修复移动端整页无法下滑的 CSS 层叠 Bug，修复右侧滚动条白条缝隙</div>
-          <div class="cl-item">待入池策略优化：概率计算改为部件口径（排除套装卡），面板注释说明套装卡视为额外加速</div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🚀 新增与特性</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>移动端全量适配</strong>：完成 Mobile 视图重构，针对手机端网页进行流畅度优化，并将关键弹窗统一升级为"底部抽屉式"交互。</span></div>
+            <div class="cl-item"><span><strong>套装数据补全</strong>：正式解锁此前挂起的 7 部件套装模块（含野外考察队、魔法嘉年华），全站收录时装总数同步更新至 37 套。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">⚙️ 算法与计算优化</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>计算粒度精细化</strong>：将待入池策略的概率算法由"整套判定"优化为"单件部件维度"，计算结果更契合实际翻牌场景。</span></div>
+            <div class="cl-item"><span><strong>机制联动修正</strong>：优化多套合并计算逻辑，目标套装中若包含已持有部件，系统将在模拟时自动将其作为"已排除资产"进行加权扣除。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🎨 界面与体验升级</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>组件交互修正</strong>：修正"整套 / 部分"持有模式切换时的前端联动逻辑，处于"已持有"状态的部件将强制转为灰显且不可二次勾选。</span></div>
+            <div class="cl-item"><span><strong>排版错位微调</strong>：精简顶部导航栏布局，提升高分辨率屏幕下的信息视觉密度。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🔧 缺陷修复</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>修复 macOS 及移动端环境下，页面纵向无法顺畅滚动的弹性回弹问题。</span></div>
+            <div class="cl-item"><span>修复因浏览器原生滚动条轨道占位导致的顶部导航栏右侧留缝、侧边栏横向错位缺陷。</span></div>
+          </div>
         </div>
       </div>
 
@@ -3141,13 +3178,12 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
       <div class="cl-block">
         <div class="cl-version-row">
           <span class="cl-badge">v1.1</span>
-          <span class="cl-date">GitHub 首发</span>
+          <span class="cl-date">GitHub 首发版本</span>
         </div>
         <div class="cl-items">
-          <div class="cl-item">入池倒计时悬浮面板、集齐日期预测（欧皇 / 正常 / 非酋三档）</div>
-          <div class="cl-item">待入池套装概率估算，按入池日期分 Case / Scenario 分阶段展示</div>
-          <div class="cl-item">散件清池策略建议，多套合并计算，每日收入支持手动覆盖</div>
-          <div class="cl-item">亮色主题 UI，顶部双页签导航，三步引导交互，套装数据 37 套</div>
+          <div class="cl-item"><span><strong>核心预测上线</strong>：支持入池倒计时悬浮面板展现，并引入"欧皇 / 正常 / 非酋"三档集齐日期概率预测模拟（3000 次随机模拟）。</span></div>
+          <div class="cl-item"><span><strong>策略覆盖全面</strong>：支持部件清池策略建议及多套合并计算，每日许愿星收入支持玩家手动覆盖调试。</span></div>
+          <div class="cl-item"><span><strong>数据基础构建</strong>：上线亮色主题二次元 UI，采用顶部双页签导航及三步引导交互，首发录入 37 套时装基础数据。</span></div>
         </div>
       </div>
 
@@ -3155,11 +3191,11 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
       <div class="cl-block">
         <div class="cl-version-row">
           <span class="cl-badge">v1.0</span>
-          <span class="cl-date">内部 Demo</span>
+          <span class="cl-date">内部 Demo 版本</span>
         </div>
         <div class="cl-items">
-          <div class="cl-item">基础概率与许愿星规划工具，单套目标计算</div>
-          <div class="cl-item">三策略（散件 / 套装卡 / 混合）P50 / P90 天数，金色 195 星 / 紫色 98 星</div>
+          <div class="cl-item"><span>跑通基础概率与许愿星规划核心算法模型，支持单套目标的天数精算。</span></div>
+          <div class="cl-item"><span>确立部件、套装卡、混合策略下 P50 / P90 的天数计算公式，金色 195 星 / 紫色 98 星。</span></div>
         </div>
       </div>
 
