@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>洛克王国 · 随机商店概率与许愿星规划工具</title>
+  <title>皮卡随机商店 · 规划助手</title>
   <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap');
@@ -68,7 +68,11 @@
       font-display: swap;
     }
 
-    html { scrollbar-gutter: stable; }
+    html {
+      scrollbar-gutter: stable;          /* 始终为滚动条预留槽位，防止布局抖动 */
+      scrollbar-color: #97938C transparent; /* Firefox：拇指灰色 / 轨道透明 */
+      scrollbar-width: thin;             /* Firefox：窄滚动条 */
+    }
 
     *, *::before, *::after {
       box-sizing: border-box; margin: 0; padding: 0;
@@ -209,7 +213,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: color 0.15s;
     }
+    .ps-val.counting { color: var(--purple); }
 
     /* ── Step tabs ── */
     .step-tabs {
@@ -354,14 +360,14 @@
     .suit-row:hover { border-color: #313131; box-shadow: none; }
     .suit-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .suit-img {
-      width: 40px; height: 40px; flex-shrink: 0;
-      background: #97938C;
-      border: none;
+      width: 48px;
+      aspect-ratio: 150 / 168;
+      flex-shrink: 0;
       border-radius: 10px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #FBF7EE; font-size: 7px; text-align: center; gap: 1px;
+      overflow: hidden;
+      background: #E3DAC8;
     }
-    .suit-img span { font-size: 14px; }
+    .suit-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .suit-name-wrap { flex: 1; min-width: 0; }
     .suit-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .rarity-tag {
@@ -664,6 +670,11 @@
       background: #FBC839; color: #313131; border: none;
     }
     .theme-all-btn.on:hover { opacity: 0.85; }
+    /* 紫色主题：全集齐按钮、套装行选中按钮、部件勾选按钮 → 统一改为紫色 */
+    .theme-purple .theme-all-btn.on { background: var(--purple); color: #fff; }
+    .theme-purple .own-btn.on-full  { background: var(--purple); color: #fff; }
+    .theme-purple .own-btn.on-part  { background: var(--purple); color: #fff; }
+    .theme-purple .part-btn.on      { background: var(--purple); color: #fff; }
 
     /* ── Target toolbar ── */
     .target-toolbar {
@@ -943,7 +954,7 @@
     /* tab 是唯一锚点，content 绝对定位向左展开 */
     #countdown-panel {
       position: fixed;
-      right: var(--sb-w, 0px);
+      right: 0;
       top: 50%;
       transform: translateY(-50%);
       z-index: 900;
@@ -1089,7 +1100,7 @@
 
       /* ── 步骤1 已持有：套装行 ── */
       .suit-hdr { gap: 8px; }
-      .suit-img { width: 42px; height: 42px; font-size: 11px; }
+      .suit-img { width: 42px; }
       .suit-name { font-size: 12px; }
       .rarity-tag { font-size: 10px; }
       .own-btn { padding: 5px 6px; font-size: 10px; min-height: 32px; }
@@ -1225,7 +1236,7 @@
 <header class="header">
   <div class="header-brand">
     <img class="header-icon" src="Favicon/Favicon.png" alt="">
-    <h1>洛克王国 · 随机商店规划工具</h1>
+    <h1>皮卡随机商店 · 规划助手</h1>
   </div>
   <nav class="top-nav">
     <button class="nav-tab active" onclick="switchView('planner')">
@@ -1989,7 +2000,8 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
       for (const p of parts) if (!owned.has(p)) usefulAtEntry.add(suitId+':p:'+p);
     }
   }
-  const u_entry = [...usefulAtEntry].filter(id => poolEntryIds.has(id)).length;
+  const u_entry         = [...usefulAtEntry].filter(id => poolEntryIds.has(id) && !id.endsWith(':set')).length;
+  const u_entry_withSet = [...usefulAtEntry].filter(id => poolEntryIds.has(id)).length; // 含套装卡，仅供备注
 
   // 垫刀清单（从今日在池的非目标散件中找）
   const allPadDao = buildPadDaoItems(targetedIds, today);
@@ -2011,7 +2023,8 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
   const diagHook = `<div class="strat-diag-hook">
     你的目标「${targetNames}」将在 <strong>${nearFmt}</strong> 入池，还需等待 <strong>${waitDays} 天</strong>。<br>
     入池当天，卡池将在现有 <strong>${N}</strong> 张基础上新增约 <strong>${newCards}</strong> 张目标卡，
-    届时共 <strong>${N_entry}</strong> 张——${Y_entry ? `你的本命平均每 <strong class="strat-warn-val">${Y_entry} 天</strong>才能在商店碰到一次。` : ''}
+    届时共 <strong>${N_entry}</strong> 张——${Y_entry ? `平均每 <strong class="strat-warn-val">${Y_entry} 天</strong>才能在商店碰到一次目标部件。` : ''}
+    <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📌 以下概率均以部件卡口径计算（套装卡触发概率极低，翻到算额外加速）。</div>
   </div>`;
 
   let panel1;
@@ -2025,13 +2038,13 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
       <div class="strat-sub-card strat-card-a">
         <div class="strat-sub-title">🔍 趁等待期提前「预清池」方案</div>
         ${diagHook}
-        <div class="strat-desc">别白等！把这几个当前在池的便宜非目标散件买断，让入池当天的卡池更浅：</div>
+        <div class="strat-desc">别白等！把这几个当前在池的便宜非目标部件买断，让入池当天的卡池更浅：</div>
         <div class="padDao-list">${itemList}</div>
         <div class="strat-account">
           <div class="strat-account-title">📈 算一笔账：提前清有多划算？</div>
           <div class="strat-account-row">你需要花：总共 <strong class="strat-cost">${M} 颗许愿星</strong>（满勤只需 <strong>${recDays} 天</strong>就能攒够）</div>
-          <div class="strat-account-row">入池当天卡池：<span class="strat-prob-old">${N_entry} 张</span> → <strong class="strat-prob-new">${N_entry_after} 张</strong>，命中概率：<span class="strat-prob-old">${Apct_e}%</span> → <strong class="strat-prob-new">${Bpct_e}%</strong>！</div>
-          <div class="strat-advice">等待期间刷新看到就顺手买断，入池当天见本命的概率更高。</div>
+          <div class="strat-account-row">入池当天卡池：<span class="strat-prob-old">${N_entry} 张</span> → <strong class="strat-prob-new">${N_entry_after} 张</strong>，每日命中目标部件概率：<span class="strat-prob-old">${Apct_e}%</span> → <strong class="strat-prob-new">${Bpct_e}%</strong>（部件口径，不含套装卡）！</div>
+          <div class="strat-advice">等待期间刷新看到目标部件就顺手买断，入池当天命中目标的概率更高。</div>
         </div>
       </div>`;
   } else {
@@ -2039,7 +2052,7 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
       <div class="strat-sub-card strat-card-a">
         <div class="strat-sub-title">🔍 趁等待期提前「预清池」方案</div>
         ${diagHook}
-        <div class="strat-desc">当前在池里已没有 ≤20星的非目标散件可以提前清了，<strong>等待期间无需额外操作。</strong></div>
+        <div class="strat-desc">当前在池里已没有 ≤20星的非目标部件可以提前清了，<strong>等待期间无需额外操作。</strong></div>
       </div>`;
   }
 
@@ -2062,7 +2075,7 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
     ? `<div class="strat-alert-row" style="margin-top:8px;background:rgba(154,115,249,0.08);border-left:3px solid var(--purple);border-radius:0 8px 8px 0">
         💜 <strong>强烈推荐立刻买断：</strong>你已零星歪到
         ${nearPurple2.map(s => `<span class="strat-purple">「${s.suitSub}」</span>（已有 ${s.ownedCnt} 件，补齐仅需 <strong>${s.missCost} 星</strong>）`).join('，')}
-        ——补齐整套后，所有散件卡 + 套装卡一起彻底退池，让入池当天的卡池更干净！
+        ——补齐整套后，所有部件卡 + 套装卡一起彻底退池，让入池当天的卡池更干净！
        </div>`
     : '';
 
@@ -2077,23 +2090,23 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
         : `入池当天命中概率提升约 <strong>${improvement2}%</strong>，提升有限——手头星数充裕可以顺手清，不急也可以留着。`;
       panel2 = `
         <div class="strat-sub-card strat-card-b">
-          <div class="strat-sub-title">💡 关于剩余金色散件：值不值得清？</div>
-          <div class="strat-tip-item">买断手套（<span class="strat-orange">17星</span>）、袜子（<span class="strat-orange">9星</span>）、鞋子（<span class="strat-orange">20星</span>）等便宜散件后，该套装的<strong>连体服（<span class="strat-orange">74星</span>）、头饰（<span class="strat-orange">41星</span>）、背包（<span class="strat-orange">34星</span>）以及套装卡</strong>仍会留在池中，无法完全退池。</div>
+          <div class="strat-sub-title">💡 关于剩余金色部件：值不值得清？</div>
+          <div class="strat-tip-item">买断手套（<span class="strat-orange">17星</span>）、袜子（<span class="strat-orange">9星</span>）、鞋子（<span class="strat-orange">20星</span>）等便宜部件后，该套装的<strong>连体服（<span class="strat-orange">74星</span>）、头饰（<span class="strat-orange">41星</span>）、背包（<span class="strat-orange">34星</span>）以及套装卡</strong>仍会留在池中，无法完全退池。</div>
           <div class="strat-tip-item">结合预清池方案测算：清完后入池当天命中概率从 <span class="strat-prob-old">${Apct_e}%</span> 提升至 <strong class="strat-prob-new">${Bpct_e}%</strong>——${rec2}</div>
           ${purpleReco2}
         </div>`;
     } else {
-      // 状态三：紫色散件还有——优先清紫色
+      // 状态三：紫色部件还有——优先清紫色
       const hasGoldInTop2 = topItems.some(c => c.rarity === 'gold');
       const goldWarn2 = hasGoldInTop2
-        ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装散件，注意：买断后该套装的<span class="strat-orange">连体服（74星）</span>等昂贵部件和套装卡依然留在池中，无法完全退池。</div>`
+        ? `<div class="strat-alert-row">⚠️ 上方推荐含金色套装部件，注意：买断后该套装的<span class="strat-orange">连体服（74星）</span>等昂贵部件和套装卡依然留在池中，无法完全退池。</div>`
         : '';
       panel2 = `
         <div class="strat-sub-card strat-card-b">
           <div class="strat-sub-title">⚠️ 避坑：哪些"低价部件"其实是陷阱？</div>
           ${goldWarn2}
-          <div class="strat-tip-item">🚫 <strong>优先清紫色套装散件，金色性价比相对更低：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但买断后昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局；而紫色散件（4–8星）清完整套即可彻底退池，性价比远高于金色。</div>
-          <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色散件（4–8星）极便宜，整套仅需 98 星。一套全部集齐后，所有散件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
+          <div class="strat-tip-item">🚫 <strong>优先清紫色套装部件，金色性价比相对更低：</strong>金色手套（<span class="strat-orange">17星</span>）和鞋子（<span class="strat-orange">20星</span>）看似便宜，但买断后昂贵的连体服（<span class="strat-orange">74星</span>）和套装卡依然留在池中搅局；而紫色部件（4–8星）清完整套即可彻底退池，性价比远高于金色。</div>
+          <div class="strat-tip-item">💜 <strong>紫色套装快凑齐了？直接买断：</strong>紫色部件（4–8星）极便宜，整套仅需 98 星。一套全部集齐后，所有部件卡连同那张大块头的<strong>套装卡</strong>一起移出卡池，这才是最彻底的瘦身！</div>
           ${purpleReco2}
         </div>`;
     }
@@ -2104,9 +2117,10 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today) {
     <div class="strat-sub-card strat-card-c">
       <div class="strat-sub-title">🎯 你的目标「真实等待成本」</div>
       <div class="strat-desc">
-        目标入池后，卡池共 <strong>${N_entry}</strong> 张，其中本命目标卡 <strong>${u_entry}</strong> 张。<br>
-        每天翻出至少一件本命的概率${A_entry >= 0.5 ? (A_entry >= 0.8 ? '高达' : '为') : '只有'} <strong>${A_entry < 0.5 ? `<span class="strat-warn-val">${Apct_e}%</span>` : `${Apct_e}%`}</strong>——平均每隔 <strong${A_entry < 0.5 ? ' class="strat-warn-val"' : ''}>${Y_entry} 天</strong>${A_entry >= 0.5 ? '即可在商店里碰到你的目标一次。' : '才能在商店里"碰到"你的目标一次。'}<br><br>
-        ${A_entry < 0.5 ? '如果觉得这个等待太折磨，提前执行上方的<strong>【预清池方案】</strong>，把入池当天的概率主动拉上来！' : '入池后概率已相当不错，保持每天翻牌节奏即可！'}
+        目标入池后，卡池共 <strong>${N_entry}</strong> 张，其中目标部件卡 <strong>${u_entry}</strong> 张。<br>
+        每天翻出至少一件目标部件的概率${A_entry >= 0.5 ? (A_entry >= 0.8 ? '高达' : '为') : '只有'} <strong>${A_entry < 0.5 ? `<span class="strat-warn-val">${Apct_e}%</span>` : `${Apct_e}%`}</strong>——平均每隔 <strong${A_entry < 0.5 ? ' class="strat-warn-val"' : ''}>${Y_entry} 天</strong>${A_entry >= 0.5 ? '即可在商店里碰到你的目标一次。' : '才能在商店里"碰到"你的目标一次。'}<br><br>
+        ${A_entry < 0.5 ? '如果觉得这个等待太折磨，提前执行上方的<strong>【预清池方案】</strong>，把入池当天的概率主动拉上来！' : '入池后概率已相当不错，保持每天翻牌节奏即可！'}<br><br>
+        💡 套装卡也是目标卡之一，但触发概率极低，不纳入以上概率计算。若刷新时恰好翻到，把它买断——视为意外加速，距离集齐整套又近了一步！
       </div>
     </div>` : '';
 
@@ -2260,7 +2274,7 @@ function _doCalc() {
         html += `<div class="warn-banner">⚠️ 目标跨多个待入池主题，仅展示最近一期【${nearTheme}（${nearFmt} 入池）】的预估结果。【${farNames}】请等入池后重新规划，届时卡池持有情况未知，无法提前估算。</div>`;
       }
       const nearFmt = nearDate.slice(5).replace('-','/');
-      html += `<div class="future-banner">🔮 <strong>以下为预估数据（${nearFmt} 入池后）</strong> · 还需等待 ${waitDays} 天入池 · 基于当前持有状态保守估算，实际命中率可能更高。</div>`;
+      html += `<div class="future-banner">🔮 <strong>以下为预估数据（${nearFmt} 入池后）</strong> · 还需等待 ${waitDays} 天入池 · 基于当前持有状态保守估算，实际命中率可能更高。<br><span style="font-size:11px;opacity:0.85">📌 以下概率均以部件卡口径计算，套装卡触发概率极低，翻到算额外加速。</span></div>`;
       banner.innerHTML = html;
       banner.classList.remove('hidden');
     } else if (isCase3) {
@@ -2433,7 +2447,8 @@ function renderOwnedList() {
     if (th.suspended) continue;
     const inPool = th.date <= today;
     const wrap = document.createElement('div');
-    wrap.className = 'theme-group';
+    const isAllPurple = th.suits.every(r => SUITS.find(x => x.id === r.id)?.rarity === 'purple');
+    wrap.className = 'theme-group' + (isAllPurple ? ' theme-purple' : '');
     const dateStr = th.date.slice(5).replace('-','/');
     const pendingBadge = inPool ? '' : `<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);margin-left:4px">待入池</span>`;
     wrap.innerHTML = `
@@ -2457,7 +2472,7 @@ function renderOwnedList() {
       const altBadge = ALTS.has(s.sub) ? '<span class="alt-badge">有异色</span>' : '';
       row.innerHTML = `
         <div class="suit-hdr">
-          <div class="suit-img"><span>🖼️</span>图片</div>
+          <div class="suit-img"><img src="assets/images/suitcard/${s.sub}.png" alt="${s.sub}" onerror="this.parentElement.style.background='#E3DAC8'"></div>
           <div class="suit-name-wrap">
             <div class="suit-name">${s.sub}${pendingSuitTag}</div>
             <span class="rarity-tag ${s.rarity}">${rarityLabel}</span>${altBadge}
@@ -2865,6 +2880,43 @@ function toggleBody(hdr) {
   toggle.classList.toggle('open', !open);
 }
 
+// 数字滚动计数动画：变化幅度自适应时长（300-800ms），easeOutQuart 缓动
+const _cntAnim = {};
+const _cntCurrent = {}; // 追踪当前显示值，避免从 DOM 读数导致 0||to 误判
+function animateStatCount(el, to) {
+  to = Math.round(to);
+  const id = el.id;
+  // 首次调用（页面加载）：直接赋值，不做动画
+  if (_cntCurrent[id] === undefined) {
+    el.textContent = to;
+    _cntCurrent[id] = to;
+    return;
+  }
+  const from = _cntCurrent[id];
+  const delta = Math.abs(to - from);
+  if (delta === 0) return;
+  const duration = Math.min(delta * 12 + 250, 800);
+  if (_cntAnim[id]) cancelAnimationFrame(_cntAnim[id]);
+  el.classList.add('counting');
+  const t0 = performance.now();
+  function tick(now) {
+    const p = Math.min((now - t0) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 4); // easeOutQuart
+    const cur = Math.round(from + (to - from) * ease);
+    el.textContent = cur;
+    _cntCurrent[id] = cur;
+    if (p < 1) {
+      _cntAnim[id] = requestAnimationFrame(tick);
+    } else {
+      el.textContent = to;
+      _cntCurrent[id] = to;
+      el.classList.remove('counting');
+      delete _cntAnim[id];
+    }
+  }
+  _cntAnim[id] = requestAnimationFrame(tick);
+}
+
 function updatePoolStats() {
   const today = todayStr();
   const pool  = buildPool(st.owned, st.fullOwned);
@@ -2872,8 +2924,8 @@ function updatePoolStats() {
   const activeSuits = SUITS.filter(s =>
     !st.fullOwned.has(s.id) && s.enterDate <= today
   ).length;
-  document.getElementById('stat-n').textContent = N;
-  document.getElementById('stat-suits').textContent = activeSuits;
+  animateStatCount(document.getElementById('stat-n'), N);
+  animateStatCount(document.getElementById('stat-suits'), activeSuits);
   maybeLiveRefreshStrategy();
   saveState();
 }
@@ -3055,14 +3107,6 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
 })();
 
 // 消除滚动条宽度缝隙：测量实际滚动条占宽，存为 CSS 变量供固定定位元素使用
-(function syncScrollbarWidth() {
-  function apply() {
-    const w = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.setProperty('--sb-w', w + 'px');
-  }
-  apply();
-  window.addEventListener('resize', apply);
-})();
 </script>
 
 <!-- ── 更新日志弹窗 ── -->
@@ -3071,7 +3115,7 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     <div class="cl-header">
       <div class="cl-header-left">
         <span class="cl-header-title">更新日志</span>
-        <span class="cl-header-sub">洛克王国随机商店规划工具</span>
+        <span class="cl-header-sub">皮卡随机商店 · 规划助手</span>
       </div>
       <button class="cl-close" onclick="closeChangelog()">✕</button>
     </div>
@@ -3089,6 +3133,7 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
           <div class="cl-item">取消 7 部件套装挂起（野外考察队、魔法嘉年华），在池套装更新至 37 套</div>
           <div class="cl-item">目标套装已持有部件灰显不可选，"整套 / 部分"模式切换逻辑修正</div>
           <div class="cl-item">修复移动端整页无法下滑的 CSS 层叠 Bug，修复右侧滚动条白条缝隙</div>
+          <div class="cl-item">待入池策略优化：概率计算改为部件口径（排除套装卡），面板注释说明套装卡视为额外加速</div>
         </div>
       </div>
 
