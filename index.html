@@ -128,6 +128,9 @@
       white-space: nowrap;
     }
 
+    /* ── Bottom nav (mobile only, hidden on desktop) ── */
+    .bottom-nav { display: none; }
+
     /* ── Top nav tabs ── */
     .top-nav {
       display: flex;
@@ -1098,21 +1101,101 @@
     @media (max-width: 600px) {
       /* ── 顶部导航栏 ── */
       .header { padding: 0 10px; gap: 6px; height: 52px; }
-      body { padding-top: 52px; }
+      body { padding-top: 52px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
       .header-icon { width: 24px; height: 24px; }
-      .header h1 { font-size: 11px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      /* 移动端只保留"数据快照"徽章，隐藏"37套"徽章 */
+      .header h1 { font-size: 11px; }
       .header-badges { margin-left: auto; gap: 4px; display: flex; }
       .header-badges .badge { font-size: 10px; padding: 2px 7px; }
-      .header-badges .badge:last-child { display: none; }
       .badge-long { display: none; }
       .badge-short { display: inline; }
-      .nav-tab { padding: 5px 9px; font-size: 11px; }
-      .nav-tab .tab-icon { width: 15px !important; height: 15px !important; margin-right: 3px !important; }
+      /* 移动端隐藏顶部 tab，改用底部导航 */
+      .top-nav { display: none; }
 
-      /* ── 整体布局 ── */
-      .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); }
-      .right-panel { padding: 8px; gap: 8px; }
+      /* ── 底部导航栏 ── */
+      .bottom-nav {
+        display: flex;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+        height: calc(64px + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);
+        background: #2B2B2B;
+        border-radius: 18px 18px 0 0;
+        overflow: visible;
+      }
+      .bnav-item {
+        flex: 1;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        padding-bottom: 10px;
+        border: none; background: transparent;
+        cursor: pointer; position: relative;
+      }
+      /* blob 容器：绝对定位，叠在 label 上方 */
+      .bnav-blob-wrap {
+        position: absolute;
+        bottom: 26px;
+        width: 66px; height: 66px;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 0.2s ease;
+      }
+      .bnav-item.active .bnav-blob-wrap {
+        transform: translateY(-12px);
+      }
+      /* blob 底图：铺满 wrap */
+      .bnav-blob-img {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%; object-fit: contain;
+      }
+      .bnav-blob-off { display: block; }
+      .bnav-blob-on  { display: none; }
+      .bnav-item.active .bnav-blob-off { display: none; }
+      .bnav-item.active .bnav-blob-on  { display: block; }
+      /* 图标：叠在 blob 上方 */
+      .bnav-icon {
+        position: relative; z-index: 1;
+        width: 34px; height: 34px; object-fit: contain;
+      }
+      .bnav-icon-on  { display: none; }
+      .bnav-icon-off { display: block; }
+      .bnav-item.active .bnav-icon-on  { display: block; }
+      .bnav-item.active .bnav-icon-off { display: none; }
+      /* label */
+      .bnav-label {
+        font-size: 10px; font-weight: 700;
+        color: rgba(251,247,238,0.45);
+        position: relative; z-index: 1;
+      }
+      .bnav-item.active .bnav-label { color: #FBC839; }
+
+      /* ── 整体布局：移动端单列 ── */
+      .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); flex-direction: column; }
+      .left-column { width: 100%; position: static; height: auto; overflow: visible; }
+      /* 移动端右侧结果面板：默认隐藏，只在第三步显示 */
+      #right-panel { display: none; }
+      #right-panel.mobile-visible { display: flex; padding: 8px; gap: 8px; }
+
+      /* ── 步骤1/2 固定高度布局（内容在面板内滚动）── */
+      #view-planner.fixed-step-layout {
+        position: fixed;
+        inset: 52px 0 calc(68px + env(safe-area-inset-bottom)) 0;
+        overflow: hidden; min-height: unset;
+      }
+      #view-planner.fixed-step-layout .layout {
+        height: 100%; min-height: unset; overflow: hidden; padding: 8px; gap: 8px;
+      }
+      #view-planner.fixed-step-layout .left-column {
+        height: 100%; overflow: hidden; flex: 1; min-height: 0;
+        display: flex; flex-direction: column;
+      }
+      #view-planner.fixed-step-layout .pool-stats-card { flex-shrink: 0; }
+      #view-planner.fixed-step-layout .left-panel {
+        flex: 1; min-height: 0; overflow: hidden;
+        display: flex; flex-direction: column;
+      }
+      #view-planner.fixed-step-layout .step-tabs { flex-shrink: 0; }
+      #view-planner.fixed-step-layout .step-pane {
+        flex: 1; min-height: 0;
+        overflow-y: auto; -webkit-overflow-scrolling: touch;
+      }
+      #view-planner.fixed-step-layout .step-nav-btns { flex-shrink: 0; }
       .pool-stats-card { padding: 8px; gap: 6px; }
       .ps-lbl { font-size: 10px; width: 70px; }
       .ps-val { font-size: 17px; }
@@ -1265,7 +1348,112 @@
       .cp-date { font-size: 9px; }
       .cp-timer { font-size: 11px; }
     }
+    /* ── 衣橱页面 ── */
+    #view-wardrobe { background: #FBC839; min-height: calc(100vh - 56px); padding: 32px 16px; }
+    .wardrobe-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    .wardrobe-input-card {
+      background: #F4EEE1; border-radius: 16px; border: 2px solid #313131;
+      padding: 28px 24px; text-align: center;
+    }
+    .wardrobe-title-banner { height: 60px; object-fit: contain; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; }
+    .wardrobe-name-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 18px; }
+    .wardrobe-name-row label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+    .wardrobe-name-input {
+      border: 1.5px solid var(--border-soft); border-radius: 8px;
+      padding: 7px 12px; font-size: 14px; width: 160px;
+      background: #fff; font-family: inherit; color: #313131;
+    }
+    .wardrobe-gen-btn {
+      width: 100%; padding: 13px; background: #FBC839; border: 2px solid #313131;
+      border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit; color: #313131; transition: opacity 0.15s;
+    }
+    .wardrobe-gen-btn:hover { opacity: 0.85; }
+    .wardrobe-hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; }
+    .wardrobe-beta-notice {
+      background: rgba(0,0,0,0.12); border-radius: 10px;
+      padding: 10px 14px; font-size: 12px; color: #3d3a37;
+      text-align: center; line-height: 1.5;
+    }
+
+    /* ── 隐藏卡片（html2canvas 截图用）── */
+    #wardrobe-card {
+      position: fixed; left: -9999px; top: 0;
+      width: 750px; z-index: -1; pointer-events: none;
+    }
+    .wc-bg { background: #F4EEE1; padding: 44px 40px 36px; font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif; }
+    .wc-title-area { text-align: center; margin-bottom: 36px; }
+    .wc-title-img { height: 76px; object-fit: contain; }
+    .wc-stats-row {
+      display: flex; align-items: stretch;
+      border-top: 2px solid #313131; border-bottom: 2px solid #313131;
+      padding: 20px 0; margin-bottom: 32px;
+    }
+    .wc-stat-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .wc-stat-icon { width: 52px; height: 52px; object-fit: contain; }
+    .wc-stat-label { font-size: 13px; color: #97938C; }
+    .wc-stat-num { font-size: 30px; font-weight: 700; color: #313131; line-height: 1.1; }
+    .wc-stat-total { font-size: 16px; font-weight: 400; color: #97938C; }
+    .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 4px 0; }
+    /* 按主题分行 */
+    .wc-themes { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .wc-theme-row { display: flex; gap: 10px; }
+    .wc-card-item { position: relative; flex: 1; aspect-ratio: 150/168; border-radius: 7px; overflow: hidden; background: #E3DAC8; }
+    .wc-card-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .wc-card-item.unowned img { filter: grayscale(1); }
+    /* 未持有遮罩 + 进度 */
+    .wc-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.52); border-radius: 7px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .wc-progress-text { color: #fff; font-size: 17px; font-weight: 700; line-height: 1; }
+    .wc-progress-bar-bg { width: 64%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; }
+    .wc-progress-fill { height: 100%; background: #fff; border-radius: 2px; }
+    .wc-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 16px; border-top: 1px solid #C8BFB2;
+    }
+    .wc-username { font-size: 14px; font-weight: 700; color: #313131; }
+    .wc-date { font-size: 12px; color: #97938C; }
+
+    /* ── 衣橱预览弹窗 ── */
+    .wardrobe-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+      z-index: 500; display: none; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      padding: 32px 16px 48px; overflow-y: auto;
+    }
+    .wardrobe-modal.open { display: flex; }
+    .wardrobe-modal-box { width: 100%; max-width: 420px; position: relative; }
+    .wardrobe-modal-close {
+      position: absolute; top: -14px; right: -14px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #fff; border: none; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; z-index: 10;
+    }
+    .wardrobe-preview-img { width: 100%; border-radius: 12px; display: block; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
+    .wardrobe-modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+    .wardrobe-modal-btns button {
+      flex: 1; padding: 13px; border-radius: 12px;
+      border: 2px solid #313131; font-size: 14px; font-weight: 700;
+      cursor: pointer; background: #FBC839; color: #313131;
+      font-family: inherit; transition: opacity 0.15s;
+    }
+    .wardrobe-modal-btns button:hover { opacity: 0.85; }
+    .wardrobe-modal-btns .share-btn { background: #FBF7EE; }
+    /* 生成中遮罩 */
+    .wardrobe-generating {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      z-index: 600; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+    }
+    .wardrobe-generating.show { display: flex; }
+    .wardrobe-generating span { color: #fff; font-size: 15px; font-weight: 700; }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1276,22 +1464,58 @@
     <h1>皮卡随机商店 · 规划助手</h1>
   </div>
   <nav class="top-nav">
-    <button class="nav-tab active" onclick="switchView('planner')">
+    <button class="nav-tab active" data-view="planner" onclick="switchView('planner')">
       <img class="tab-icon tab-icon-off" src="assets/icon/toolbox-white.png" alt="">
       <img class="tab-icon tab-icon-on"  src="assets/icon/toolbox.png" alt="">
       规划工具
     </button>
-    <button class="nav-tab" onclick="switchView('pool')">
+    <button class="nav-tab" data-view="pool" onclick="switchView('pool')">
       <img class="tab-icon tab-icon-off" src="assets/icon/suit-white.png" alt="">
       <img class="tab-icon tab-icon-on"  src="assets/icon/suit.png" alt="">
       卡池总览
     </button>
+    <button class="nav-tab" data-view="wardrobe" onclick="switchView('wardrobe')">
+      <img class="tab-icon tab-icon-off" src="assets/icon/tab-wardrobe-off.png" alt="">
+      <img class="tab-icon tab-icon-on"  src="assets/icon/tab-wardrobe-on.png" alt="">
+      我的衣橱
+    </button>
   </nav>
   <div class="header-badges">
     <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.3 ↗</span><span class="badge-short">v1.3 ↗</span></span>
-    <span class="badge" style="cursor:pointer" onclick="switchView('pool');document.getElementById('pool-suits-card').scrollIntoView({behavior:'smooth',block:'start'})">44 套（含待入池）</span>
+    <span class="badge" style="cursor:pointer" onclick="switchView('pool');document.getElementById('pool-suits-card').scrollIntoView({behavior:'smooth',block:'start'})"><span class="badge-long">44 套（含待入池）</span><span class="badge-short">44 套</span></span>
   </div>
 </header>
+
+<!-- ── BOTTOM NAV (mobile only) ── -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bnav-item active" data-view="planner" onclick="switchView('planner')">
+    <div class="bnav-blob-wrap">
+      <img class="bnav-blob-img bnav-blob-off" src="assets/icon/tab-bg-off.png" alt="">
+      <img class="bnav-blob-img bnav-blob-on"  src="assets/icon/tab-bg-on.png" alt="">
+      <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-plan-off.png" alt="">
+      <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-plan-on.png" alt="">
+    </div>
+    <span class="bnav-label">规划</span>
+  </button>
+  <button class="bnav-item" data-view="pool" onclick="switchView('pool')">
+    <div class="bnav-blob-wrap">
+      <img class="bnav-blob-img bnav-blob-off" src="assets/icon/tab-bg-off.png" alt="">
+      <img class="bnav-blob-img bnav-blob-on"  src="assets/icon/tab-bg-on.png" alt="">
+      <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-pool-off.png" alt="">
+      <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-pool-on.png" alt="">
+    </div>
+    <span class="bnav-label">卡池</span>
+  </button>
+  <button class="bnav-item" data-view="wardrobe" onclick="switchView('wardrobe')">
+    <div class="bnav-blob-wrap">
+      <img class="bnav-blob-img bnav-blob-off" src="assets/icon/tab-bg-off.png" alt="">
+      <img class="bnav-blob-img bnav-blob-on"  src="assets/icon/tab-bg-on.png" alt="">
+      <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-wardrobe-off.png" alt="">
+      <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-wardrobe-on.png" alt="">
+    </div>
+    <span class="bnav-label">衣橱</span>
+  </button>
+</nav>
 
 <!-- ════════════════════════ PLANNER VIEW ════════════════════════ -->
 <div id="view-planner" class="layout">
@@ -1487,6 +1711,45 @@
   </div>
 </div><!-- /view-pool -->
 
+<!-- ════════════════════════ WARDROBE VIEW ════════════════════════ -->
+<!-- ════════════════════════ WARDROBE VIEW ════════════════════════ -->
+<div id="view-wardrobe" class="hidden">
+  <div class="wardrobe-page">
+    <div class="wardrobe-beta-notice">
+      🧪 <strong>测试功能</strong> · 当前版本仍在完善中，生成效果可能与预期有出入，欢迎反馈！
+    </div>
+    <div class="wardrobe-input-card">
+      <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wardrobe-title-banner">
+      <div class="wardrobe-name-row">
+        <label for="wardrobe-username">我的昵称</label>
+        <input id="wardrobe-username" class="wardrobe-name-input" type="text" placeholder="输入你的昵称" maxlength="10">
+      </div>
+      <button class="wardrobe-gen-btn" onclick="generateWardrobeCard()">生成我的衣橱长图</button>
+      <div class="wardrobe-hint">根据「已持有」填写情况自动生成 · 请先完成第一步填写</div>
+    </div>
+  </div>
+</div><!-- /view-wardrobe -->
+
+<!-- ── 隐藏的衣橱卡片（html2canvas 截图用）── -->
+<div id="wardrobe-card"></div>
+
+<!-- ── 衣橱预览弹窗 ── -->
+<div id="wardrobe-modal" class="wardrobe-modal" onclick="closeWardrobeModal()">
+  <div class="wardrobe-modal-box" onclick="event.stopPropagation()">
+    <button class="wardrobe-modal-close" onclick="closeWardrobeModal()">✕</button>
+    <img id="wardrobe-preview-img" class="wardrobe-preview-img" src="" alt="我的衣橱">
+    <div class="wardrobe-modal-btns">
+      <button onclick="downloadWardrobeCard()">下载图片</button>
+      <button id="wardrobe-share-btn" class="share-btn" onclick="shareWardrobeCard()" style="display:none">分享</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 生成中遮罩 ── -->
+<div id="wardrobe-generating" class="wardrobe-generating">
+  <span>生成中，请稍候…</span>
+</div>
+
 <!-- ── 右侧悬浮倒计时面板 ── -->
 <div id="countdown-panel">
   <div class="cp-content">
@@ -1509,8 +1772,9 @@
 function switchView(view) {
   document.getElementById('view-planner').classList.toggle('hidden', view !== 'planner');
   document.getElementById('view-pool').classList.toggle('hidden', view !== 'pool');
-  document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && view === 'planner') || (i === 1 && view === 'pool'));
+  document.getElementById('view-wardrobe').classList.toggle('hidden', view !== 'wardrobe');
+  document.querySelectorAll('.nav-tab, .bnav-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
   });
 }
 
@@ -1527,6 +1791,12 @@ function switchStep(step) {
     t.classList.toggle('visited', _visitedSteps.has(tab) && tab !== step);
   });
   if (step === 'targets') renderTargetList();
+  // 移动端：步骤1/2 固定高度，步骤3 正常滚动
+  if (window.innerWidth <= 600) {
+    const isFixed = step !== 'resources';
+    document.getElementById('view-planner').classList.toggle('fixed-step-layout', isFixed);
+    document.getElementById('right-panel').classList.toggle('mobile-visible', !isFixed);
+  }
 }
 
 // ════════════════════════════════════════════════════
@@ -3083,7 +3353,166 @@ updatePoolStats();
 // All theme bodies collapsed by default
 document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
 
+// 移动端初始化：步骤1 默认固定高度布局
+if (window.innerWidth <= 600) {
+  document.getElementById('view-planner').classList.add('fixed-step-layout');
+}
+
 // ── Lightbox ──
+// ════════════════════════════════════════════════════
+// 衣橱功能
+// ════════════════════════════════════════════════════
+
+let _wardrobeDataUrl = null;
+
+// 读取用户名（localStorage 持久化）
+(function() {
+  const saved = localStorage.getItem('wardrobe-username');
+  if (saved) {
+    const el = document.getElementById('wardrobe-username');
+    if (el) el.value = saved;
+  }
+})();
+
+function getWardrobeStats() {
+  const ownedSuits  = st.fullOwned.size;
+  const totalSuits  = SUITS.length;
+  const ownedThemes = THEMES_RAW.filter(th =>
+    th.suits.every(raw => st.fullOwned.has(raw.id))
+  ).length;
+  const totalThemes = THEMES_RAW.length;
+  let ownedParts = 0, totalParts = 0;
+  for (const s of SUITS) {
+    const pn = s.partNames || PART_NAMES;
+    totalParts += pn.length;
+    if (st.fullOwned.has(s.id)) {
+      ownedParts += pn.length;
+    } else if (st.owned[s.id]) {
+      ownedParts += st.owned[s.id].size;
+    }
+  }
+  return { ownedSuits, totalSuits, ownedThemes, totalThemes, ownedParts, totalParts };
+}
+
+function buildWardrobeCardDOM(username) {
+  const stats = getWardrobeStats();
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+  // 按主题分行，THEMES_RAW 已按入池日期从早到晚排列
+  const suitMap = Object.fromEntries(SUITS.map(s => [s.id, s]));
+  const themesHtml = THEMES_RAW.map(th => {
+    const cardsHtml = th.suits.map(raw => {
+      const suit = suitMap[raw.id];
+      if (!suit) return '';
+      const isOwned = st.fullOwned.has(suit.id);
+      const partNames = suit.partNames || PART_NAMES;
+      const total = partNames.length;
+      const ownedCount = isOwned ? total : ((st.owned[suit.id] && st.owned[suit.id].size) || 0);
+      const pct = total > 0 ? Math.round(ownedCount / total * 100) : 0;
+      const overlay = !isOwned ? `
+        <div class="wc-overlay">
+          <div class="wc-progress-text">${ownedCount}/${total}</div>
+          <div class="wc-progress-bar-bg"><div class="wc-progress-fill" style="width:${pct}%"></div></div>
+        </div>` : '';
+      return `<div class="wc-card-item${isOwned ? '' : ' unowned'}">
+        <img src="assets/images/suitcard/${suit.sub}.png" alt="${suit.sub}">
+        ${overlay}
+      </div>`;
+    }).join('');
+    return `<div class="wc-theme-row">${cardsHtml}</div>`;
+  }).join('');
+
+  document.getElementById('wardrobe-card').innerHTML = `
+    <div class="wc-bg">
+      <div class="wc-title-area">
+        <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wc-title-img">
+      </div>
+      <div class="wc-stats-row">
+        <div class="wc-stat-col">
+          <img src="assets/icon/wardrobe-part.png" class="wc-stat-icon" alt="">
+          <div class="wc-stat-label">已集齐主题</div>
+          <div class="wc-stat-num">${stats.ownedThemes}<span class="wc-stat-total">/${stats.totalThemes}</span></div>
+        </div>
+        <div class="wc-stat-sep"></div>
+        <div class="wc-stat-col">
+          <img src="assets/icon/wardrobe-suit.png" class="wc-stat-icon" alt="">
+          <div class="wc-stat-label">已集齐套装</div>
+          <div class="wc-stat-num">${stats.ownedSuits}<span class="wc-stat-total">/${stats.totalSuits}</span></div>
+        </div>
+        <div class="wc-stat-sep"></div>
+        <div class="wc-stat-col">
+          <img src="assets/icon/wardrobe-theme.png" class="wc-stat-icon" alt="">
+          <div class="wc-stat-label">已收集部件</div>
+          <div class="wc-stat-num">${stats.ownedParts}<span class="wc-stat-total">/${stats.totalParts}</span></div>
+        </div>
+      </div>
+      <div class="wc-themes">${themesHtml}</div>
+      <div class="wc-footer">
+        <span class="wc-username">${username}</span>
+        <span class="wc-date">${dateStr}</span>
+      </div>
+    </div>`;
+}
+
+function generateWardrobeCard() {
+  if (typeof html2canvas === 'undefined') {
+    alert('图片生成库未加载（可能被网络拦截），请刷新页面或连接 VPN 后重试。');
+    return;
+  }
+  if (location.protocol === 'file:') {
+    alert('本地文件模式下图片无法截图，请先推送到 GitHub Pages 后在线测试。');
+    return;
+  }
+  const username = (document.getElementById('wardrobe-username').value.trim()) || '洛克玩家';
+  localStorage.setItem('wardrobe-username', username);
+  buildWardrobeCardDOM(username);
+  document.getElementById('wardrobe-generating').classList.add('show');
+  setTimeout(() => {
+    html2canvas(document.getElementById('wardrobe-card'), {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#F4EEE1',
+      imageTimeout: 15000,
+      logging: false,
+    }).then(canvas => {
+      _wardrobeDataUrl = canvas.toDataURL('image/png');
+      document.getElementById('wardrobe-preview-img').src = _wardrobeDataUrl;
+      const shareBtn = document.getElementById('wardrobe-share-btn');
+      shareBtn.style.display = (navigator.share && navigator.canShare) ? 'flex' : 'none';
+      document.getElementById('wardrobe-generating').classList.remove('show');
+      document.getElementById('wardrobe-modal').classList.add('open');
+    }).catch(err => {
+      document.getElementById('wardrobe-generating').classList.remove('show');
+      console.error('html2canvas error:', err);
+      alert('生成失败：' + (err && err.message ? err.message : String(err)));
+    });
+  }, 600);
+}
+
+function closeWardrobeModal() {
+  document.getElementById('wardrobe-modal').classList.remove('open');
+}
+
+function downloadWardrobeCard() {
+  if (!_wardrobeDataUrl) return;
+  const a = document.createElement('a');
+  a.href = _wardrobeDataUrl;
+  a.download = '我的衣橱.png';
+  a.click();
+}
+
+async function shareWardrobeCard() {
+  if (!_wardrobeDataUrl) return;
+  try {
+    const res  = await fetch(_wardrobeDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], '我的衣橱.png', { type: 'image/png' });
+    await navigator.share({ files: [file], title: '我的衣橱' });
+  } catch(e) { /* 用户取消分享，忽略 */ }
+}
+
 function openChangelog() {
   document.getElementById('changelog-modal').classList.add('open');
   document.addEventListener('keydown', _clKey);
@@ -3186,12 +3615,22 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
           <span class="cl-tag-current">当前版本</span>
           <span class="cl-date">2026 年 7 月</span>
         </div>
+
         <div class="cl-section">
           <div class="cl-section-title">🚀 数据更新</div>
           <div class="cl-items">
             <div class="cl-item"><span><strong>梦境流浪者</strong>（8/14 入池）：新增幻影灵菇印象、怖哭菇印象、流浪鼠印象，共 3 套金色套装。</span></div>
             <div class="cl-item"><span><strong>乐团协奏曲</strong>（8/28 入池）：新增圆号鱼印象、里拉鳐印象、卡瓦重印象、蹦床松鼠印象，共 4 套紫色 7 部件套装。</span></div>
             <div class="cl-item"><span>全站收录时装总数更新至 <strong>44 套</strong>（含待入池）。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">✨ 新功能</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>我的衣橱（Beta）</strong>：新增「我的衣橱」页面，可根据持有情况一键生成个人时装收藏分享图，支持按主题分行展示、未集齐套装显示进度。</span></div>
+            <div class="cl-item"><span><strong>套装异色切换</strong>：在「已持有」填写步骤中，拥有异色版本的套装新增「异色」标签，点击可切换卡片缩略图为异色版本。</span></div>
+            <div class="cl-item"><span><strong>移动端底部导航</strong>：重构移动端导航为底部 Tab 栏，规划、卡池、衣橱三大功能区一键切换。</span></div>
           </div>
         </div>
       </div>
