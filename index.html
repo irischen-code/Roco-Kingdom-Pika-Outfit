@@ -1862,6 +1862,11 @@ function switchStep(step) {
     document.getElementById('view-planner').classList.toggle('fixed-step-layout', isFixed);
     document.getElementById('right-panel').classList.toggle('mobile-visible', !isFixed);
   }
+  // 百度统计漏斗埋点
+  if (typeof _hmt !== 'undefined') {
+    const stepMap = { owned: '#planner', targets: '#planner-step2', resources: '#planner-step3' };
+    _hmt.push(['_trackPageview', location.pathname + stepMap[step]]);
+  }
 }
 
 // ════════════════════════════════════════════════════
