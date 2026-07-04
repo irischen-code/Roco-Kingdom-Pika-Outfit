@@ -1787,6 +1787,11 @@ function switchView(view) {
   document.querySelectorAll('.nav-tab, .bnav-item').forEach(t => {
     t.classList.toggle('active', t.dataset.view === view);
   });
+  // Hash 路由：更新 URL，百度统计自动识别为不同页面
+  history.replaceState(null, '', '#' + view);
+  if (typeof _hmt !== 'undefined') {
+    _hmt.push(['_trackPageview', location.pathname + '#' + view]);
+  }
 }
 
 const _visitedSteps = new Set(['owned']);
@@ -3364,6 +3369,11 @@ updatePoolStats();
 
 // All theme bodies collapsed by default
 document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
+
+// Hash 路由初始化：根据 URL hash 决定默认显示哪个 tab
+const _validViews = ['planner', 'pool', 'wardrobe'];
+const _initView = _validViews.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'planner';
+switchView(_initView);
 
 // 移动端初始化：步骤1 默认固定高度布局
 if (window.innerWidth <= 600) {
