@@ -12,6 +12,12 @@
   <meta name="google-site-verification" content="1d4za3oc1T8y4MWlSfYQMxyHNscLpdydsa5WTiDlzRk" />
   <meta name="msvalidate.01" content="D3BFF8FD7CA42B6CCCC6E01CE5706B56" />
   <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2D2260">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="皮卡时装">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <script>
   var _hmt = _hmt || [];
   (function() {
@@ -3799,5 +3805,12 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     <img src="" alt="">
   </div>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/Roco-Kingdom-Pika-Outfit/sw.js', { scope: '/Roco-Kingdom-Pika-Outfit/' });
+  });
+}
+</script>
 </body>
 </html>
