@@ -1137,7 +1137,7 @@
       /* blob 容器：绝对定位，叠在 label 上方 */
       .bnav-blob-wrap {
         position: absolute;
-        bottom: 26px;
+        bottom: 20px;
         width: 66px; height: 66px;
         display: flex; align-items: center; justify-content: center;
         transition: transform 0.2s ease;
@@ -1165,11 +1165,20 @@
       .bnav-item.active .bnav-icon-off { display: none; }
       /* label */
       .bnav-label {
-        font-size: 10px; font-weight: 700;
+        font-size: 12px; font-weight: 700;
         color: rgba(251,247,238,0.45);
         position: relative; z-index: 1;
       }
       .bnav-item.active .bnav-label { color: #FBC839; }
+
+      @media (display-mode: standalone) {
+        .bottom-nav { height: calc(80px + env(safe-area-inset-bottom)); }
+        .bnav-item { padding-bottom: 14px; }
+        .bnav-blob-wrap { width: 76px; height: 76px; bottom: 28px; }
+        .bnav-item.active .bnav-blob-wrap { transform: translateY(-14px); }
+        .bnav-icon { width: 40px; height: 40px; }
+        .bnav-label { font-size: 14px; }
+      }
 
       /* ── 整体布局：移动端单列 ── */
       .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); flex-direction: column; }
