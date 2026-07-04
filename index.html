@@ -1394,9 +1394,9 @@
     }
     .wc-stat-icon { height: 68px; width: auto; display: block; }
     .wc-stat-text { display: flex; flex-direction: column; gap: 3px; }
-    .wc-stat-label { font-size: 13px; color: #97938C; }
-    .wc-stat-num { font-size: 28px; font-weight: 700; color: #313131; line-height: 1.1; }
-    .wc-stat-total { font-size: 15px; font-weight: 400; color: #97938C; }
+    .wc-stat-label { font-size: 13px; color: #62605E; }
+    .wc-stat-num { font-size: 28px; font-weight: 700; color: #131313; line-height: 1.1; }
+    .wc-stat-total { font-size: 15px; font-weight: 400; color: #62605E; }
     .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 6px 0; flex-shrink: 0; }
     /* 按稀有度分区，每行最多 8 张 */
     .wc-section { margin-bottom: 24px; }
@@ -3407,7 +3407,7 @@ function buildWardrobeCardDOM(username) {
   const d = new Date();
   const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 
-  // 按 THEMES_RAW 入池顺序收集，分金/紫两区
+  // 按 THEMES_RAW 入池顺序收集，分金/紫两区，已持有排前
   const goldSuits = [], purpleSuits = [];
   for (const th of THEMES_RAW) {
     for (const raw of th.suits) {
@@ -3416,6 +3416,9 @@ function buildWardrobeCardDOM(username) {
       (suit.rarity === 'gold' ? goldSuits : purpleSuits).push(suit);
     }
   }
+  const byOwned = (a, b) => (st.fullOwned.has(b.id) ? 1 : 0) - (st.fullOwned.has(a.id) ? 1 : 0);
+  goldSuits.sort(byOwned);
+  purpleSuits.sort(byOwned);
 
   function renderCard(suit) {
     const isOwned = st.fullOwned.has(suit.id);
