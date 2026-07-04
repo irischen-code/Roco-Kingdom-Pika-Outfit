@@ -1379,7 +1379,7 @@
     /* ── 隐藏卡片（html2canvas 截图用）── */
     #wardrobe-card {
       position: absolute; left: -9999px; top: 0;
-      width: 750px; z-index: -1; pointer-events: none;
+      width: 750px; pointer-events: none;
     }
     .wc-bg { background: #F4EEE1; padding: 44px 40px 36px; font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif; }
     .wc-title-area { text-align: center; margin-bottom: 16px; }
@@ -1395,9 +1395,9 @@
     }
     .wc-stat-icon { height: 68px; width: auto; display: block; }
     .wc-stat-text { display: flex; flex-direction: column; gap: 3px; background: transparent; }
-    .wc-stat-label { font-size: 13px; color: #62605E; }
-    .wc-stat-num { font-size: 28px; font-weight: 700; color: #131313; line-height: 1.1; }
-    .wc-stat-total { font-size: 15px; font-weight: 400; color: #62605E; }
+    .wc-stat-label { font-size: 20px; color: #62605E; font-weight: 500; }
+    .wc-stat-num { font-size: 20px; font-weight: 700; color: #131313; line-height: 1.2; }
+    .wc-stat-total { font-size: 20px; font-weight: 400; color: #62605E; }
     .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 6px 0; flex-shrink: 0; }
     /* 按稀有度分区，每行最多 8 张 */
     .wc-section { margin-bottom: 24px; }
@@ -3497,14 +3497,20 @@ function generateWardrobeCard() {
   buildWardrobeCardDOM(username);
   document.getElementById('wardrobe-generating').classList.add('show');
   setTimeout(() => {
-    html2canvas(document.getElementById('wardrobe-card'), {
+    const el = document.getElementById('wardrobe-card');
+    // 让浏览器完成布局和图片解码后再截图
+    Promise.all(
+      Array.from(el.querySelectorAll('img')).map(img =>
+        img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
+      )
+    ).then(() => html2canvas(el, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#F4EEE1',
-      imageTimeout: 15000,
+      imageTimeout: 20000,
       logging: false,
-    }).then(canvas => {
+    })).then(canvas => {
       _wardrobeDataUrl = canvas.toDataURL('image/png');
       document.getElementById('wardrobe-preview-img').src = _wardrobeDataUrl;
       const shareBtn = document.getElementById('wardrobe-share-btn');
@@ -3516,7 +3522,7 @@ function generateWardrobeCard() {
       console.error('html2canvas error:', err);
       alert('生成失败：' + (err && err.message ? err.message : String(err)));
     });
-  }, 600);
+  }, 1200);
 }
 
 function closeWardrobeModal() {
