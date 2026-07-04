@@ -1505,7 +1505,7 @@
       <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-plan-off.png" alt="">
       <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-plan-on.png" alt="">
     </div>
-    <span class="bnav-label">规划</span>
+    <span class="bnav-label">规划工具</span>
   </button>
   <button class="bnav-item" data-view="pool" onclick="switchView('pool')">
     <div class="bnav-blob-wrap">
@@ -1514,7 +1514,7 @@
       <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-pool-off.png" alt="">
       <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-pool-on.png" alt="">
     </div>
-    <span class="bnav-label">卡池</span>
+    <span class="bnav-label">卡池总览</span>
   </button>
   <button class="bnav-item" data-view="wardrobe" onclick="switchView('wardrobe')">
     <div class="bnav-blob-wrap">
@@ -1523,7 +1523,7 @@
       <img class="bnav-icon bnav-icon-off" src="assets/icon/tab-wardrobe-off.png" alt="">
       <img class="bnav-icon bnav-icon-on"  src="assets/icon/tab-wardrobe-on.png" alt="">
     </div>
-    <span class="bnav-label">衣橱</span>
+    <span class="bnav-label">我的衣橱</span>
   </button>
 </nav>
 
@@ -1599,6 +1599,7 @@
 
     <!-- Bottom nav buttons -->
     <div class="step-nav-btns" id="step-nav-owned">
+      <button class="step-nav-btn" onclick="switchView('wardrobe')">总结我的衣橱</button>
       <button class="step-nav-btn primary" onclick="switchStep('targets')">下一步：选目标套装 →</button>
     </div>
     <div class="step-nav-btns hidden" id="step-nav-targets">
