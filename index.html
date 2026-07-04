@@ -2644,6 +2644,7 @@ function _doCalc() {
   // ════ RENDER ════
   document.getElementById('result-placeholder').classList.add('hidden');
   document.getElementById('result-area').classList.remove('hidden');
+  if (typeof _hmt !== 'undefined') _hmt.push(['_trackPageview', location.pathname + '#result']);
 
   // ── Banner ──
   const banner = document.getElementById('r-banner');
