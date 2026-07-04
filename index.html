@@ -3579,8 +3579,16 @@ function closeWardrobeModal() {
 function downloadWardrobeCard() {
   if (!_wardrobeDataUrl) return;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  if (isIOS && isStandalone) {
+    // standalone 模式：在页内全屏遮罩展示图片，避免跳出无法返回
+    const overlay = document.getElementById('img-save-overlay');
+    document.getElementById('img-save-img').src = _wardrobeDataUrl;
+    overlay.style.display = 'flex';
+    return;
+  }
   if (isIOS) {
-    // iOS 不支持 <a download>，在新标签页打开图片，用户长按「存储图像」保存到相册
+    // iOS 浏览器模式：新标签页打开，用户长按「存储图像」
     const win = window.open('', '_blank');
     win.document.write(
       '<html><head><title>长按图片 → 存储图像</title><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
@@ -3814,6 +3822,15 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     <img src="" alt="">
   </div>
 </div>
+<!-- standalone 模式下载图片用的全屏遮罩 -->
+<div id="img-save-overlay" style="display:none; position:fixed; inset:0; z-index:10000; background:#000; flex-direction:column; align-items:center; justify-content:center;">
+  <div style="position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; padding-top:calc(16px + env(safe-area-inset-top));">
+    <span style="color:#fff; font-size:14px; font-weight:600;">长按图片可保存到相册</span>
+    <button onclick="document.getElementById('img-save-overlay').style.display='none'" style="background:rgba(255,255,255,0.2); border:none; border-radius:50%; width:32px; height:32px; color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+  </div>
+  <img id="img-save-img" src="" alt="我的衣橱" style="max-width:100%; max-height:100vh; display:block; object-fit:contain;">
+</div>
+
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
