@@ -1171,15 +1171,6 @@
       }
       .bnav-item.active .bnav-label { color: #FBC839; }
 
-      @media (display-mode: standalone) {
-        .bottom-nav { height: calc(80px + env(safe-area-inset-bottom)); }
-        .bnav-item { padding-bottom: 24px; }
-        #view-planner.fixed-step-layout { inset: 52px 0 calc(84px + env(safe-area-inset-bottom)) 0; }
-        .bnav-blob-wrap { width: 76px; height: 76px; bottom: 28px; }
-        .bnav-item.active .bnav-blob-wrap { transform: translateY(-14px); }
-        .bnav-icon { width: 36px; height: 36px; }
-        .bnav-label { font-size: 14px; }
-      }
 
       /* ── 整体布局：移动端单列 ── */
       .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); flex-direction: column; }
@@ -1365,6 +1356,17 @@
       .cp-date { font-size: 9px; }
       .cp-timer { font-size: 11px; }
     }
+    /* ── standalone 模式（添加到主屏幕）移动端专属覆盖 ── */
+    @media (max-width: 600px) and (display-mode: standalone) {
+      .bottom-nav { height: calc(80px + env(safe-area-inset-bottom)); }
+      .bnav-item { padding-bottom: 24px; }
+      #view-planner.fixed-step-layout { inset: 52px 0 calc(84px + env(safe-area-inset-bottom)) 0; }
+      .bnav-blob-wrap { width: 76px; height: 76px; bottom: 28px; }
+      .bnav-item.active .bnav-blob-wrap { transform: translateY(-14px); }
+      .bnav-icon { width: 36px; height: 36px; }
+      .bnav-label { font-size: 14px; }
+    }
+
     /* ── 衣橱页面 ── */
     #view-wardrobe { background: #FBC839; min-height: calc(100vh - 56px); padding: 32px 16px; }
     .wardrobe-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
