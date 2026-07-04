@@ -666,10 +666,19 @@
 
     /* ── Alt-color badge ── */
     .alt-badge {
-      display: inline-block; padding: 1px 6px; border-radius: 4px;
-      font-size: 9px; font-weight: 700;
-      background: rgba(154,115,249,0.12); color: #9A73F9; border: 1px solid rgba(154,115,249,0.35);
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 7px; border-radius: 4px;
+      font-size: 10px; font-weight: 700;
+      background: rgba(151,147,140,0.13); color: #6b6660; border: 1px solid rgba(151,147,140,0.45);
       margin-left: 4px; vertical-align: middle;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .alt-badge img { width: 11px; height: 11px; object-fit: contain; }
+    .alt-badge:hover { background: rgba(151,147,140,0.22); }
+    .alt-badge.alt-on {
+      background: rgba(151,147,140,0.32); border-color: rgba(151,147,140,0.7);
+      color: #3d3a37;
     }
 
     /* ── Theme all-full button ── */
@@ -1627,11 +1636,10 @@ for (const th of THEMES_RAW) {
   }
 }
 
-// Suits with alternate-color variants (异色)
+// Suits with alternate-color variants (异色) — must have matching file in suitcard-alt/
 const ALTS = new Set([
   '白金独角兽印象', '红绒十字印象',
   '雪影娃娃印象',  '嘟嘟锅印象',  '獠牙猪印象',
-  '奇丽花印象',
   '烟花伯爵印象', '巨鼓象印象', '咕德帽帽印象', '小丑公爵印象',
 ]);
 
@@ -2508,10 +2516,10 @@ function renderOwnedList() {
       if (!inPool) row.style.opacity = '0.7';
       const rarityLabel = s.rarity==='gold'?'金色·195':'紫色·98';
       const pendingSuitTag = inPool ? '' : `<span style="font-size:10px;color:var(--amber);margin-left:4px">待入池</span>`;
-      const altBadge = ALTS.has(s.sub) ? '<span class="alt-badge">有异色</span>' : '';
+      const altBadge = ALTS.has(s.sub) ? `<span class="alt-badge" id="alt-btn-${s.id}" onclick="toggleAltColor('${s.id}','${s.sub}')"><img src="assets/icon/variant.png" alt="">异色</span>` : '';
       row.innerHTML = `
         <div class="suit-hdr">
-          <div class="suit-img"><img src="assets/images/suitcard/${s.sub}.png" alt="${s.sub}" onerror="this.parentElement.style.background='#E3DAC8'"></div>
+          <div class="suit-img"><img id="sc-img-${s.id}" src="assets/images/suitcard/${s.sub}.png" alt="${s.sub}" onerror="this.parentElement.style.background='#E3DAC8'"></div>
           <div class="suit-name-wrap">
             <div class="suit-name">${s.sub}${pendingSuitTag}</div>
             <span class="rarity-tag ${s.rarity}">${rarityLabel}</span>${altBadge}
@@ -2534,6 +2542,17 @@ function renderOwnedList() {
     }
     el.appendChild(wrap);
   }
+}
+
+function toggleAltColor(sid, sub) {
+  const img = document.getElementById('sc-img-' + sid);
+  const btn = document.getElementById('alt-btn-' + sid);
+  if (!img || !btn) return;
+  const isAlt = btn.classList.contains('alt-on');
+  img.src = isAlt
+    ? `assets/images/suitcard/${sub}.png`
+    : `assets/images/suitcard-alt/${sub}.png`;
+  btn.classList.toggle('alt-on', !isAlt);
 }
 
 function setThemeAllFull(themeName) {
