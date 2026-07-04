@@ -1493,7 +1493,7 @@
   </nav>
   <div class="header-badges">
     <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.3 ↗</span><span class="badge-short">v1.3 ↗</span></span>
-    <span class="badge" style="cursor:pointer" onclick="switchView('pool');document.getElementById('pool-suits-card').scrollIntoView({behavior:'smooth',block:'start'})"><span class="badge-long">44 套（含待入池）</span><span class="badge-short">44 套</span></span>
+    <span class="badge" style="cursor:pointer" onclick="switchView('pool');(function(){ const el=document.getElementById('pool-suits-card'); const headerH=document.querySelector('.header').offsetHeight; const top=el.getBoundingClientRect().top+window.scrollY-headerH-12; window.scrollTo({top,behavior:'smooth'}); })()"><span class="badge-long">44 套（含待入池）</span><span class="badge-short">44 套</span></span>
   </div>
 </header>
 
