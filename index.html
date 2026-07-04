@@ -1385,15 +1385,19 @@
     .wc-title-area { text-align: center; margin-bottom: 16px; }
     .wc-title-img { height: 110px; width: auto; display: block; margin: 0 auto; }
     .wc-stats-row {
-      display: flex; align-items: stretch;
+      display: flex; align-items: center;
       padding: 16px 0; margin-bottom: 28px;
     }
-    .wc-stat-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .wc-stat-icon { height: 52px; width: auto; display: block; }
+    .wc-stat-col {
+      flex: 1; display: flex; flex-direction: row;
+      align-items: center; gap: 12px; padding: 0 12px;
+    }
+    .wc-stat-icon { height: 68px; width: auto; display: block; }
+    .wc-stat-text { display: flex; flex-direction: column; gap: 3px; }
     .wc-stat-label { font-size: 13px; color: #97938C; }
-    .wc-stat-num { font-size: 30px; font-weight: 700; color: #313131; line-height: 1.1; }
-    .wc-stat-total { font-size: 16px; font-weight: 400; color: #97938C; }
-    .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 4px 0; }
+    .wc-stat-num { font-size: 28px; font-weight: 700; color: #313131; line-height: 1.1; }
+    .wc-stat-total { font-size: 15px; font-weight: 400; color: #97938C; }
+    .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 6px 0; flex-shrink: 0; }
     /* 按稀有度分区，每行最多 8 张 */
     .wc-section { margin-bottom: 24px; }
     .wc-rarity-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -3444,20 +3448,26 @@ function buildWardrobeCardDOM(username) {
       <div class="wc-stats-row">
         <div class="wc-stat-col">
           <img src="assets/icon/wardrobe-theme.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-label">已集齐主题</div>
-          <div class="wc-stat-num">${stats.ownedThemes}<span class="wc-stat-total">/${stats.totalThemes}</span></div>
+          <div class="wc-stat-text">
+            <div class="wc-stat-label">已集齐主题</div>
+            <div class="wc-stat-num">${stats.ownedThemes}<span class="wc-stat-total">/${stats.totalThemes}</span></div>
+          </div>
         </div>
         <div class="wc-stat-sep"></div>
         <div class="wc-stat-col">
           <img src="assets/icon/wardrobe-suit.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-label">已集齐套装</div>
-          <div class="wc-stat-num">${stats.ownedSuits}<span class="wc-stat-total">/${stats.totalSuits}</span></div>
+          <div class="wc-stat-text">
+            <div class="wc-stat-label">已集齐套装</div>
+            <div class="wc-stat-num">${stats.ownedSuits}<span class="wc-stat-total">/${stats.totalSuits}</span></div>
+          </div>
         </div>
         <div class="wc-stat-sep"></div>
         <div class="wc-stat-col">
           <img src="assets/icon/wardrobe-part.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-label">已收集部件</div>
-          <div class="wc-stat-num">${stats.ownedParts}<span class="wc-stat-total">/${stats.totalParts}</span></div>
+          <div class="wc-stat-text">
+            <div class="wc-stat-label">已收集部件</div>
+            <div class="wc-stat-num">${stats.ownedParts}<span class="wc-stat-total">/${stats.totalParts}</span></div>
+          </div>
         </div>
       </div>
       <div class="wc-section"><div class="wc-rarity-grid">${goldHtml}</div></div>
