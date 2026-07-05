@@ -1784,6 +1784,7 @@
         <label for="wardrobe-username">我的昵称</label>
         <input id="wardrobe-username" class="wardrobe-name-input" type="text" placeholder="输入你的昵称" maxlength="10">
       </div>
+      <button class="wardrobe-gen-btn" style="background:#F4EEE1; margin-bottom:8px;" onclick="openAltOwnedModal()">🎨 填写异色拥有情况（选填）</button>
       <button class="wardrobe-gen-btn" onclick="generateWardrobeCard()">生成我的衣橱长图</button>
       <div class="wardrobe-hint">根据「已持有」填写情况自动生成 · 请先完成第一步填写</div>
     </div>
@@ -1792,6 +1793,17 @@
 
 <!-- ── 隐藏的衣橱卡片（html2canvas 截图用）── -->
 <div id="wardrobe-card"></div>
+
+<!-- ── 异色拥有情况弹窗 ── -->
+<div id="alt-owned-modal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;" onclick="if(event.target===this)closeAltOwnedModal()">
+  <div style="background:#FBF7EE; border:2px solid #313131; border-radius:20px; padding:28px 24px 20px; max-width:400px; width:92%; max-height:80vh; overflow-y:auto; position:relative;">
+    <button onclick="closeAltOwnedModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
+    <div style="font-size:16px; font-weight:700; color:#313131; margin-bottom:6px;">🎨 异色套装</div>
+    <div style="font-size:12px; color:#62605E; margin-bottom:16px; line-height:1.6;">勾选你已购买的异色套装，生成的衣橱图会单独展示。</div>
+    <div id="alt-owned-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button onclick="confirmAltOwned()" style="margin-top:20px; width:100%; background:#FBC839; border:2px solid #313131; border-radius:12px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; color:#313131;">确认</button>
+  </div>
+</div>
 
 <!-- ── 衣橱预览弹窗 ── -->
 <div id="wardrobe-modal" class="wardrobe-modal" onclick="closeWardrobeModal()">
@@ -1992,6 +2004,7 @@ const st = {
   owned:    {},   // suitId -> Set<partName>
   fullOwned: new Set(), // suitId fully collected
   targets:  {},   // suitId -> 'ALL' | Set<partName>  (undefined = not targeted)
+  altOwned: new Set(), // suitId whose alt-color is owned
 };
 
 // ════════════════════════════════════════════════════
@@ -2886,6 +2899,53 @@ function renderOwnedList() {
   }
 }
 
+function openAltOwnedModal() {
+  const list = document.getElementById('alt-owned-list');
+  list.innerHTML = '';
+  // 找出所有有异色的套装
+  const altSuits = [];
+  for (const th of THEMES_RAW) {
+    for (const raw of th.suits) {
+      const s = SUITS.find(x => x.id === raw.id);
+      if (s && ALTS.has(s.sub)) altSuits.push(s);
+    }
+  }
+  list.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:10px;';
+  altSuits.forEach(s => {
+    const selected = st.altOwned.has(s.id);
+    const item = document.createElement('div');
+    item.dataset.sid = s.id;
+    item.style.cssText = `position:relative; cursor:pointer; border-radius:8px; overflow:hidden; aspect-ratio:150/168; border:3px solid ${selected ? '#FBC839' : 'transparent'}; transition:border-color 0.15s;`;
+    item.innerHTML = `
+      <img src="assets/images/suitcard-alt/${s.sub}.png" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);display:${selected ? 'none' : 'block'};"></div>
+      <div style="position:absolute;top:4px;right:4px;width:18px;height:18px;background:#FBC839;border-radius:50%;display:${selected ? 'flex' : 'none'};align-items:center;justify-content:center;font-size:11px;font-weight:700;">✓</div>
+    `;
+    item.onclick = () => {
+      const isNowSelected = item.style.borderColor === 'rgb(251, 200, 57)';
+      item.style.borderColor = isNowSelected ? 'transparent' : '#FBC839';
+      item.querySelectorAll('div')[0].style.display = isNowSelected ? 'block' : 'none';
+      item.querySelectorAll('div')[1].style.display = isNowSelected ? 'none' : 'flex';
+    };
+    list.appendChild(item);
+  });
+  const modal = document.getElementById('alt-owned-modal');
+  modal.style.display = 'flex';
+}
+
+function closeAltOwnedModal() {
+  document.getElementById('alt-owned-modal').style.display = 'none';
+}
+
+function confirmAltOwned() {
+  st.altOwned = new Set();
+  document.querySelectorAll('#alt-owned-list [data-sid]').forEach(item => {
+    if (item.style.borderColor === 'rgb(251, 200, 57)') st.altOwned.add(item.dataset.sid);
+  });
+  saveState();
+  closeAltOwnedModal();
+}
+
 function toggleAltColor(sid, sub) {
   const img = document.getElementById('sc-img-' + sid);
   const btn = document.getElementById('alt-btn-' + sid);
@@ -3341,6 +3401,7 @@ function saveState() {
     const data = {
       owned:     {},
       fullOwned: [...st.fullOwned],
+      altOwned:  [...st.altOwned],
       targets:   {},
       balance:   document.getElementById('star-balance')?.value ?? '0',
       daily:     document.getElementById('daily-income')?.value ?? '25',
@@ -3366,6 +3427,7 @@ function loadState() {
       st.owned[sid] = new Set(parts);
     }
     st.fullOwned = new Set(data.fullOwned || []);
+    st.altOwned  = new Set(data.altOwned  || []);
     for (const [sid, tval] of Object.entries(data.targets || {})) {
       if (tval === 'ALL')           st.targets[sid] = 'ALL';
       else if (Array.isArray(tval)) st.targets[sid] = new Set(tval);
@@ -3502,8 +3564,26 @@ function buildWardrobeCardDOM(username) {
     const shortName = suit.sub.replace('印象', '');
     return `<div class="wc-card-wrap">
       <div class="wc-card-item${isOwned ? '' : ' unowned'}">
-        <img src="assets/images/suitcard/${suit.sub}.png" alt="${suit.sub}">
+        <img src="${ALTS.has(suit.sub) && st.altOwned.has(suit.id) ? `assets/images/suitcard-alt/${suit.sub}.png` : `assets/images/suitcard/${suit.sub}.png`}" alt="${suit.sub}">
         ${overlay}
+      </div>
+      <div class="wc-card-name">${shortName}</div>
+    </div>`;
+  }
+
+  // 异色套装：只展示用户在弹窗里勾选了的
+  const altSuits = [];
+  for (const th of THEMES_RAW) {
+    for (const raw of th.suits) {
+      const s = SUITS.find(x => x.id === raw.id);
+      if (s && ALTS.has(s.sub) && st.altOwned.has(s.id)) altSuits.push(s);
+    }
+  }
+  function renderAltCard(suit) {
+    const shortName = suit.sub.replace('印象', '');
+    return `<div class="wc-card-wrap">
+      <div class="wc-card-item">
+        <img src="assets/images/suitcard-alt/${suit.sub}.png" alt="${suit.sub}">
       </div>
       <div class="wc-card-name">${shortName}</div>
     </div>`;
@@ -3511,6 +3591,7 @@ function buildWardrobeCardDOM(username) {
 
   const goldHtml   = goldSuits.map(renderCard).join('');
   const purpleHtml = purpleSuits.map(renderCard).join('');
+  const altHtml    = altSuits.map(renderAltCard).join('');
 
   document.getElementById('wardrobe-card').innerHTML = `
     <div class="wc-bg">
@@ -3544,6 +3625,7 @@ function buildWardrobeCardDOM(username) {
       </div>
       <div class="wc-section"><div class="wc-rarity-grid">${goldHtml}</div></div>
       <div class="wc-section"><div class="wc-rarity-grid">${purpleHtml}</div></div>
+      ${altHtml ? `<div class="wc-section"><div class="wc-rarity-grid">${altHtml}</div></div>` : ''}
       <div class="wc-footer">
         <span class="wc-username">${username}</span>
         <span class="wc-date">${dateStr}</span>
