@@ -3571,22 +3571,32 @@ function buildWardrobeCardDOM(username) {
     </div>`;
   }
 
-  // 异色套装：只展示用户在弹窗里勾选了的
+  // 异色套装：全部展示，按拥有状态区分显示
   const altSuits = [];
   for (const th of THEMES_RAW) {
     for (const raw of th.suits) {
       const s = SUITS.find(x => x.id === raw.id);
-      if (s && ALTS.has(s.sub) && st.altOwned.has(s.id)) altSuits.push(s);
+      if (s && ALTS.has(s.sub)) altSuits.push(s);
     }
   }
   altSuits.sort((a, b) => (a.rarity === 'gold' ? 0 : 1) - (b.rarity === 'gold' ? 0 : 1));
   function renderAltCard(suit) {
-    const shortName = suit.sub.replace('印象', '') + '-异色';
+    const altOwned   = st.altOwned.has(suit.id);
+    const suitOwned  = st.fullOwned.has(suit.id);
+    const imgSrc     = altOwned
+      ? `assets/images/suitcard-alt/${suit.sub}.png`
+      : `assets/images/suitcard/${suit.sub}.png`;
+    const grayed     = !altOwned ? ' unowned' : '';
+    const label      = altOwned
+      ? suit.sub.replace('印象', '') + '-异色'
+      : (suitOwned ? '已集齐未解锁' : '套装暂未集齐');
+    const overlay    = !altOwned ? `<div class="wc-overlay"></div>` : '';
     return `<div class="wc-card-wrap">
-      <div class="wc-card-item">
-        <img src="assets/images/suitcard-alt/${suit.sub}.png" alt="${suit.sub}">
+      <div class="wc-card-item${grayed}">
+        <img src="${imgSrc}" alt="${suit.sub}">
+        ${overlay}
       </div>
-      <div class="wc-card-name">${shortName}</div>
+      <div class="wc-card-name">${label}</div>
     </div>`;
   }
 
@@ -3626,7 +3636,7 @@ function buildWardrobeCardDOM(username) {
       </div>
       <div class="wc-section"><div class="wc-rarity-grid">${goldHtml}</div></div>
       <div class="wc-section"><div class="wc-rarity-grid">${purpleHtml}</div></div>
-      ${altHtml ? `<div class="wc-section"><div class="wc-rarity-grid">${altHtml}</div></div>` : ''}
+      <div class="wc-section"><div class="wc-rarity-grid">${altHtml}</div></div>
       <div class="wc-footer">
         <span class="wc-username">${username}</span>
         <span class="wc-date">${dateStr}</span>
