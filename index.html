@@ -3587,10 +3587,11 @@ function buildWardrobeCardDOM(username) {
       ? `assets/images/suitcard-alt/${suit.sub}.png`
       : `assets/images/suitcard/${suit.sub}.png`;
     const grayed     = !altOwned ? ' unowned' : '';
-    const label      = altOwned
-      ? suit.sub.replace('印象', '') + '-异色'
-      : (suitOwned ? '已集齐未解锁' : '套装暂未集齐');
-    const overlay    = !altOwned ? `<div class="wc-overlay"></div>` : '';
+    const label   = suit.sub.replace('印象', '') + '-异色';
+    const overlay = !altOwned ? `
+      <div class="wc-overlay">
+        <div class="wc-progress-text">${suitOwned ? '已集齐未解锁' : '套装暂未集齐'}</div>
+      </div>` : '';
     return `<div class="wc-card-wrap">
       <div class="wc-card-item${grayed}">
         <img src="${imgSrc}" alt="${suit.sub}">
