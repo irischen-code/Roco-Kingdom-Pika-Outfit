@@ -3581,7 +3581,7 @@ function buildWardrobeCardDOM(username) {
   }
   altSuits.sort((a, b) => (a.rarity === 'gold' ? 0 : 1) - (b.rarity === 'gold' ? 0 : 1));
   function renderAltCard(suit) {
-    const shortName = suit.sub.replace('印象', '');
+    const shortName = suit.sub.replace('印象', '') + '-异色';
     return `<div class="wc-card-wrap">
       <div class="wc-card-item">
         <img src="assets/images/suitcard-alt/${suit.sub}.png" alt="${suit.sub}">
