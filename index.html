@@ -3579,6 +3579,7 @@ function buildWardrobeCardDOM(username) {
       if (s && ALTS.has(s.sub) && st.altOwned.has(s.id)) altSuits.push(s);
     }
   }
+  altSuits.sort((a, b) => (a.rarity === 'gold' ? 0 : 1) - (b.rarity === 'gold' ? 0 : 1));
   function renderAltCard(suit) {
     const shortName = suit.sub.replace('印象', '');
     return `<div class="wc-card-wrap">
