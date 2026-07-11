@@ -1,4 +1,4 @@
-const CACHE = 'pika-v4';
+const CACHE = 'pika-v5';
 const PRECACHE = [
   '/Roco-Kingdom-Pika-Outfit/',
   '/Roco-Kingdom-Pika-Outfit/index.html',

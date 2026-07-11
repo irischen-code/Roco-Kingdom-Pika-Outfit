@@ -4078,18 +4078,33 @@ function generateWardrobeCard() {
 
     const tick = () => {
       loaded++;
+      const shown = Math.min(loaded, total);            // 双保险：分子不会超过分母
       const labelEl = document.getElementById('gen-label');
-      if (labelEl) labelEl.textContent = `加载图片中… (${loaded}/${total})`;
+      if (labelEl) labelEl.textContent = `加载图片中… (${shown}/${total})`;
+      // 图片加载阶段：百分比从 15% 平滑推进到 70%，让数字有连续过渡
+      const pct = total > 0 ? 15 + Math.round((shown / total) * 55) : 70;
+      const fill = document.getElementById('gen-bar-fill');
+      const pctEl = document.getElementById('gen-pct');
+      if (fill) { fill.classList.remove('preparing', 'rendering'); fill.style.width = pct + '%'; }
+      if (pctEl) pctEl.textContent = pct + '%';
     };
     const imgPromises = imgs.map(img => {
       // naturalWidth > 0 才算真正加载成功
       if (img.complete && img.naturalWidth > 0) { tick(); return Promise.resolve(); }
       return new Promise(r => {
-        const done = () => { tick(); r(); };
+        let settled = false;                              // 保证每张图只计一次，杜绝重复计数
+        let timer;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          tick();
+          r();
+        };
         // 10s 超时兜底：防止安卓离屏元素 onload 永不触发导致卡死
-        const timer = setTimeout(done, 10000);
-        img.onload  = () => { clearTimeout(timer); done(); };
-        img.onerror = () => { clearTimeout(timer); done(); };
+        timer = setTimeout(done, 10000);
+        img.onload  = done;
+        img.onerror = done;
         // complete 但 naturalWidth===0（加载失败）：强制重新请求
         if (img.complete) { const s = img.src; img.src = ''; img.src = s; }
       });
