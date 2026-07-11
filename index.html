@@ -1581,6 +1581,14 @@
       background: #FBC839; border-radius: 4px;
       transition: width 0.12s linear;
     }
+    .gen-bar-fill.rendering {
+      animation: gen-rendering 8s ease-out forwards;
+      transition: none;
+    }
+    @keyframes gen-rendering {
+      from { width: 75%; }
+      to   { width: 93%; }
+    }
     .gen-pct { color: rgba(255,255,255,0.6); font-size: 12px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -4020,15 +4028,16 @@ function _animateGenTo(from, to, ms, label) {
     if (n >= steps) _stopGenTimer();
   }, 80);
 }
-function _asymptoticGen(label) {
+function _startRenderingAnim(label) {
   _stopGenTimer();
-  _genTimer = setInterval(() => {
-    const fill = document.getElementById('gen-bar-fill');
-    if (!fill) return;
-    const cur = parseFloat(fill.style.width) || 75;
-    const next = cur + (99 - cur) * 0.06;
-    _setGenProgress(next, label);
-  }, 120);
+  const fill = document.getElementById('gen-bar-fill');
+  const labelEl = document.getElementById('gen-label');
+  if (fill) fill.classList.add('rendering');
+  if (labelEl && label) labelEl.textContent = label;
+}
+function _stopRenderingAnim() {
+  const fill = document.getElementById('gen-bar-fill');
+  if (fill) fill.classList.remove('rendering');
 }
 
 function generateWardrobeCard() {
@@ -4076,9 +4085,9 @@ function generateWardrobeCard() {
     });
 
     Promise.all(imgPromises).then(() => {
-      // 阶段3：75%→99%，html2canvas 黑盒阶段，渐进逼近不卡死
+      // 阶段3：75%→93%，CSS 动画推进，不占用 JS 主线程，不干扰 html2canvas
       _setGenProgress(75, '渲染中…');
-      _asymptoticGen('渲染中…');
+      _startRenderingAnim('渲染中…');
 
       return html2canvas(el, {
         scale: 2,
@@ -4089,6 +4098,7 @@ function generateWardrobeCard() {
         logging: false,
       });
     }).then(canvas => {
+      _stopRenderingAnim();
       _stopGenTimer();
       _setGenProgress(100, '完成！');
       _wardrobeDataUrl = canvas.toDataURL('image/png');
@@ -4100,6 +4110,7 @@ function generateWardrobeCard() {
         document.getElementById('wardrobe-modal').classList.add('open');
       }, 300);
     }).catch(err => {
+      _stopRenderingAnim();
       _stopGenTimer();
       document.getElementById('wardrobe-generating').classList.remove('show');
       console.error('html2canvas error:', err);
