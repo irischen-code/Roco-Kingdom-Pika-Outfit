@@ -4069,6 +4069,20 @@ function _ensureHtml2Canvas(maxMs = 8000) {
   });
 }
 
+// 单次渲染：html2canvas + 硬超时（timeoutMs 内没画完就以 render-timeout 拒绝，避免无限卡死）
+function _renderWardrobe(el, scale, timeoutMs) {
+  const renderP = html2canvas(el, {
+    scale,
+    useCORS: false,
+    allowTaint: true,
+    backgroundColor: '#F4EEE1',
+    imageTimeout: 15000,
+    logging: false,
+  });
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('render-timeout')), timeoutMs));
+  return Promise.race([renderP, timeout]);
+}
+
 function generateWardrobeCard() {
   if (location.protocol === 'file:') {
     alert('本地文件模式下图片无法截图，请先推送到 GitHub Pages 后在线测试。');
@@ -4151,15 +4165,24 @@ function generateWardrobeCard() {
       .then(() => {
         // 阶段3：CSS 动画，不占 JS 主线程
         _startRenderingAnim('渲染中…');
-        // scale 根据设备 DPR 自适应，低端安卓不强制 2x
-        const scale = Math.min(window.devicePixelRatio || 1, 2);
-        return html2canvas(el, {
-          scale,
-          useCORS: false,
-          allowTaint: true,
-          backgroundColor: '#F4EEE1',
-          imageTimeout: 15000,
-          logging: false,
+        // scale 自适应：受设备DPR + 画布像素上限 + 单边尺寸上限三重约束，避免画布过大导致卡死/空白
+        const rect = el.getBoundingClientRect();
+        const w = rect.width || 750;
+        const h = rect.height || 1500;
+        const MAX_CANVAS_PX = 12000000; // 画布总像素安全上限（约1200万）
+        const MAX_DIM = 8192;           // 画布单边尺寸上限
+        // 移动端/低内存设备首次就用较低倍率，更快更省内存；桌面端用 2x 保清晰
+        const lowEnd = (navigator.deviceMemory && navigator.deviceMemory <= 4)
+                    || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        let scale = Math.min(window.devicePixelRatio || 1, lowEnd ? 1.5 : 2);
+        scale = Math.max(1, Math.min(scale, Math.sqrt(MAX_CANVAS_PX / (w * h)), MAX_DIM / w, MAX_DIM / h));
+        // 首次高清渲染 30s 超时；超时则自动降到 scale=1 再试（省4倍内存、更快，画面略糊但能出图）
+        return _renderWardrobe(el, scale, 30000).catch(err => {
+          if (err && err.message === 'render-timeout' && scale > 1) {
+            _setGenLabel('优化渲染中…');
+            return _renderWardrobe(el, 1, 30000);
+          }
+          throw err;
         });
       }).then(canvas => {
         _stopAllAnim();
@@ -4176,7 +4199,11 @@ function generateWardrobeCard() {
         _stopAllAnim();
         document.getElementById('wardrobe-generating').classList.remove('show');
         console.error('html2canvas error:', err);
-        alert('生成失败：' + (err && err.message ? err.message : String(err)));
+        if (err && err.message === 'render-timeout') {
+          alert('渲染超时：套装图片较多，当前设备渲染较慢。建议换到网络更好的环境、或用电脑端重试。');
+        } else {
+          alert('生成失败：' + (err && err.message ? err.message : String(err)));
+        }
       });
   }, 1200)).catch(() => {
     _stopAllAnim();
