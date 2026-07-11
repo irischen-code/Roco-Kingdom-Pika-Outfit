@@ -4065,31 +4065,43 @@ function generateWardrobeCard() {
     const total = imgs.length;
     let loaded = 0;
 
-    // 阶段2：等图片下载完成（只更新文字，不做 DOM 重排）
+    // 阶段2：等图片加载，每张最多等 10s（兼容安卓 OEM 浏览器不触发 onload 的问题）
     _setGenLabel(`加载图片中… (0/${total})`);
 
     const tick = () => {
       loaded++;
-      document.getElementById('gen-label').textContent = `加载图片中… (${loaded}/${total})`;
+      const labelEl = document.getElementById('gen-label');
+      if (labelEl) labelEl.textContent = `加载图片中… (${loaded}/${total})`;
     };
     const imgPromises = imgs.map(img => {
-      if (img.complete) { tick(); return Promise.resolve(); }
+      // naturalWidth > 0 才算真正加载成功
+      if (img.complete && img.naturalWidth > 0) { tick(); return Promise.resolve(); }
       return new Promise(r => {
-        img.onload  = () => { tick(); r(); };
-        img.onerror = () => { tick(); r(); };
+        const done = () => { tick(); r(); };
+        // 10s 超时兜底：防止安卓离屏元素 onload 永不触发导致卡死
+        const timer = setTimeout(done, 10000);
+        img.onload  = () => { clearTimeout(timer); done(); };
+        img.onerror = () => { clearTimeout(timer); done(); };
+        // complete 但 naturalWidth===0（加载失败）：强制重新请求
+        if (img.complete) { const s = img.src; img.src = ''; img.src = s; }
       });
     });
 
-    Promise.all(imgPromises)
+    // 全局兜底：所有图片超过 25s 还没处理完，直接继续截图
+    const globalTimeout = new Promise(r => setTimeout(r, 25000));
+
+    Promise.race([Promise.all(imgPromises), globalTimeout])
       .then(() => {
-        // 阶段3：CSS 动画 75→93%，纯 CSS 不干扰 html2canvas
+        // 阶段3：CSS 动画，不占 JS 主线程
         _startRenderingAnim('渲染中…');
+        // scale 根据设备 DPR 自适应，低端安卓不强制 2x
+        const scale = Math.min(window.devicePixelRatio || 1, 2);
         return html2canvas(el, {
-          scale: 2,
+          scale,
           useCORS: false,
           allowTaint: true,
           backgroundColor: '#F4EEE1',
-          imageTimeout: 30000,
+          imageTimeout: 15000,
           logging: false,
         });
       }).then(canvas => {
