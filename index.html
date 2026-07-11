@@ -4082,12 +4082,6 @@ function generateWardrobeCard() {
 
     Promise.all(imgPromises)
       .then(() => {
-        // 确保图片解码完成（不只是下载完成），慢设备上这一步关键
-        return Promise.all(imgs.map(img =>
-          typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve()
-        ));
-      })
-      .then(() => {
         // 阶段3：CSS 动画 75→93%，纯 CSS 不干扰 html2canvas
         _startRenderingAnim('渲染中…');
         return html2canvas(el, {
