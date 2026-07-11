@@ -1579,10 +1579,18 @@
     .gen-bar-fill {
       height: 100%; width: 0%;
       background: #FBC839; border-radius: 4px;
-      transition: width 0.12s linear;
+      transition: width 0.15s linear;
+    }
+    .gen-bar-fill.preparing {
+      animation: gen-preparing 1.1s ease-out forwards;
+      transition: none;
+    }
+    @keyframes gen-preparing {
+      from { width: 0%; }
+      to   { width: 15%; }
     }
     .gen-bar-fill.rendering {
-      animation: gen-rendering 8s ease-out forwards;
+      animation: gen-rendering 10s ease-out forwards;
       transition: none;
     }
     @keyframes gen-rendering {
@@ -4004,40 +4012,32 @@ function buildWardrobeCardDOM(username) {
     </div>`;
 }
 
-let _genTimer = null;
-function _setGenProgress(pct, label) {
+function _setGenLabel(label) {
+  const el = document.getElementById('gen-label');
+  if (el && label) el.textContent = label;
+}
+function _setGenProgressFull(pct, label) {
   const p = Math.min(Math.round(pct), 100);
   const fill = document.getElementById('gen-bar-fill');
   const pctEl = document.getElementById('gen-pct');
-  const labelEl = document.getElementById('gen-label');
-  if (fill) fill.style.width = p + '%';
+  if (fill) { fill.classList.remove('preparing', 'rendering'); fill.style.width = p + '%'; }
   if (pctEl) pctEl.textContent = p + '%';
-  if (labelEl && label) labelEl.textContent = label;
+  _setGenLabel(label);
 }
-function _stopGenTimer() {
-  if (_genTimer) { clearInterval(_genTimer); _genTimer = null; }
-}
-function _animateGenTo(from, to, ms, label) {
-  _stopGenTimer();
-  const steps = Math.max(1, Math.round(ms / 80));
-  const step = (to - from) / steps;
-  let cur = from; let n = 0;
-  _setGenProgress(cur, label);
-  _genTimer = setInterval(() => {
-    n++; cur += step; _setGenProgress(cur, label);
-    if (n >= steps) _stopGenTimer();
-  }, 80);
+function _startPreparingAnim() {
+  const fill = document.getElementById('gen-bar-fill');
+  const pctEl = document.getElementById('gen-pct');
+  if (fill) { fill.style.width = '0%'; fill.classList.add('preparing'); }
+  if (pctEl) pctEl.textContent = '0%';
 }
 function _startRenderingAnim(label) {
-  _stopGenTimer();
   const fill = document.getElementById('gen-bar-fill');
-  const labelEl = document.getElementById('gen-label');
-  if (fill) fill.classList.add('rendering');
-  if (labelEl && label) labelEl.textContent = label;
+  if (fill) { fill.classList.remove('preparing'); fill.style.width = '75%'; fill.classList.add('rendering'); }
+  _setGenLabel(label);
 }
-function _stopRenderingAnim() {
+function _stopAllAnim() {
   const fill = document.getElementById('gen-bar-fill');
-  if (fill) fill.classList.remove('rendering');
+  if (fill) fill.classList.remove('preparing', 'rendering');
 }
 
 function generateWardrobeCard() {
@@ -4054,12 +4054,10 @@ function generateWardrobeCard() {
   const username = (_ap?.name || '').trim() || '洛克玩家';
   buildWardrobeCardDOM(username);
 
-  // 重置进度并显示遮罩
-  _setGenProgress(0, '准备中…');
+  // 阶段1：CSS 动画 0→15%，不占 JS 主线程，让图片安心加载
+  _startPreparingAnim();
+  _setGenLabel('准备中…');
   document.getElementById('wardrobe-generating').classList.add('show');
-
-  // 阶段1：0→15%，固定 1200ms 初始延迟
-  _animateGenTo(0, 15, 1100, '准备中…');
 
   setTimeout(() => {
     const el = document.getElementById('wardrobe-card');
@@ -4067,14 +4065,12 @@ function generateWardrobeCard() {
     const total = imgs.length;
     let loaded = 0;
 
-    // 阶段2：15→75%，按图片真实加载进度推进
-    _stopGenTimer();
-    _setGenProgress(15, `加载图片中… (0/${total})`);
+    // 阶段2：等图片下载完成（只更新文字，不做 DOM 重排）
+    _setGenLabel(`加载图片中… (0/${total})`);
 
     const tick = () => {
       loaded++;
-      const pct = total > 0 ? 15 + (loaded / total) * 60 : 75;
-      _setGenProgress(pct, `加载图片中… (${loaded}/${total})`);
+      document.getElementById('gen-label').textContent = `加载图片中… (${loaded}/${total})`;
     };
     const imgPromises = imgs.map(img => {
       if (img.complete) { tick(); return Promise.resolve(); }
@@ -4084,38 +4080,41 @@ function generateWardrobeCard() {
       });
     });
 
-    Promise.all(imgPromises).then(() => {
-      // 阶段3：75%→93%，CSS 动画推进，不占用 JS 主线程，不干扰 html2canvas
-      _setGenProgress(75, '渲染中…');
-      _startRenderingAnim('渲染中…');
-
-      return html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#F4EEE1',
-        imageTimeout: 20000,
-        logging: false,
-      });
-    }).then(canvas => {
-      _stopRenderingAnim();
-      _stopGenTimer();
-      _setGenProgress(100, '完成！');
-      _wardrobeDataUrl = canvas.toDataURL('image/png');
-      document.getElementById('wardrobe-preview-img').src = _wardrobeDataUrl;
-      const shareBtn = document.getElementById('wardrobe-share-btn');
-      shareBtn.style.display = (navigator.share && navigator.canShare) ? 'flex' : 'none';
-      setTimeout(() => {
+    Promise.all(imgPromises)
+      .then(() => {
+        // 确保图片解码完成（不只是下载完成），慢设备上这一步关键
+        return Promise.all(imgs.map(img =>
+          typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve()
+        ));
+      })
+      .then(() => {
+        // 阶段3：CSS 动画 75→93%，纯 CSS 不干扰 html2canvas
+        _startRenderingAnim('渲染中…');
+        return html2canvas(el, {
+          scale: 2,
+          useCORS: false,
+          allowTaint: true,
+          backgroundColor: '#F4EEE1',
+          imageTimeout: 30000,
+          logging: false,
+        });
+      }).then(canvas => {
+        _stopAllAnim();
+        _setGenProgressFull(100, '完成！');
+        _wardrobeDataUrl = canvas.toDataURL('image/png');
+        document.getElementById('wardrobe-preview-img').src = _wardrobeDataUrl;
+        const shareBtn = document.getElementById('wardrobe-share-btn');
+        shareBtn.style.display = (navigator.share && navigator.canShare) ? 'flex' : 'none';
+        setTimeout(() => {
+          document.getElementById('wardrobe-generating').classList.remove('show');
+          document.getElementById('wardrobe-modal').classList.add('open');
+        }, 300);
+      }).catch(err => {
+        _stopAllAnim();
         document.getElementById('wardrobe-generating').classList.remove('show');
-        document.getElementById('wardrobe-modal').classList.add('open');
-      }, 300);
-    }).catch(err => {
-      _stopRenderingAnim();
-      _stopGenTimer();
-      document.getElementById('wardrobe-generating').classList.remove('show');
-      console.error('html2canvas error:', err);
-      alert('生成失败：' + (err && err.message ? err.message : String(err)));
-    });
+        console.error('html2canvas error:', err);
+        alert('生成失败：' + (err && err.message ? err.message : String(err)));
+      });
   }, 1200);
 }
 
