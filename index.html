@@ -4032,7 +4032,9 @@ function _startPreparingAnim() {
 }
 function _startRenderingAnim(label) {
   const fill = document.getElementById('gen-bar-fill');
+  const pctEl = document.getElementById('gen-pct');
   if (fill) { fill.classList.remove('preparing'); fill.style.width = '75%'; fill.classList.add('rendering'); }
+  if (pctEl) pctEl.textContent = '75%';
   _setGenLabel(label);
 }
 function _stopAllAnim() {
@@ -4067,6 +4069,8 @@ function generateWardrobeCard() {
 
     // 阶段2：等图片加载，每张最多等 10s（兼容安卓 OEM 浏览器不触发 onload 的问题）
     _setGenLabel(`加载图片中… (0/${total})`);
+    const pctEl2 = document.getElementById('gen-pct');
+    if (pctEl2) pctEl2.textContent = '15%';
 
     const tick = () => {
       loaded++;
