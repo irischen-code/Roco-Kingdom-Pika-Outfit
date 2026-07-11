@@ -13,9 +13,8 @@
   <meta name="msvalidate.01" content="D3BFF8FD7CA42B6CCCC6E01CE5706B56" />
   <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
   <link rel="manifest" href="manifest.json">
-  <!-- 提前建连，减少境外CDN握手延迟；字体本地预加载（非阻塞，配合 font-display:swap） -->
+  <!-- 提前建连，减少境外CDN握手延迟。字体不做 preload：避免高优先级抢占图片带宽，配合 font-display:swap 优雅降级 -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preload" href="./ttf/luoke.woff2" as="font" type="font/woff2" crossorigin>
   <meta name="theme-color" content="#2D2260">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1601,9 +1600,9 @@
     }
     .gen-pct { color: rgba(255,255,255,0.6); font-size: 12px; }
   </style>
-  <!-- html2canvas：defer 不阻塞首屏解析；主源失败时自动回退到备用镜像，避免境外CDN不稳导致生图库加载失败 -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
-          onerror="(function(){var s=document.createElement('script');s.defer=true;s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';document.head.appendChild(s);})()"></script>
+  <!-- html2canvas：本地同源加载（国内无需 VPN 也稳），失败时才回退到境外CDN -->
+  <script defer src="./assets/js/html2canvas.min.js"
+          onerror="(function(){var s=document.createElement('script');s.defer=true;s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';document.head.appendChild(s);})()"></script>
 </head>
 <body>
 
@@ -4110,10 +4109,24 @@ function generateWardrobeCard() {
       });
     });
 
+    // 字体优雅降级：与图片并行，最多等自定义字体 3s。
+    // 加载好 → 用洛克官方字体渲染（理想态）；超时 → 用系统默认字体继续生成（兜底态），绝不因字体卡住
+    const fontReady = new Promise(resolve => {
+      const cap = setTimeout(resolve, 3000);
+      try {
+        if (document.fonts && document.fonts.check && document.fonts.check('16px LuokeFont')) {
+          clearTimeout(cap); resolve(); return;
+        }
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => { clearTimeout(cap); resolve(); }).catch(() => { clearTimeout(cap); resolve(); });
+        }
+      } catch (e) { /* 老浏览器无 document.fonts API，纯靠上面的 3s 超时兜底 */ }
+    });
+
     // 全局兜底：所有图片超过 25s 还没处理完，直接继续截图
     const globalTimeout = new Promise(r => setTimeout(r, 25000));
 
-    Promise.race([Promise.all(imgPromises), globalTimeout])
+    Promise.race([Promise.all([...imgPromises, fontReady]), globalTimeout])
       .then(() => {
         // 阶段3：CSS 动画，不占 JS 主线程
         _startRenderingAnim('渲染中…');

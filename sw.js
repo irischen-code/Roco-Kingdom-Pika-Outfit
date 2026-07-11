@@ -1,8 +1,9 @@
-const CACHE = 'pika-v5';
+const CACHE = 'pika-v6';
 const PRECACHE = [
   '/Roco-Kingdom-Pika-Outfit/',
   '/Roco-Kingdom-Pika-Outfit/index.html',
   '/Roco-Kingdom-Pika-Outfit/ttf/luoke.woff2',
+  '/Roco-Kingdom-Pika-Outfit/assets/js/html2canvas.min.js',
 ];
 
 self.addEventListener('install', e => {
@@ -23,7 +24,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   // 图片和静态资源：cache-first
-  if (url.pathname.match(/\.(png|jpg|jpeg|webp|gif|svg|ttf|woff2?)$/)) {
+  if (url.pathname.match(/\.(png|jpg|jpeg|webp|gif|svg|ttf|woff2?|js)$/)) {
     e.respondWith(
       caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
         const clone = res.clone();
