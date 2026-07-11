@@ -3600,8 +3600,8 @@ function buildWardrobeCardDOM(username) {
     return (a.rarity === 'gold' ? 0 : 1) - (b.rarity === 'gold' ? 0 : 1);
   });
   function renderAltCard(suit) {
-    const altOwned   = st.altOwned.has(suit.id);
     const suitOwned  = st.fullOwned.has(suit.id);
+    const altOwned   = suitOwned && st.altOwned.has(suit.id); // 未集齐套装不可能拥有异色
     const imgSrc     = altOwned
       ? `assets/images/suitcard-alt/${suit.sub}.png`
       : `assets/images/suitcard/${suit.sub}.png`;
