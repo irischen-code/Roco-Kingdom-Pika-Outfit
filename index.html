@@ -13,6 +13,9 @@
   <meta name="msvalidate.01" content="D3BFF8FD7CA42B6CCCC6E01CE5706B56" />
   <link rel="icon" type="image/png" href="./Favicon/Favicon.png">
   <link rel="manifest" href="manifest.json">
+  <!-- 提前建连，减少境外CDN握手延迟；字体本地预加载（非阻塞，配合 font-display:swap） -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preload" href="./ttf/luoke.woff2" as="font" type="font/woff2" crossorigin>
   <meta name="theme-color" content="#2D2260">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -40,7 +43,9 @@
   })();
   </script>
   <style>
-    @import url('https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+    /* 已移除阻塞式远程 @import（fonts.loli.net）：它会阻塞整张样式表与首屏渲染，
+       在部分安卓/UC浏览器或境外网络不稳时导致「白屏、字体加载不出来、加载慢」。
+       Noto Sans SC 回退到系统中文字体（PingFang SC / 系统默认），视觉几乎无差异。 */
 
     :root {
       --bg:             #FBC839;
@@ -80,24 +85,21 @@
       --accent2:        #9A73F9;
     }
 
+    /* WOFF2 优先（约 2.3MB，比原 4.4MB TTF 小约一半），旧浏览器回退 TTF。
+       font-display:swap 保证字体下载期间先用系统字体显示、绝不白屏。 */
     @font-face {
       font-family: 'LuokeFont';
-      src: url('./ttf/洛克官方字体.ttf') format('truetype');
+      src: url('./ttf/luoke.woff2') format('woff2'),
+           url('./ttf/洛克官方字体.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'LuokeFont';
-      src: url('./ttf/洛克官方字体.ttf') format('truetype');
+      src: url('./ttf/luoke.woff2') format('woff2'),
+           url('./ttf/洛克官方字体.ttf') format('truetype');
       font-weight: bold;
-      font-style: normal;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'RoundFont';
-      src: url('./ttf/圆体.ttf') format('truetype');
-      font-weight: normal;
       font-style: normal;
       font-display: swap;
     }
@@ -1599,7 +1601,9 @@
     }
     .gen-pct { color: rgba(255,255,255,0.6); font-size: 12px; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- html2canvas：defer 不阻塞首屏解析；主源失败时自动回退到备用镜像，避免境外CDN不稳导致生图库加载失败 -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+          onerror="(function(){var s=document.createElement('script');s.defer=true;s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';document.head.appendChild(s);})()"></script>
 </head>
 <body>
 
