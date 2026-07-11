@@ -258,11 +258,16 @@
     .step-tabs {
       display: flex;
       align-items: center;
-      border-bottom: 1.5px solid #313131;
       background: transparent;
       padding: 12px 16px;
       flex-shrink: 0;
       gap: 0;
+      position: relative;
+    }
+    .step-tabs::after {
+      content: ''; position: absolute; bottom: 0;
+      left: 16px; right: 16px; height: 1px;
+      background: rgba(49,49,49,0.2);
     }
     .step-tab {
       flex: 0 0 auto;
@@ -314,10 +319,15 @@
     /* ── Step bottom nav ── */
     .step-nav-btns {
       display: flex; gap: 8px;
-      padding: 12px 16px;           /* matches step-pane horizontal padding */
-      border-top: 1.5px solid #313131;
+      padding: 12px 16px;
       background: transparent;
       flex-shrink: 0;
+      position: relative;
+    }
+    .step-nav-btns::before {
+      content: ''; position: absolute; top: 0;
+      left: 16px; right: 16px; height: 1px;
+      background: rgba(49,49,49,0.2);
     }
     .step-nav-btn {
       flex: 1; padding: 11px;
@@ -360,12 +370,20 @@
       background: #E3DAC8;
       border: 1.5px solid #313131;
       border-radius: 10px;
-      padding: 10px 14px;
+      padding: 10px 36px 10px 14px;
       font-size: 12px;
       color: #313131;
       margin-bottom: 12px;
       line-height: 1.6;
+      position: relative;
     }
+    .notice-close {
+      position: absolute; top: 8px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      font-size: 14px; color: #999; line-height: 1;
+      padding: 2px 4px; border-radius: 4px;
+    }
+    .notice-close:hover { color: #555; }
 
     /* ── Theme group ── */
     .theme-group { margin-bottom: 8px; }
@@ -1221,6 +1239,7 @@
 
       /* ── 步骤标签栏 ── */
       .step-tabs { padding: 8px 10px; }
+      .account-chips-row { padding: 8px 10px 8px; }
       .step-tab { font-size: 11px; padding: 6px 2px; gap: 3px; }
       .step-connector { min-width: 4px; margin: 0 2px; }
       .step-num { width: 18px; height: 18px; font-size: 10px; }
@@ -1379,6 +1398,66 @@
       .bnav-label { font-size: 14px; }
     }
 
+    /* ── 账号 chip 行 ── */
+    .account-chips-row {
+      display: flex; align-items: center; gap: 6px;
+      overflow-x: auto; padding: 10px 16px 10px;
+      scrollbar-width: none;
+      position: relative;
+    }
+    .account-chips-row::after {
+      content: ''; position: absolute; bottom: 0;
+      left: 16px; right: 16px; height: 1px;
+      background: rgba(49,49,49,0.2);
+    }
+    .account-chips-row::-webkit-scrollbar { display: none; }
+    .account-chip {
+      flex-shrink: 0; padding: 4px 12px;
+      border-radius: 20px; border: none;
+      background: rgba(49,49,49,0.1);
+      color: #555; font-family: inherit; font-size: 12px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; line-height: 1.4;
+    }
+    .account-chip:active { opacity: 0.7; }
+    .account-chip-active {
+      background: #313131; color: #FBC839;
+    }
+    .account-chip-add {
+      background: rgba(49,49,49,0.07); color: #888;
+      font-size: 14px; font-weight: 400; padding: 3px 10px;
+    }
+    .account-chip-manage {
+      background: rgba(49,49,49,0.07); color: #888;
+      font-size: 12px; padding: 4px 10px; letter-spacing: 2px;
+    }
+
+    /* ── 账号弹窗 ── */
+    .account-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 4px; border-bottom: 1px solid rgba(0,0,0,0.07);
+      cursor: pointer;
+    }
+    .account-item:last-child { border-bottom: none; }
+    .account-item-active { cursor: default; }
+    .account-item-check { width: 20px; font-size: 15px; color: #FBC839; flex-shrink: 0; font-weight: 800; }
+    .account-item-name {
+      flex: 1; font-weight: 600; font-size: 15px;
+      border-radius: 4px; padding: 1px 3px;
+      border: 1px solid transparent;
+      outline: none; background: transparent;
+    }
+    .account-item-name[contenteditable="true"] {
+      border-color: #FBC839; background: #fffbef;
+    }
+    .account-item-stats { font-size: 12px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
+    .account-item-del {
+      width: 28px; height: 28px; border: none; background: none;
+      cursor: pointer; font-size: 15px; color: #bbb; padding: 0;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+    }
+    .account-item-del:active { background: #fee; color: #e05; }
+
     /* ── 衣橱页面 ── */
     #view-wardrobe { background: #FBC839; min-height: calc(100vh - 56px); padding: 32px 16px; }
     .wardrobe-page { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -1522,7 +1601,7 @@
     </button>
   </nav>
   <div class="header-badges">
-    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.3 ↗</span><span class="badge-short">v1.3 ↗</span></span>
+    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.4 ↗</span><span class="badge-short">v1.4 ↗</span></span>
     <span class="badge" style="cursor:pointer" onclick="switchView('pool');(function(){ const el=document.getElementById('pool-suits-card'); const headerH=document.querySelector('.header').offsetHeight; const top=el.getBoundingClientRect().top+window.scrollY-headerH-12; window.scrollTo({top,behavior:'smooth'}); })()"><span class="badge-long">44 套（含待入池）</span><span class="badge-short">44 套</span></span>
     <span style="cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center;" onclick="openFeedback()">💬</span>
   </div>
@@ -1593,6 +1672,9 @@
     <!-- Left panel -->
     <div class="left-panel">
 
+    <!-- Account chips row -->
+    <div class="account-chips-row" id="account-chips-row"></div>
+
     <!-- Step tabs -->
     <div class="step-tabs">
       <button class="step-tab active" data-tab="owned"     onclick="switchStep('owned')">
@@ -1610,13 +1692,13 @@
 
     <!-- Step 1: Owned -->
     <div class="step-pane" id="sc-owned">
-      <div class="notice">展开套装 → 点「持有部分」→ 勾选已拥有的部件。已集齐整套可直接点「已集齐」，该套整体退出卡池。</div>
+      <div class="notice" id="notice-owned">展开套装 → 点「持有部分」→ 勾选已拥有的部件。已集齐整套可直接点「已集齐」，该套整体退出卡池。<button class="notice-close" onclick="dismissNotice('owned')">✕</button></div>
       <div id="owned-list"></div>
     </div>
 
     <!-- Step 2: Targets -->
     <div class="step-pane hidden" id="sc-targets">
-      <div class="notice">勾选想要的套装。默认选中「只看整套」目标；若只需要部分部件，请点击「只看整套」标签（取消选中状态），切换为「只要部分」模式。</div>
+      <div class="notice" id="notice-targets">勾选想要的套装。默认选中「只看整套」目标；若只需要部分部件，请点击「只看整套」标签（取消选中状态），切换为「只要部分」模式。<button class="notice-close" onclick="dismissNotice('targets')">✕</button></div>
       <div class="target-toolbar">
         <span class="target-sel-count" id="target-sel-count">已选 0 套</span>
         <div style="display:flex;gap:6px">
@@ -1641,7 +1723,7 @@
           <input type="number" id="daily-income" class="res-input" value="25" min="1" max="200" placeholder="25" oninput="saveState()">
           <span class="res-unit">颗/天</span>
         </div>
-        <div class="notice" style="margin-bottom:14px">⚡ 活动、任务等额外产出不计入，实际到手可能更快。</div>
+        <div class="notice" id="notice-resources" style="margin-bottom:14px">⚡ 活动、任务等额外产出不计入，实际到手可能更快。<button class="notice-close" onclick="dismissNotice('resources')">✕</button></div>
         <button class="calc-btn" id="calc-btn" onclick="onCalc()">✨ 开始计算规划</button>
       </div>
     </div>
@@ -1780,9 +1862,9 @@
     </div>
     <div class="wardrobe-input-card">
       <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wardrobe-title-banner">
-      <div class="wardrobe-name-row">
-        <label for="wardrobe-username">我的昵称</label>
-        <input id="wardrobe-username" class="wardrobe-name-input" type="text" placeholder="输入你的昵称" maxlength="10">
+      <div style="text-align:center; font-size:15px; color:#888; margin-bottom:16px; position:relative;">
+        当前账号：<span id="wardrobe-account-label" style="font-weight:800; color:#555;"></span><button onclick="toggleWardrobeDropdown(event)" id="wardrobe-dropdown-btn" style="background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:0 0 0 5px;line-height:1;vertical-align:middle;">▾</button>
+        <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:130px;z-index:100;overflow:hidden;"></div>
       </div>
       <button class="wardrobe-gen-btn" style="background:#F4EEE1; margin-bottom:8px;" onclick="openAltOwnedModal()">🎨 填写异色拥有情况（选填）</button>
       <button class="wardrobe-gen-btn" onclick="generateWardrobeCard()">生成我的衣橱长图</button>
@@ -1795,6 +1877,15 @@
 <div id="wardrobe-card"></div>
 
 <!-- ── 异色拥有情况弹窗 ── -->
+<div id="account-modal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;" onclick="if(event.target===this)closeAccountModal()">
+  <div style="background:#FBF7EE; border:2px solid #313131; border-radius:20px; padding:24px 20px 20px; max-width:360px; width:90%; max-height:75vh; overflow-y:auto; position:relative;">
+    <button onclick="closeAccountModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#888; line-height:1;">✕</button>
+    <div style="font-size:16px; font-weight:800; color:#313131; margin-bottom:6px;">管理账号</div>
+    <div style="font-size:12px; color:#999; margin-bottom:14px;">双击账号名可重命名</div>
+    <div id="account-list"></div>
+  </div>
+</div>
+
 <div id="alt-owned-modal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;" onclick="if(event.target===this)closeAltOwnedModal()">
   <div style="background:#FBF7EE; border:2px solid #313131; border-radius:20px; padding:28px 24px 20px; max-width:400px; width:92%; max-height:80vh; overflow-y:auto; position:relative;">
     <button onclick="closeAltOwnedModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
@@ -3405,10 +3496,245 @@ function updatePoolStats() {
 }
 
 // ════════════════════════════════════════════════════
-// PERSISTENCE (localStorage)
+// ════════════════════════════════════════════════════
+// PROFILE MANAGEMENT（多账号）
 // ════════════════════════════════════════════════════
 
-const _SAVE_KEY = 'luoke_planner_v1';
+const _PROFILES_KEY = 'luoke_profiles_v1';
+const _ACTIVE_KEY   = 'luoke_active_v1';
+const _LEGACY_KEY   = 'luoke_planner_v1';
+
+function _getProfiles() {
+  try { return JSON.parse(localStorage.getItem(_PROFILES_KEY)) || []; } catch(e) { return []; }
+}
+function _saveProfiles(profiles) {
+  try { localStorage.setItem(_PROFILES_KEY, JSON.stringify(profiles)); } catch(e) {}
+}
+function _getActiveId() {
+  return localStorage.getItem(_ACTIVE_KEY) || '';
+}
+function _setActiveId(id) {
+  try { localStorage.setItem(_ACTIVE_KEY, id); } catch(e) {}
+}
+function _getSaveKey(id) {
+  return 'luoke_planner_' + (id || _getActiveId());
+}
+function _migrateIfNeeded() {
+  const profiles = _getProfiles();
+  if (profiles.length > 0) return;
+  const id = 'p' + Date.now();
+  const legacyData     = localStorage.getItem(_LEGACY_KEY);
+  _saveProfiles([{ id, name: '洛克1' }]);
+  _setActiveId(id);
+  if (legacyData) {
+    try { localStorage.setItem(_getSaveKey(id), legacyData); } catch(e) {}
+  }
+}
+function _getProfileSuitCount(id) {
+  try {
+    const raw = localStorage.getItem(_getSaveKey(id));
+    if (!raw) return 0;
+    return (JSON.parse(raw).fullOwned || []).length;
+  } catch(e) { return 0; }
+}
+function updateAccountDisplay() {
+  renderAccountChips();
+  updateWardrobeAccountLabel();
+}
+function updateWardrobeAccountLabel() {
+  const profiles = _getProfiles();
+  const active = profiles.find(p => p.id === _getActiveId());
+  const nameEl = document.getElementById('wardrobe-account-label');
+  if (nameEl && active) nameEl.textContent = active.name;
+}
+function toggleWardrobeDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('wardrobe-account-dropdown');
+  if (!dd) return;
+  if (dd.style.display === 'none') {
+    renderWardrobeDropdown();
+    dd.style.display = 'block';
+  } else {
+    dd.style.display = 'none';
+  }
+}
+function renderWardrobeDropdown() {
+  const profiles = _getProfiles();
+  const activeId = _getActiveId();
+  const dd = document.getElementById('wardrobe-account-dropdown');
+  if (!dd) return;
+  dd.innerHTML = profiles.map(p => {
+    const isActive = p.id === activeId;
+    return `<button onclick="switchProfileFromWardrobeDropdown('${p.id}')"
+      style="display:block;width:100%;padding:10px 16px;background:${isActive ? '#313131' : 'none'};color:${isActive ? '#FBC839' : '#555'};border:none;cursor:${isActive ? 'default' : 'pointer'};font-family:inherit;font-size:13px;font-weight:${isActive ? '800' : '500'};text-align:center;white-space:nowrap;"
+      ${isActive ? 'disabled' : ''}>${p.name}</button>`;
+  }).join('');
+}
+function switchProfileFromWardrobeDropdown(id) {
+  document.getElementById('wardrobe-account-dropdown').style.display = 'none';
+  if (id === _getActiveId()) return;
+  switchProfile(id, 'owned');
+  switchView('wardrobe');
+}
+document.addEventListener('click', () => {
+  const dd = document.getElementById('wardrobe-account-dropdown');
+  if (dd) dd.style.display = 'none';
+});
+function renderAccountChips() {
+  const profiles = _getProfiles();
+  const activeId = _getActiveId();
+  const row = document.getElementById('account-chips-row');
+  if (!row) return;
+  row.innerHTML = profiles.map(p => {
+    const isActive = p.id === activeId;
+    return `<button class="account-chip${isActive ? ' account-chip-active' : ''}"
+                    onclick="${isActive ? `startChipRename('${p.id}', this)` : `switchProfile('${p.id}')`}"
+                    title="${isActive ? '点击重命名' : ''}">${p.name}</button>`;
+  }).join('') +
+  `<button class="account-chip account-chip-add" onclick="onCreateNewProfile()" title="新建账号">＋</button>` +
+  `<button class="account-chip account-chip-manage" onclick="openAccountModal()" title="管理账号">···</button>`;
+}
+
+function startChipRename(id, btn) {
+  const name = btn.textContent.trim();
+  const input = document.createElement('input');
+  input.value = name;
+  input.style.cssText = `
+    background: transparent; border: none; outline: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    color: #FBC839; width: ${Math.max(name.length * 13, 48)}px;
+    padding: 0; margin: 0;
+  `;
+  btn.textContent = '';
+  btn.appendChild(input);
+  input.focus();
+  input.select();
+
+  const confirm = () => {
+    const newName = input.value.trim();
+    const profiles = _getProfiles();
+    const p = profiles.find(p => p.id === id);
+    if (p && newName) { p.name = newName; _saveProfiles(profiles); }
+    renderAccountChips();
+    updateAccountDisplay();
+  };
+  input.onblur = confirm;
+  input.onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { renderAccountChips(); }
+    e.stopPropagation();
+  };
+  input.onclick = e => e.stopPropagation();
+}
+function openAccountModal() {
+  renderAccountList();
+  document.getElementById('account-modal').style.display = 'flex';
+}
+function closeAccountModal() {
+  document.getElementById('account-modal').style.display = 'none';
+}
+function renderAccountList() {
+  const profiles = _getProfiles();
+  const activeId = _getActiveId();
+  const total = SUITS.length;
+  const list = document.getElementById('account-list');
+  list.innerHTML = profiles.map(p => {
+    const isActive = p.id === activeId;
+    const count = _getProfileSuitCount(p.id);
+    const canDel = profiles.length > 1;
+    return `<div class="account-item${isActive ? ' account-item-active' : ''}"
+                 onclick="${isActive ? '' : `switchProfile('${p.id}')`}">
+      <span class="account-item-check">${isActive ? '✓' : ''}</span>
+      <span class="account-item-name" id="aname-${p.id}"
+            ondblclick="event.stopPropagation(); startRenameProfile('${p.id}', this)">${p.name}</span>
+      <span class="account-item-stats">${count}/${total}套</span>
+      ${canDel
+        ? `<button class="account-item-del" onclick="event.stopPropagation(); deleteProfile('${p.id}')">🗑</button>`
+        : '<span style="width:28px;flex-shrink:0;"></span>'}
+    </div>`;
+  }).join('');
+}
+function startRenameProfile(id, el) {
+  el.contentEditable = 'true';
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  el.onclick = e => e.stopPropagation();
+  el.onblur = () => {
+    el.contentEditable = 'false';
+    el.onclick = null;
+    const name = el.textContent.trim();
+    if (name) {
+      const profiles = _getProfiles();
+      const p = profiles.find(p => p.id === id);
+      if (p) { p.name = name; _saveProfiles(profiles); }
+      if (id === _getActiveId()) updateAccountDisplay();
+    } else {
+      renderAccountList();
+    }
+  };
+  el.onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    if (e.key === 'Escape') { el.contentEditable = 'false'; el.onclick = null; renderAccountList(); }
+  };
+}
+function switchProfile(id, targetStep = 'owned') {
+  saveState();
+  _setActiveId(id);
+  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set();
+  const loaded = loadState();
+  renderOwnedList();
+  if (loaded) {
+    for (const s of SUITS) applyOwnedDom(s.id);
+    for (const th of THEMES_RAW) updateThemeAllBtn(th.theme);
+  }
+  renderTargetList();
+  updatePoolStats();
+  switchStep(targetStep);
+  updateAccountDisplay();
+  closeAccountModal();
+}
+function deleteProfile(id) {
+  const profiles = _getProfiles();
+  if (profiles.length <= 1) return;
+  const name = profiles.find(p => p.id === id)?.name || '该账号';
+  if (!confirm(`确认删除「${name}」？数据无法恢复。`)) return;
+  try { localStorage.removeItem(_getSaveKey(id)); } catch(e) {}
+  const newProfiles = profiles.filter(p => p.id !== id);
+  _saveProfiles(newProfiles);
+  if (_getActiveId() === id) {
+    switchProfile(newProfiles[0].id);
+  } else {
+    renderAccountList();
+  }
+}
+function onCreateNewProfile() {
+  const profiles = _getProfiles();
+  const nums = profiles.map(p => { const m = p.name.match(/^洛克(\d+)$/); return m ? parseInt(m[1]) : 0; });
+  const maxNum = nums.length ? Math.max(...nums) : 0;
+  const name = '洛克' + (maxNum + 1);
+  const id = 'p' + Date.now();
+  profiles.push({ id, name });
+  _saveProfiles(profiles);
+  saveState();
+  _setActiveId(id);
+  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set();
+  document.getElementById('star-balance').value = '0';
+  document.getElementById('daily-income').value = '25';
+  renderOwnedList();
+  renderTargetList();
+  updatePoolStats();
+  switchStep('owned');
+  updateAccountDisplay();
+  closeAccountModal();
+}
+
+// ════════════════════════════════════════════════════
+// PERSISTENCE (localStorage)
+// ════════════════════════════════════════════════════
 
 function saveState() {
   try {
@@ -3427,13 +3753,13 @@ function saveState() {
       if (tval === 'ALL') data.targets[sid] = 'ALL';
       else if (tval instanceof Set && tval.size > 0) data.targets[sid] = [...tval];
     }
-    localStorage.setItem(_SAVE_KEY, JSON.stringify(data));
+    localStorage.setItem(_getSaveKey(), JSON.stringify(data));
   } catch(e) { /* 无痕模式等场景不支持 localStorage，静默忽略 */ }
 }
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(_SAVE_KEY);
+    const raw = localStorage.getItem(_getSaveKey());
     if (!raw) return false;
     const data = JSON.parse(raw);
 
@@ -3486,6 +3812,7 @@ function applyOwnedDom(sid) {
 // INIT
 // ════════════════════════════════════════════════════
 
+_migrateIfNeeded();              // 旧数据迁移至多账号结构
 const _hadSaved = loadState();   // 先恢复 st，再渲染
 renderOwnedList();
 if (_hadSaved) {
@@ -3497,6 +3824,7 @@ renderTargetList();
 renderTimeline();
 renderPoolThemes();
 updatePoolStats();
+updateAccountDisplay();
 
 // All theme bodies collapsed by default
 document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
@@ -3518,14 +3846,6 @@ if (window.innerWidth <= 600) {
 
 let _wardrobeDataUrl = null;
 
-// 读取用户名（localStorage 持久化）
-(function() {
-  const saved = localStorage.getItem('wardrobe-username');
-  if (saved) {
-    const el = document.getElementById('wardrobe-username');
-    if (el) el.value = saved;
-  }
-})();
 
 function getWardrobeStats() {
   const ownedSuits  = st.fullOwned.size;
@@ -3673,8 +3993,9 @@ function generateWardrobeCard() {
     alert('本地文件模式下图片无法截图，请先推送到 GitHub Pages 后在线测试。');
     return;
   }
-  const username = (document.getElementById('wardrobe-username').value.trim()) || '洛克玩家';
-  localStorage.setItem('wardrobe-username', username);
+  const _profiles = _getProfiles();
+  const _ap = _profiles.find(p => p.id === _getActiveId());
+  const username = (_ap?.name || '').trim() || '洛克玩家';
   buildWardrobeCardDOM(username);
   document.getElementById('wardrobe-generating').classList.add('show');
   setTimeout(() => {
@@ -3748,6 +4069,27 @@ async function shareWardrobeCard() {
     await navigator.share({ files: [file], title: '我的衣橱' });
   } catch(e) { /* 用户取消分享，忽略 */ }
 }
+
+// ── 说明 banner 关闭 ──
+const _NOTICE_KEY = 'pikaNoticeDismissed';
+function _getDismissed() {
+  try { return JSON.parse(localStorage.getItem(_NOTICE_KEY)) || []; } catch(e) { return []; }
+}
+function dismissNotice(key) {
+  const el = document.getElementById('notice-' + key);
+  if (el) el.style.display = 'none';
+  try {
+    const list = _getDismissed();
+    if (!list.includes(key)) { list.push(key); localStorage.setItem(_NOTICE_KEY, JSON.stringify(list)); }
+  } catch(e) {}
+}
+function applyDismissedNotices() {
+  _getDismissed().forEach(key => {
+    const el = document.getElementById('notice-' + key);
+    if (el) el.style.display = 'none';
+  });
+}
+applyDismissedNotices();
 
 function openFeedback() {
   const m = document.getElementById('feedback-modal');
@@ -3853,11 +4195,35 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     </div>
     <div class="cl-body">
 
+      <!-- v1.4 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge latest">v1.4</span>
+          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-date">2026 年 7 月</span>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">✨ 新功能</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>多账号支持</strong>：可创建多个账号（如「洛克1」「洛克2」），每个账号独立保存持有情况与规划数据，切换账号后全站数据实时同步。</span></div>
+            <div class="cl-item"><span><strong>衣橱页账号切换</strong>：「我的衣橱」页面支持直接切换账号，点击「当前账号 ▾」展开列表一键切换，生成的衣橱图对应所选账号数据。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🐛 Bug 修复</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>修复异色套装数据残留问题：将套装从「全部持有」降级后，异色状态未同步清除，导致衣橱图显示异常。</span></div>
+            <div class="cl-item"><span>修复普通套装卡片有时错误展示异色图片的问题。</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- v1.3 -->
       <div class="cl-block">
         <div class="cl-version-row">
-          <span class="cl-badge latest">v1.3</span>
-          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-badge">v1.3</span>
           <span class="cl-date">2026 年 7 月</span>
         </div>
 
