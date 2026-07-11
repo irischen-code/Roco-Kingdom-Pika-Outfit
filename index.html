@@ -3225,10 +3225,12 @@ function setOwn(sid, state) {
   if (state === 'none') {
     st.owned[sid] = new Set();
     st.fullOwned.delete(sid);
+    st.altOwned.delete(sid);
     grid.style.display = 'none';
   } else if (state === 'part') {
     st.owned[sid] = new Set();
     st.fullOwned.delete(sid);
+    st.altOwned.delete(sid);
     grid.style.display = 'grid';
     document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
   } else {
@@ -3576,7 +3578,7 @@ function buildWardrobeCardDOM(username) {
     const shortName = suit.sub.replace('印象', '');
     return `<div class="wc-card-wrap">
       <div class="wc-card-item${isOwned ? '' : ' unowned'}">
-        <img src="${ALTS.has(suit.sub) && st.altOwned.has(suit.id) ? `assets/images/suitcard-alt/${suit.sub}.png` : `assets/images/suitcard/${suit.sub}.png`}" alt="${suit.sub}">
+        <img src="assets/images/suitcard/${suit.sub}.png" alt="${suit.sub}">
         ${overlay}
       </div>
       <div class="wc-card-name">${shortName}</div>
