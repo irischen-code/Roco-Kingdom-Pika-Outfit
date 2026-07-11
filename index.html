@@ -4045,11 +4045,31 @@ function _stopAllAnim() {
   if (fill) fill.classList.remove('preparing', 'rendering');
 }
 
+// 确保 html2canvas 就绪：已加载则立即返回；否则主动补加载（本地优先，失败回退CDN）并轮询等待，最多 maxMs
+function _ensureHtml2Canvas(maxMs = 8000) {
+  return new Promise((resolve, reject) => {
+    if (typeof html2canvas !== 'undefined') return resolve();
+    // 首次进入才补注入脚本，避免重复插入
+    if (!document.querySelector('script[data-h2c-retry]')) {
+      const local = document.createElement('script');
+      local.setAttribute('data-h2c-retry', '1');
+      local.src = './assets/js/html2canvas.min.js';
+      local.onerror = () => {
+        const cdn = document.createElement('script');
+        cdn.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        document.head.appendChild(cdn);
+      };
+      document.head.appendChild(local);
+    }
+    const start = Date.now();
+    const poll = setInterval(() => {
+      if (typeof html2canvas !== 'undefined') { clearInterval(poll); resolve(); }
+      else if (Date.now() - start > maxMs) { clearInterval(poll); reject(new Error('h2c-timeout')); }
+    }, 100);
+  });
+}
+
 function generateWardrobeCard() {
-  if (typeof html2canvas === 'undefined') {
-    alert('图片生成库未加载（可能被网络拦截），请刷新页面或连接 VPN 后重试。');
-    return;
-  }
   if (location.protocol === 'file:') {
     alert('本地文件模式下图片无法截图，请先推送到 GitHub Pages 后在线测试。');
     return;
@@ -4064,7 +4084,8 @@ function generateWardrobeCard() {
   _setGenLabel('准备中…');
   document.getElementById('wardrobe-generating').classList.add('show');
 
-  setTimeout(() => {
+  // 确保生图库就绪：本地优先，慢则等待/补加载（最多8s），仍失败才提示——不再点击瞬间硬报错
+  _ensureHtml2Canvas().then(() => setTimeout(() => {
     const el = document.getElementById('wardrobe-card');
     const imgs = Array.from(el.querySelectorAll('img'));
     const total = imgs.length;
@@ -4157,7 +4178,11 @@ function generateWardrobeCard() {
         console.error('html2canvas error:', err);
         alert('生成失败：' + (err && err.message ? err.message : String(err)));
       });
-  }, 1200);
+  }, 1200)).catch(() => {
+    _stopAllAnim();
+    document.getElementById('wardrobe-generating').classList.remove('show');
+    alert('图片生成库加载较慢，可能网络不稳。请稍等几秒后再点一次「生成」，或刷新页面重试。');
+  });
 }
 
 function closeWardrobeModal() {
