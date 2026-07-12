@@ -199,6 +199,7 @@
     /* ── Two-column layout ── */
     .layout { display: flex; gap: 12px; padding: 12px; min-height: calc(100vh - 56px); background: #FBC839; }
     .left-column { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 56px; height: calc(100vh - 56px - 24px); align-self: flex-start; overflow: hidden; }
+    .planner-screen { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .left-panel { background: #FBF7EE; border: 1.5px solid #313131; border-radius: 20px; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .right-panel { flex: 1; overflow-y: auto; padding: 12px; background: #FBF7EE; border: 1.5px solid #313131; border-radius: 20px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
     @media (max-width: 860px) {
@@ -1205,29 +1206,29 @@
 
       /* ── 整体布局：移动端单列 ── */
       .layout { padding: 8px; gap: 8px; min-height: calc(100vh - 52px); flex-direction: column; }
-      .left-column { width: 100%; position: static; height: auto; overflow: visible; }
+      .left-column { width: 100%; position: static; height: auto; overflow: visible; gap: 6px; }
+      .planner-screen { gap: 6px; }
+      /* 内联历史 bar：仅步骤1/2（一屏布局）露出；步骤3 结果区已自带入口，这里隐藏 */
+      #hist-inline-wrap { display: none; }
+      #view-planner.fixed-step-layout #hist-inline-wrap { display: block; }
       /* 移动端右侧结果面板：默认隐藏，只在第三步显示 */
       #right-panel { display: none; }
       #right-panel.mobile-visible { display: flex; padding: 8px; gap: 8px; }
 
-      /* ── 步骤1/2 固定高度布局（内容在面板内滚动）── */
-      #view-planner.fixed-step-layout {
-        position: fixed;
-        inset: 52px 0 calc(68px + env(safe-area-inset-bottom)) 0;
-        overflow: hidden; min-height: unset;
-      }
-      #view-planner.fixed-step-layout .layout {
-        height: 100%; min-height: unset; overflow: hidden; padding: 8px; gap: 8px;
-      }
-      #view-planner.fixed-step-layout .left-column {
-        height: 100%; overflow: hidden; flex: 1; min-height: 0;
-        display: flex; flex-direction: column;
+      /* ── 步骤1/2：整个填写模块（统计卡+卡片+按钮栏）锁成正好一屏高，列表在卡片内部滚动；
+            历史记录在这一屏之外下方，整页可向下滚动找到；展开历史向下撑开页面，不压缩上方 ── */
+      #view-planner.fixed-step-layout .planner-screen {
+        height: calc(100vh - 128px - env(safe-area-inset-bottom));
+        height: calc(100dvh - 128px - env(safe-area-inset-bottom));
+        min-height: 320px;
+        flex: none; overflow: hidden;
       }
       #view-planner.fixed-step-layout .pool-stats-card { flex-shrink: 0; }
       #view-planner.fixed-step-layout .left-panel {
         flex: 1; min-height: 0; overflow: hidden;
         display: flex; flex-direction: column;
       }
+      #view-planner.fixed-step-layout .account-chips-row { flex-shrink: 0; }
       #view-planner.fixed-step-layout .step-tabs { flex-shrink: 0; }
       #view-planner.fixed-step-layout .step-pane {
         flex: 1; min-height: 0;
@@ -1392,7 +1393,10 @@
     @media (max-width: 600px) and (display-mode: standalone) {
       .bottom-nav { height: calc(80px + env(safe-area-inset-bottom)); }
       .bnav-item { padding-bottom: 24px; }
-      #view-planner.fixed-step-layout { inset: 52px 0 calc(84px + env(safe-area-inset-bottom)) 0; }
+      #view-planner.fixed-step-layout .planner-screen {
+        height: calc(100vh - 144px - env(safe-area-inset-bottom));
+        height: calc(100dvh - 144px - env(safe-area-inset-bottom));
+      }
       .bnav-blob-wrap { width: 76px; height: 76px; bottom: 28px; }
       .bnav-item.active .bnav-blob-wrap { transform: translateY(-14px); }
       .bnav-icon { width: 36px; height: 36px; }
@@ -1599,6 +1603,14 @@
       to   { width: 93%; }
     }
     .gen-pct { color: rgba(255,255,255,0.6); font-size: 12px; }
+    /* 历史记录入口 bar（结果区 + 第一步/第三步底部） */
+    .hist-bar {
+      width: 100%; background: #FBF7EE; border: 1.5px solid #313131; border-radius: 20px;
+      padding: 13px 16px; font-size: 14px; font-weight: 700; color: #313131; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; justify-content: space-between;
+    }
+    .hist-inline { flex-shrink: 0; }
+    #history-tabs::-webkit-scrollbar { display: none; }
   </style>
   <!-- html2canvas：本地同源加载（国内无需 VPN 也稳），失败时才回退到境外CDN -->
   <script defer src="./assets/js/html2canvas.min.js"
@@ -1690,6 +1702,9 @@
   <!-- ── LEFT COLUMN ── -->
   <div class="left-column">
 
+    <!-- 一屏区：统计卡 + 填写卡片（步骤1/2 锁成正好一屏高，历史记录在其下方） -->
+    <div class="planner-screen">
+
     <!-- Pool stats card -->
     <div class="pool-stats-card">
       <div class="ps-item"><div class="ps-lbl">卡池总卡数</div><div class="ps-val" id="stat-n">203</div></div>
@@ -1771,6 +1786,16 @@
     </div>
 
   </div><!-- /left-panel -->
+  </div><!-- /planner-screen（一屏区结束）-->
+
+  <!-- 历史记录：在一屏之外下方，下滑才可见 -->
+  <div class="hist-inline" id="hist-inline-wrap">
+    <button type="button" class="hist-bar" onclick="toggleInlineHistory('main')">
+      <span style="display:inline-flex;align-items:center;gap:6px;">🕒 历史记录</span>
+      <span class="hist-caret" id="hist-caret-main" style="font-size:11px;color:#aaa;">▼</span>
+    </button>
+    <div id="history-inline-main" style="display:none;margin-top:10px;max-height:44vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  </div>
   </div><!-- /left-column -->
 
   <!-- ── RIGHT PANEL ── -->
@@ -1802,6 +1827,11 @@
 
     <!-- Result Area -->
     <div id="result-area" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+
+      <button onclick="openHistory()" class="hist-bar">
+        <span style="display:inline-flex;align-items:center;gap:6px;">🕒 历史记录</span>
+        <span style="font-size:12px;color:#aaa;font-weight:500;">查看全部 ›</span>
+      </button>
 
       <div id="r-banner" class="hidden"></div>
 
@@ -1915,6 +1945,17 @@
   </div>
 </div>
 
+<div id="history-modal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;" onclick="if(event.target===this)closeHistory()">
+  <div style="background:#FBF7EE; border:2px solid #313131; border-radius:20px; padding:24px 20px 20px; max-width:400px; width:92%; max-height:78vh; display:flex; flex-direction:column; position:relative;">
+    <button onclick="closeHistory()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#888; line-height:1;">✕</button>
+    <div style="font-size:16px; font-weight:800; color:#313131; margin-bottom:4px;">🕒 历史记录</div>
+    <div style="font-size:12px; color:#999; margin-bottom:12px;">每账号最多存 30 条 · 仅存于本设备浏览器</div>
+    <div id="history-tabs" style="display:flex; gap:6px; flex-shrink:0; overflow-x:auto; overflow-y:hidden; padding-bottom:10px; margin-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none;"></div>
+    <div id="history-list" style="overflow-y:auto; flex:1; margin:0 -4px; padding:0 4px;"></div>
+    <button id="history-clear-btn" onclick="clearHistory()" style="margin-top:14px; width:100%; background:none; border:1.5px solid #e0d9cc; border-radius:12px; padding:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; color:#c0392b;">清空历史</button>
+  </div>
+</div>
+
 <div id="alt-owned-modal" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;" onclick="if(event.target===this)closeAltOwnedModal()">
   <div style="background:#FBF7EE; border:2px solid #313131; border-radius:20px; padding:28px 24px 20px; max-width:400px; width:92%; max-height:80vh; overflow-y:auto; position:relative;">
     <button onclick="closeAltOwnedModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#888;">✕</button>
@@ -1990,7 +2031,7 @@ function switchStep(step) {
     t.classList.toggle('visited', _visitedSteps.has(tab) && tab !== step);
   });
   if (step === 'targets') renderTargetList();
-  // 移动端：步骤1/2 固定高度，步骤3 正常滚动
+  // 移动端：步骤1/2 卡片固定高度（内容在卡片内部滚动），步骤3 正常滚动
   if (window.innerWidth <= 600) {
     const isFixed = step !== 'resources';
     document.getElementById('view-planner').classList.toggle('fixed-step-layout', isFixed);
@@ -2952,6 +2993,28 @@ function _doCalc() {
     }
   }
 
+  // ── 保存本次计算到历史记录 ──
+  try {
+    const dOffH = isCase2 ? waitDays : 0;
+    pushHistory({
+      t: Date.now(),
+      case2: isCase2,
+      waitDays,
+      targets: allTargets.map(({ suitId, parts }) => {
+        const s = SUITS.find(x => x.id === suitId);
+        const whole = parts === 'ALL';
+        return { sub: s.sub, whole, parts: whole ? Object.keys(s.parts).length : parts.size };
+      }),
+      balance, daily,
+      prob: p1.dailyProb,
+      days: Math.round(p1.mcParts.p50 + dOffH),
+      d10:  Math.round(p1.mcParts.p10 + dOffH),
+      d90:  Math.round(p1.mcParts.p90 + dOffH),
+      cost: totalCost,
+      income: Math.round(incomeAtD)
+    });
+  } catch(e) {}
+
   // Scroll to results on mobile
   if (window.innerWidth < 860) {
     document.getElementById('right-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3550,6 +3613,151 @@ function _setActiveId(id) {
 function _getSaveKey(id) {
   return 'luoke_planner_' + (id || _getActiveId());
 }
+
+// ════════════════════════════════════════════════════
+// 历史记录（每账号独立存储；弹窗支持跨账号查看）
+// ════════════════════════════════════════════════════
+const _HISTORY_MAX = 30;
+let _historyTab = 'all';                   // 弹窗当前 tab：'all' 或某账号 id
+function _getHistoryKey(id) {
+  return 'luoke_history_' + (id || _getActiveId());
+}
+function _getHistory(id) {                  // 不传 id = 当前账号
+  try { return JSON.parse(localStorage.getItem(_getHistoryKey(id))) || []; } catch(e) { return []; }
+}
+function _saveHistory(list, id) {
+  try { localStorage.setItem(_getHistoryKey(id), JSON.stringify(list)); } catch(e) {}
+}
+function pushHistory(rec) {
+  const list = _getHistory();
+  list.unshift(rec);                       // 最新的在最前
+  if (list.length > _HISTORY_MAX) list.length = _HISTORY_MAX;
+  _saveHistory(list);
+  refreshHistoryViews();
+}
+function _histTimeLabel(t) {
+  const d = new Date(t);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+// 单条记录卡片（accountName 有值则显示账号标签；delOnclick 有值则显示删除按钮）
+function _historyCardHTML(r, accountName, delOnclick) {
+  const targetStr = r.targets.map(t => `${t.sub}${t.whole ? '（整套）' : `（${t.parts}件）`}`).join('、');
+  const probLabel = r.case2 ? '入池当天命中率' : '今日命中率';
+  const badge = accountName
+    ? `<span style="font-size:11px;font-weight:700;color:#fff;background:#313131;border-radius:6px;padding:1px 8px;">${accountName}</span>`
+    : '';
+  const delBtn = delOnclick
+    ? `<button onclick="${delOnclick}" style="background:none;border:none;color:#c0392b;font-size:12px;cursor:pointer;padding:2px 4px;font-family:inherit;">删除</button>`
+    : '';
+  return `
+    <div style="border:1.5px solid #e0d9cc;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="display:inline-flex;align-items:center;gap:8px;">${badge}<span style="font-size:12px;color:#999;">${_histTimeLabel(r.t)}</span></span>
+        ${delBtn}
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#313131;margin-bottom:8px;line-height:1.5;">🎯 ${targetStr}</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#62605E;">
+        <span>${probLabel} <strong style="color:#D89A00">${(r.prob*100).toFixed(1)}%</strong></span>
+        <span>正常进度 <strong style="color:#313131">${r.days} 天</strong></span>
+        <span>总花费 <strong style="color:#313131">${r.cost} 星</strong></span>
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px;line-height:1.6;">余额 ${r.balance} · 日入 ${r.daily} · 欧皇 ${r.d10}天 / 非酋 ${r.d90}天${r.case2 ? ` · 含 ${r.waitDays} 天等待期` : ''}</div>
+    </div>
+  `;
+}
+const _histEmptyHTML = `<div style="text-align:center;color:#999;padding:34px 0;font-size:13px;line-height:1.8">还没有计算记录<br><span style="font-size:12px;color:#aaa">点击「开始计算规划」后会自动保存到这里</span></div>`;
+
+// ── 内联折叠区（第一步/第三步底部，只看当前账号最近 5 条）──
+function toggleInlineHistory(key) {
+  const body = document.getElementById('history-inline-' + key);
+  const caret = document.getElementById('hist-caret-' + key);
+  if (!body) return;
+  const opening = !body.style.display || body.style.display === 'none';
+  if (opening) { body.style.display = 'block'; renderInlineHistory(key); if (caret) caret.textContent = '▲'; }
+  else { body.style.display = 'none'; if (caret) caret.textContent = '▼'; }
+}
+function renderInlineHistory(key) {
+  const el = document.getElementById('history-inline-' + key);
+  if (!el || el.style.display === 'none' || !el.style.display) return;  // 收起状态无需渲染
+  const all = _getHistory();
+  if (!all.length) {
+    el.innerHTML = `<div style="text-align:center;color:#aaa;padding:16px 0;font-size:12px;">当前账号还没有计算记录</div>`;
+    return;
+  }
+  const aid = _getActiveId();
+  const cards = all.slice(0, 3).map(r => _historyCardHTML(r, '', `deleteHistory('${aid}',${r.t})`)).join('');
+  el.innerHTML = cards +
+    `<button onclick="openHistory()" style="width:100%;background:none;border:none;color:#62605E;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:8px 0 2px;">查看更多 / 跨账号查看 →</button>`;
+}
+
+// ── 弹窗（跨账号 tab + 完整列表）──
+function openHistory() {
+  _historyTab = _getActiveId();            // 默认停在当前账号
+  renderHistoryModal();
+  document.getElementById('history-modal').style.display = 'flex';
+}
+function closeHistory() {
+  document.getElementById('history-modal').style.display = 'none';
+}
+function switchHistoryTab(tab) {
+  _historyTab = tab;
+  renderHistoryModal();
+}
+function renderHistoryModal() {
+  const profiles = _getProfiles();
+  // tabs
+  const mk = (id, name) => {
+    const active = _historyTab === id;
+    return `<button onclick="switchHistoryTab('${id}')" style="flex-shrink:0;background:${active ? '#313131' : '#fff'};color:${active ? '#fff' : '#62605E'};border:1.5px solid ${active ? '#313131' : '#e0d9cc'};border-radius:16px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">${name}</button>`;
+  };
+  document.getElementById('history-tabs').innerHTML =
+    mk('all', '全部') + profiles.map(p => mk(p.id, p.name)).join('');
+  // list
+  const el = document.getElementById('history-list');
+  const clearBtn = document.getElementById('history-clear-btn');
+  const nameOf = id => (profiles.find(p => p.id === id)?.name) || '已删除';
+  let items = [];   // {r, pid, name}
+  if (_historyTab === 'all') {
+    profiles.forEach(p => _getHistory(p.id).forEach(r => items.push({ r, pid: p.id, name: p.name })));
+    items.sort((a, b) => b.r.t - a.r.t);
+  } else {
+    _getHistory(_historyTab).forEach(r => items.push({ r, pid: _historyTab, name: nameOf(_historyTab) }));
+  }
+  if (!items.length) {
+    el.innerHTML = _histEmptyHTML;
+    clearBtn.style.display = 'none';
+    return;
+  }
+  clearBtn.style.display = '';
+  clearBtn.textContent = _historyTab === 'all' ? '清空全部账号历史' : '清空当前账号历史';
+  const showBadge = _historyTab === 'all';
+  el.innerHTML = items.map(it =>
+    _historyCardHTML(it.r, showBadge ? it.name : '', `deleteHistory('${it.pid}',${it.r.t})`)
+  ).join('');
+}
+function deleteHistory(pid, t) {
+  _saveHistory(_getHistory(pid).filter(r => r.t !== t), pid);
+  refreshHistoryViews();
+}
+function clearHistory() {
+  if (_historyTab === 'all') {
+    if (!_getProfiles().some(p => _getHistory(p.id).length)) return;
+    if (!confirm('确定清空所有账号的全部历史记录？无法恢复。')) return;
+    _getProfiles().forEach(p => _saveHistory([], p.id));
+  } else {
+    if (!_getHistory(_historyTab).length) return;
+    if (!confirm('确定清空当前账号的所有历史记录？无法恢复。')) return;
+    _saveHistory([], _historyTab);
+  }
+  refreshHistoryViews();
+}
+// 统一刷新：弹窗（若打开）+ 两处内联区
+function refreshHistoryViews() {
+  const modal = document.getElementById('history-modal');
+  if (modal && modal.style.display === 'flex') renderHistoryModal();
+  renderInlineHistory('main');
+}
 function _migrateIfNeeded() {
   const profiles = _getProfiles();
   if (profiles.length > 0) return;
@@ -3726,6 +3934,7 @@ function switchProfile(id, targetStep = 'owned') {
   updatePoolStats();
   switchStep(targetStep);
   updateAccountDisplay();
+  refreshHistoryViews();
   closeAccountModal();
 }
 function deleteProfile(id) {
@@ -3734,6 +3943,7 @@ function deleteProfile(id) {
   const name = profiles.find(p => p.id === id)?.name || '该账号';
   if (!confirm(`确认删除「${name}」？数据无法恢复。`)) return;
   try { localStorage.removeItem(_getSaveKey(id)); } catch(e) {}
+  try { localStorage.removeItem(_getHistoryKey(id)); } catch(e) {}
   const newProfiles = profiles.filter(p => p.id !== id);
   _saveProfiles(newProfiles);
   if (_getActiveId() === id) {
@@ -3760,6 +3970,7 @@ function onCreateNewProfile() {
   updatePoolStats();
   switchStep('owned');
   updateAccountDisplay();
+  refreshHistoryViews();
   closeAccountModal();
 }
 
@@ -3865,7 +4076,7 @@ const _validViews = ['planner', 'pool', 'wardrobe'];
 const _initView = _validViews.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'planner';
 switchView(_initView);
 
-// 移动端初始化：步骤1 默认固定高度布局
+// 移动端初始化：步骤1 默认固定高度布局（内容卡片内部滚动）
 if (window.innerWidth <= 600) {
   document.getElementById('view-planner').classList.add('fixed-step-layout');
 }
@@ -4391,16 +4602,15 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
         <div class="cl-section">
           <div class="cl-section-title">✨ 新功能</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>多账号支持</strong>：可创建多个账号（如「洛克1」「洛克2」），每个账号独立保存持有情况与规划数据，切换账号后全站数据实时同步。</span></div>
-            <div class="cl-item"><span><strong>衣橱页账号切换</strong>：「我的衣橱」页面支持直接切换账号，点击「当前账号 ▾」展开列表一键切换，生成的衣橱图对应所选账号数据。</span></div>
+            <div class="cl-item"><span><strong>历史记录</strong>：每次计算自动保存，填写页下方可快速查看最近记录，展开可看完整列表；支持按账号分别查看并标注归属、删除单条或清空。数据仅存于本机浏览器。</span></div>
+            <div class="cl-item"><span><strong>多账号支持</strong>：可创建多个账号，各自独立保存持有与规划数据，全站及「我的衣橱」页实时同步切换。</span></div>
           </div>
         </div>
 
         <div class="cl-section">
           <div class="cl-section-title">🐛 Bug 修复</div>
           <div class="cl-items">
-            <div class="cl-item"><span>修复异色套装数据残留问题：将套装从「全部持有」降级后，异色状态未同步清除，导致衣橱图显示异常。</span></div>
-            <div class="cl-item"><span>修复普通套装卡片有时错误展示异色图片的问题。</span></div>
+            <div class="cl-item"><span>修复异色套装数据残留、普通套装偶尔误显示异色卡图的问题。</span></div>
           </div>
         </div>
       </div>
