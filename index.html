@@ -4857,7 +4857,7 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/Roco-Kingdom-Pika-Outfit/sw.js', { scope: '/Roco-Kingdom-Pika-Outfit/' });
+    navigator.serviceWorker.register('sw.js');   // 相对路径：作用域自动跟随所在目录（GitHub 子路径 / 服务器根目录均可）
   });
 }
 </script>

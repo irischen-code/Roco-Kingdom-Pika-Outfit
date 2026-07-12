@@ -1,9 +1,10 @@
-const CACHE = 'pika-v15';
+const CACHE = 'pika-v16';
+// 相对路径：在 GitHub 子路径和自有服务器根目录下都会解析成各自正确的地址
 const PRECACHE = [
-  '/Roco-Kingdom-Pika-Outfit/',
-  '/Roco-Kingdom-Pika-Outfit/index.html',
-  '/Roco-Kingdom-Pika-Outfit/ttf/luoke.woff2',
-  '/Roco-Kingdom-Pika-Outfit/assets/js/html2canvas.min.js',
+  './',
+  './index.html',
+  './ttf/luoke.woff2',
+  './assets/js/html2canvas.min.js',
 ];
 
 self.addEventListener('install', e => {
