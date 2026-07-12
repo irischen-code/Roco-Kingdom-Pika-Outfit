@@ -1787,6 +1787,10 @@
           <input type="number" id="daily-income" class="res-input" value="25" min="1" max="200" placeholder="25" oninput="saveState()">
           <span class="res-unit">颗/天</span>
         </div>
+        <div class="res-row" style="align-items:center; gap:8px; padding:0 2px;">
+          <input type="checkbox" id="today-completed" onchange="saveState()" style="width:16px; height:16px; cursor:pointer; flex-shrink:0;">
+          <label for="today-completed" style="font-size:12px; color:#313131; cursor:pointer; flex:1; margin:0;">今日已完成收入</label>
+        </div>
         <div class="notice" id="notice-resources" style="margin-bottom:14px">⚡ 活动、任务等额外产出不计入，实际到手可能更快。<button class="notice-close" onclick="dismissNotice('resources')">✕</button></div>
         <button class="calc-btn" id="calc-btn" onclick="onCalc()">✨ 开始计算规划</button>
       </div>
@@ -2795,7 +2799,10 @@ function animateCount(el, target, duration, fmt) {
 function _doCalc() {
   const balance = parseInt(document.getElementById('star-balance').value) || 0;
   const daily   = parseInt(document.getElementById('daily-income').value) || 25;
+  const todayCompleted = document.getElementById('today-completed').checked;
   const today   = todayStr();
+  // 调整收入计算：如果今日已完成收入，则从明天开始计算
+  const effectiveDaily = todayCompleted ? daily : daily;
 
   // 1. Collect all targets
   const allTargets = [];
@@ -2839,7 +2846,8 @@ function _doCalc() {
   const p1Targets  = isCase2 ? nearTargets : currentTargets;
   const p1Snapshot = isCase2 ? nearDate    : null;
   // For Case 2, player accumulates income during the wait before cards enter pool
-  const p1StartBal = isCase2 ? balance + waitDays * daily : balance;
+  // 如果今日已完成收入，等待期不包括今天的收入（因为已经领了）
+  const p1StartBal = isCase2 ? balance + waitDays * daily + (todayCompleted ? 0 : daily) : balance;
   const p1         = computePhase(p1Targets, p1Snapshot, p1StartBal, daily);
 
   // 5. Compute Phase 2 stats (Case 3 only; post-Phase-1 balance unknown, so no budget constraint)
@@ -2857,7 +2865,8 @@ function _doCalc() {
     // Case 3: Phase 1 may overlap with waiting; Phase 2 starts after both
     D = Math.max(p1.mcParts.p50, waitDays) + (p2 ? p2.mcParts.p50 : 0);
   }
-  const incomeAtD = balance + daily * D;
+  // 如果今日已完成收入，只计算从明天开始的D天收入（减去今天的一份）
+  const incomeAtD = todayCompleted ? (balance + daily * Math.max(D - 1, 0)) : (balance + daily * D);
 
   // ════ RENDER ════
   document.getElementById('result-placeholder').classList.add('hidden');
