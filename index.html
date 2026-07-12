@@ -2932,7 +2932,7 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
   if (u_entry > 0 && Y_entry !== null) {
     // 构建缺失部件列表
     const missingParts = [];
-    for (const {suitId, parts} of p1Targets) {
+    for (const {suitId, parts} of nearTargets) {
       const suit = SUITS.find(s => s.id === suitId);
       if (!suit) continue;
       const owned = st.owned[suitId] || new Set();
