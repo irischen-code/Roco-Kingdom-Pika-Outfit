@@ -1804,24 +1804,37 @@
 
     <!-- Placeholder -->
     <div id="result-placeholder" style="display:flex;flex-direction:column;gap:10px;flex:1">
-      <div class="img-ph" style="flex:1;min-height:200px">
-        <div class="placeholder-wrap" style="padding:0">
-          <div class="placeholder-icon">🎴</div>
-          <div class="placeholder-title">选好目标后点击计算</div>
-          <div class="placeholder-sub">
-            填写已持有部件、勾选目标套装<br>
-            输入许愿星余额，即可查看规划结果
+
+      <!-- PC 端：未计算前，有历史记录时右侧展示历史（仅桌面，JS 控制显隐） -->
+      <div id="hist-panel" style="display:none;flex-direction:column;flex:1;min-height:0;gap:10px">
+        <button onclick="openHistory()" class="hist-bar">
+          <span style="display:inline-flex;align-items:center;gap:6px;">🕒 历史记录</span>
+          <span style="font-size:12px;color:#aaa;font-weight:500;">查看全部 ›</span>
+        </button>
+        <div id="hist-panel-list" style="overflow-y:auto;flex:1;min-height:0;padding-right:2px;"></div>
+      </div>
+
+      <!-- 原引导图（无历史记录 / 移动端时显示） -->
+      <div id="placeholder-illustration" style="display:flex;flex-direction:column;gap:10px;flex:1">
+        <div class="img-ph" style="flex:1;min-height:200px">
+          <div class="placeholder-wrap" style="padding:0">
+            <div class="placeholder-icon">🎴</div>
+            <div class="placeholder-title">选好目标后点击计算</div>
+            <div class="placeholder-sub">
+              填写已持有部件、勾选目标套装<br>
+              输入许愿星余额，即可查看规划结果
+            </div>
           </div>
         </div>
-      </div>
-      <div class="sub-cards-pair">
-        <div class="sub-card-l">
-          <div class="sub-card-icon">📊</div>
-          <div>概率卡示意</div>
-        </div>
-        <div class="sub-card-r">
-          <div class="sub-card-icon">⏱️</div>
-          <div>周期卡示意</div>
+        <div class="sub-cards-pair">
+          <div class="sub-card-l">
+            <div class="sub-card-icon">📊</div>
+            <div>概率卡示意</div>
+          </div>
+          <div class="sub-card-r">
+            <div class="sub-card-icon">⏱️</div>
+            <div>周期卡示意</div>
+          </div>
         </div>
       </div>
     </div>
@@ -3753,11 +3766,31 @@ function clearHistory() {
   }
   refreshHistoryViews();
 }
-// 统一刷新：弹窗（若打开）+ 两处内联区
+// PC 端：未计算前的右侧历史面板（展示全部账号记录并标注账号，无任何记录则回到引导图）
+function updateHistPanel() {
+  const panel = document.getElementById('hist-panel');
+  const illus = document.getElementById('placeholder-illustration');
+  if (!panel || !illus) return;
+  const items = [];
+  _getProfiles().forEach(p => _getHistory(p.id).forEach(r => items.push({ r, pid: p.id, name: p.name })));
+  const showHist = window.innerWidth > 600 && items.length > 0;
+  if (showHist) {
+    items.sort((a, b) => b.r.t - a.r.t);   // 跨账号按时间倒序
+    document.getElementById('hist-panel-list').innerHTML =
+      items.map(it => _historyCardHTML(it.r, it.name, `deleteHistory('${it.pid}',${it.r.t})`)).join('');
+    panel.style.display = 'flex';
+    illus.style.display = 'none';
+  } else {
+    panel.style.display = 'none';
+    illus.style.display = 'flex';
+  }
+}
+// 统一刷新：弹窗（若打开）+ 移动端内联区 + PC 端右侧历史面板
 function refreshHistoryViews() {
   const modal = document.getElementById('history-modal');
   if (modal && modal.style.display === 'flex') renderHistoryModal();
   renderInlineHistory('main');
+  updateHistPanel();
 }
 function _migrateIfNeeded() {
   const profiles = _getProfiles();
@@ -4068,6 +4101,7 @@ renderTimeline();
 renderPoolThemes();
 updatePoolStats();
 updateAccountDisplay();
+updateHistPanel();               // PC 端未计算前右侧展示历史
 
 // All theme bodies collapsed by default
 document.querySelectorAll('.theme-body').forEach(b => b.style.display = 'none');
