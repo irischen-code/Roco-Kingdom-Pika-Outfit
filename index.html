@@ -536,7 +536,7 @@
     .result-card {
       background: #ffffff; border: 1.5px solid #313131;
       border-radius: 16px; padding: 18px 20px;
-      margin-bottom: 0; box-shadow: none; flex-shrink: 0;
+      margin-bottom: 12px; box-shadow: none; flex-shrink: 0;
       /* 结果卡片内容用系统字体提升易读性 */
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
     }
@@ -1878,7 +1878,7 @@
         <div class="result-card-title" id="r-prob-card-title"><img src="assets/icon/analysis.png" alt="">今日目标卡命中概率</div>
         <div class="prob-row">
           <span class="big-num gold-color" id="r-prob-pct">—</span>
-          <span class="big-unit">今日 5 次翻牌中翻出至少 1 张目标卡的概率</span>
+          <span class="big-unit" id="r-prob-subtitle">今日 5 次翻牌中翻出至少 1 张目标卡的概率</span>
         </div>
         <div class="prog-wrap"><div class="prog-bar" id="r-prob-bar" style="width:0"></div></div>
         <div class="prob-detail" id="r-prob-detail"></div>
@@ -2903,13 +2903,15 @@ function _doCalc() {
     document.getElementById('r-prob-card-title').innerHTML =
       `<img src="assets/icon/analysis.png" alt="" style="width:20px;height:20px;object-fit:contain;flex-shrink:0">` +
       (isCase2 ? `入池当天命中率预估（${nearFmt} 卡池）` : '今日目标卡命中概率');
+    document.getElementById('r-prob-subtitle').textContent =
+      isCase2 ? '入池当天 5 次翻牌中翻出至少 1 张目标卡的概率' : '今日 5 次翻牌中翻出至少 1 张目标卡的概率';
     animateCount(document.getElementById('r-prob-pct'), p1.dailyProb * 100, 1200, v => v.toFixed(1) + '%');
     document.getElementById('r-prob-bar').style.width  = (p1.dailyProb * 100) + '%';
     const setNote = p1.hasAll
       ? `&nbsp;·&nbsp; 含套装卡情形：<strong>${(p1.dailyProbAll * 100).toFixed(1)}%</strong>`
       : '';
     document.getElementById('r-prob-detail').innerHTML =
-      `${isCase2 ? '该主题入池后，' : ''}卡池共 <strong>${p1.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p1.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p1.expUseful.toFixed(2)}</strong> 张${setNote}`;
+      `卡池共 <strong>${p1.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p1.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p1.expUseful.toFixed(2)}</strong> 张${setNote}`;
   }
 
   // ── Strategy table ──
@@ -2941,12 +2943,16 @@ function _doCalc() {
     }
     const mc = p1.mcParts;
     const el = document.getElementById('r-strat-dates');
-    el.style.display = '';
-    el.innerHTML =
-      `预计集齐日期 &nbsp;·&nbsp; `
-      + `欧皇进度 <strong style="color:var(--gold)">${dateLabel(mc.p10 + dOff)}</strong>`
-      + ` &nbsp;·&nbsp; 正常进度 <strong style="color:#313131">${dateLabel(mc.p50 + dOff)}</strong>`
-      + ` &nbsp;·&nbsp; 非酋保底 <strong style="color:var(--text-dim)">${dateLabel(mc.p90 + dOff)}</strong>`;
+    if (isCase2) {
+      el.style.display = '';
+      el.innerHTML =
+        `预计集齐日期 &nbsp;·&nbsp; `
+        + `欧皇进度 <strong style="color:var(--gold)">${dateLabel(mc.p10 + dOff)}</strong>`
+        + ` &nbsp;·&nbsp; 正常进度 <strong style="color:#313131">${dateLabel(mc.p50 + dOff)}</strong>`
+        + ` &nbsp;·&nbsp; 非酋保底 <strong style="color:var(--text-dim)">${dateLabel(mc.p90 + dOff)}</strong>`;
+    } else {
+      el.style.display = 'none';
+    }
   }
 
   // ── Cost & feasibility ──
@@ -3008,6 +3014,47 @@ function _doCalc() {
           ? Math.round((p2.mcParts.mean - p2.mcMixed.mean) / p2.mcParts.mean * 100) : 0;
         p2tips.push(`🎴 <strong>套装卡策略：</strong>混合策略平均可快 <strong>${gain}%（约节省 ${p2.mcParts.mean - p2.mcMixed.mean} 天）</strong>。`);
       }
+      // 日期标签辅助函数
+      const WD = ['周日','周一','周二','周三','周四','周五','周六'];
+      function dateLabel(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + Math.round(days));
+        return `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+      }
+      const setNote = p2.hasAll
+        ? `&nbsp;·&nbsp; 含套装卡情形：<strong>${(p2.dailyProbAll * 100).toFixed(1)}%</strong>`
+        : '';
+      const p2mc = p2.mcParts;
+      const p2datesHTML = `<div style="margin:2px 0 12px;font-size:12px;color:var(--text-muted);line-height:1.8">预计集齐日期 &nbsp;·&nbsp; 欧皇进度 <strong style="color:var(--gold)">${dateLabel(p2mc.p10)}</strong> &nbsp;·&nbsp; 正常进度 <strong style="color:#313131">${dateLabel(p2mc.p50)}</strong> &nbsp;·&nbsp; 非酋保底 <strong style="color:var(--text-dim)">${dateLabel(p2mc.p90)}</strong></div>`;
+      // Phase 2 许愿星成本
+      let p2TotalCost = 0;
+      for (const {suitId, parts} of nearTargets) {
+        const suit  = SUITS.find(s=>s.id===suitId);
+        const owned = st.owned[suitId] || new Set();
+        if (parts === 'ALL') {
+          p2TotalCost += suit.setPrice - [...owned].reduce((a,p)=>a+suit.parts[p],0);
+        } else {
+          for (const p of parts) if (!owned.has(p)) p2TotalCost += suit.parts[p];
+        }
+      }
+      const p2D = p2.mcParts.p50;
+      const p2IncomeAtD = balance + daily * (waitDays + p2D);
+      const p2FeasHTML = (() => {
+        if (p2IncomeAtD >= p2TotalCost) {
+          const surplus = Math.round(p2IncomeAtD - p2TotalCost);
+          const daysToSave = balance >= p2TotalCost ? 0 : Math.ceil((p2TotalCost - balance) / daily);
+          const saveNote = balance >= p2TotalCost
+            ? `当前余额已足够支付全部目标`
+            : `按每日 ${daily} 颗收入仅需攒 <strong>${daysToSave} 天</strong>即可凑够`;
+          return `<div class="feas-box feas-ok">✅ 许愿星充足。目标合计 <strong>${p2TotalCost} 颗</strong>，${saveNote}；而翻牌集齐的正常进度预期为 <strong>${waitDays + p2D} 天</strong>，届时累计获得星 <strong>${Math.round(p2IncomeAtD)} 颗</strong>，完成后盈余 <strong>${surplus} 颗</strong>。</div>`;
+        } else {
+          const daysToFull = Math.ceil((p2TotalCost - balance) / daily);
+          const extraDays = daysToFull - (waitDays + p2D);
+          return `<div class="feas-box feas-warn">⚠️ 许愿星有缺口。按集齐正常进度需 <strong>${waitDays + p2D} 天</strong>，但要凑够 <strong>${p2TotalCost} 颗</strong>目标合计还需等到第 <strong>${daysToFull} 天</strong>（多等 <strong>${extraDays} 天</strong>）。建议：活动额外收入优先领，或提前减少非目标项目支出。</div>`;
+        }
+      })();
+      // Phase 2 策略建议（使用buildStrategyPanelsCase2）
+      const p2StrategyHTML = buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today);
       p2section.innerHTML = `
         <div class="phase-divider">「${nearTheme}」${nearFmt} 入池 · ${dividerNote}</div>
         <div class="phase-label">🔮 入池后阶段目标（预估，${nearFmt} 起）</div>
@@ -3016,21 +3063,46 @@ function _doCalc() {
           <div class="result-card-title">📊 入池当天命中率预估（${nearFmt} 卡池）</div>
           <div class="prob-row">
             <span class="big-num gold-color">${(p2.dailyProb*100).toFixed(1)}%</span>
-            <span class="big-unit">翻到至少 1 张目标卡的概率</span>
+            <span class="big-unit">入池当天 5 次翻牌中翻出至少 1 张目标卡的概率</span>
           </div>
           <div class="prog-wrap"><div class="prog-bar" style="width:${(p2.dailyProb*100).toFixed(1)}%"></div></div>
-          <div class="prob-detail">卡池共 <strong>${p2.N}</strong> 张卡 &nbsp;·&nbsp; 其中目标卡 <strong>${p2.u}</strong> 张${p2uNote} &nbsp;·&nbsp; 每天平均翻到目标卡 <strong>${p2.expUseful.toFixed(2)} 张</strong></div>
-          <div style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 基于当前持有状态保守估算，不含等待期间的购买行为，实际入池时命中率可能更高。</div>
+          <div class="prob-detail">卡池共 <strong>${p2.N}</strong> 张部件卡 &nbsp;·&nbsp; 其中目标部件卡 <strong>${p2.u}</strong> 张 &nbsp;·&nbsp; 每天平均翻到 <strong>${p2.expUseful.toFixed(2)}</strong> 张${setNote}</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-dim)">* 概率基于部件卡计算（不含套装卡），因为套装卡在游戏内实际概率偏低。整套目标下，"含套装卡情形"数值一并注明供参考。</div>
         </div>
         <div class="result-card">
           <div class="result-card-title">⏱️ 入池后集齐时间预估（3000 次随机模拟）</div>
-          <div class="notice" style="margin-bottom:12px">从 ${nearFmt} 入池当天起算，不含入池前的等待天数。</div>
+          <div class="prob-row" style="margin-bottom:10px">
+            <span class="big-num gold-color">${Math.round(p2.mcParts.p50)}</span>
+            <span class="big-unit">天 · 正常进度（套装卡没翻出、散件一件件凑的情况）</span>
+          </div>
+          ${p2datesHTML}
+          <div class="notice" style="margin-bottom:12px">天数已结合你填写的许愿星余额和每日收入计算。"正常进度"代表恰好 50% 的玩家在此天数内集齐；"欧皇进度"代表运气极好的 10% 玩家能在此天数内集齐；"非酋保底"代表 90% 的玩家在此天数内集齐。</div>
           <table class="strat-table">
-            <thead><tr><th>策略</th><th>平均天数</th><th>正常进度</th><th>非酋保底</th></tr></thead>
+            <thead><tr><th>翻牌情况</th><th>正常进度</th><th>欧皇进度</th><th>非酋保底</th></tr></thead>
             <tbody>${stratRowsHTML(p2)}</tbody>
           </table>
         </div>
-        ${p2tips.length ? `<div class="result-card"><div class="result-card-title">💡 策略建议</div>${p2tips.map(t=>`<div class="tip-box">${t}</div>`).join('')}</div>` : ''}
+        <div class="result-card">
+          <div class="result-card-title"><img src="assets/icon/star.png" alt="" style="width:20px;height:20px;object-fit:contain;flex-shrink:0">许愿星成本与收支</div>
+          <div class="cost-row">
+            <div class="cost-item">
+              <div class="cost-label">目标总成本（确定值）</div>
+              <div class="cost-num gold-color">${p2TotalCost}</div>
+              <div class="cost-unit">颗许愿星</div>
+            </div>
+            <div class="cost-item">
+              <div class="cost-label">届时累计获得星 <span style="font-size:10px;color:var(--text-dim)">(余额＋收入)</span></div>
+              <div class="cost-num purple-color">${Math.round(p2IncomeAtD)}</div>
+              <div class="cost-unit">颗（当前余额 ${balance} ＋ ${waitDays + p2D} 天收入 ${daily * (waitDays + p2D)}）</div>
+            </div>
+          </div>
+          ${p2FeasHTML}
+          <div class="result-footnote" style="margin-top:10px;font-size:11px;color:var(--text-dim)">* 无论翻到散件还是套装卡，总花费相同——套装卡按所缺散件差价计算。</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-title">💡 策略建议</div>
+          ${p2StrategyHTML}
+        </div>
       `;
       p2section.classList.remove('hidden');
     } else {
