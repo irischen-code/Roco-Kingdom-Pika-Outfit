@@ -3185,7 +3185,7 @@ function closeAltOwnedModal() {
 function confirmAltOwned() {
   st.altOwned = new Set();
   document.querySelectorAll('#alt-owned-list [data-sid]').forEach(item => {
-    if (item.style.borderColor === 'rgb(251, 200, 57)') st.altOwned.add(item.dataset.sid);
+    if (item.style.boxShadow && item.style.boxShadow !== 'none') st.altOwned.add(item.dataset.sid);
   });
   saveState();
   closeAltOwnedModal();
