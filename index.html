@@ -1847,6 +1847,8 @@
         <span style="font-size:12px;color:#aaa;font-weight:500;">查看全部 ›</span>
       </button>
 
+      <div id="r-anchor-note" style="display:none;font-size:12px;color:#B26A00;background:#FFF6E6;border:1.5px solid #F0D49B;border-radius:12px;padding:10px 14px;line-height:1.6;"></div>
+
       <div id="r-banner" class="hidden"></div>
 
       <div class="result-card">
@@ -3010,7 +3012,11 @@ function _doCalc() {
   // ── 保存本次计算到历史记录 ──
   try {
     const dOffH = isCase2 ? waitDays : 0;
-    pushHistory({
+    // 状态签名：目标 + 持有部件 + 已集齐（不含许愿星余额），用于识别「同一目标、零进展」的重复预测
+    const sig = computeStateSig();
+    const hist = _getHistory();                              // 当前账号，最新在前
+    const origin = hist.filter(r => r.sig === sig).pop();    // 同签名里最早那次 = 原始预测
+    const rec = {
       t: Date.now(),
       case2: isCase2,
       waitDays,
@@ -3025,8 +3031,15 @@ function _doCalc() {
       d10:  Math.round(p1.mcParts.p10 + dOffH),
       d90:  Math.round(p1.mcParts.p90 + dOffH),
       cost: totalCost,
-      income: Math.round(incomeAtD)
-    });
+      income: Math.round(incomeAtD),
+      sig
+    };
+    if (origin) {                                            // 命中同目标零进展 → 锚定原始预测
+      rec.anchorT    = origin.anchorT != null ? origin.anchorT : origin.t;
+      rec.anchorDays = origin.anchorDays != null ? origin.anchorDays : origin.days;
+    }
+    pushHistory(rec);
+    renderAnchorNote(rec);                                   // 结果页锚点提示
   } catch(e) {}
 
   // Scroll to results on mobile
@@ -3654,6 +3667,42 @@ function _histTimeLabel(t) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+// 预计集齐日期 = 预测当天(t) + 天数(days)
+function _histCompletionLabel(t, days) {
+  const WD = ['周日','周一','周二','周三','周四','周五','周六'];
+  const d = new Date(t);
+  d.setDate(d.getDate() + Math.round(days));
+  return `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+}
+const _DAY_MS = 86400000;
+// 状态签名：目标 + 持有部件 + 已集齐（不含许愿星余额/日收入）
+function computeStateSig() {
+  const tSig = Object.keys(st.targets)
+    .filter(k => { const v = st.targets[k]; return v === 'ALL' || (v instanceof Set && v.size); })
+    .sort()
+    .map(k => { const v = st.targets[k]; return k + ':' + (v === 'ALL' ? 'ALL' : [...v].sort().join(',')); })
+    .join('|');
+  const oSig = Object.keys(st.owned || {})
+    .map(k => { const s = st.owned[k]; const arr = s instanceof Set ? [...s] : (s || []); return arr.length ? k + ':' + arr.slice().sort().join(',') : ''; })
+    .filter(Boolean).sort().join('|');
+  const fSig = [...(st.fullOwned || [])].sort().join(',');
+  return 'T[' + tSig + ']O[' + oSig + ']F[' + fSig + ']';
+}
+// 结果页锚点提示（同一目标的重复预测）
+function renderAnchorNote(rec) {
+  const el = document.getElementById('r-anchor-note');
+  if (!el) return;
+  if (!rec || rec.anchorT == null) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const origDate = _histCompletionLabel(rec.anchorT, rec.anchorDays);
+  const nowDate  = _histCompletionLabel(rec.t, rec.days);
+  const tracked  = Math.max(0, Math.round((rec.t - rec.anchorT) / _DAY_MS));
+  const slip     = Math.round((rec.t + rec.days * _DAY_MS - (rec.anchorT + rec.anchorDays * _DAY_MS)) / _DAY_MS);
+  el.style.display = '';
+  el.innerHTML = `📌 同一目标的再次预测：原定 <strong>${origDate}</strong> 集齐，已追踪 <strong>${tracked}</strong> 天。`
+    + (slip > 0
+        ? `当前预计 <strong>${nowDate}</strong>，较原计划晚 <strong>${slip}</strong> 天——这几天没抽到新部件，随机抽卡下日期顺延属正常。`
+        : `进度基本符合原计划。`);
+}
 // 单条记录卡片（accountName 有值则显示账号标签；delOnclick 有值则显示删除按钮）
 function _historyCardHTML(r, accountName, delOnclick) {
   const targetStr = r.targets.map(t => `${t.sub}${t.whole ? '（整套）' : `（${t.parts}件）`}`).join('、');
@@ -3664,6 +3713,14 @@ function _historyCardHTML(r, accountName, delOnclick) {
   const delBtn = delOnclick
     ? `<button onclick="${delOnclick}" style="background:none;border:none;color:#c0392b;font-size:12px;cursor:pointer;padding:2px 4px;font-family:inherit;">删除</button>`
     : '';
+  const dateLine = `<div style="font-size:12px;color:#62605E;margin-top:6px;">预计集齐（正常进度）<strong style="color:#313131">${_histCompletionLabel(r.t, r.days)}</strong></div>`;
+  let anchorLine = '';
+  if (r.anchorT != null) {
+    const origDate = _histCompletionLabel(r.anchorT, r.anchorDays);
+    const tracked  = Math.max(0, Math.round((r.t - r.anchorT) / _DAY_MS));
+    const slip     = Math.round((r.t + r.days * _DAY_MS - (r.anchorT + r.anchorDays * _DAY_MS)) / _DAY_MS);
+    anchorLine = `<div style="font-size:11px;color:#B26A00;background:#FFF6E6;border-radius:8px;padding:5px 9px;margin-top:6px;line-height:1.55;">🎯 原定目标 <strong>${origDate}</strong> · 已追踪 ${tracked} 天${slip > 0 ? ` · 较原计划晚 ${slip} 天` : ''}</div>`;
+  }
   return `
     <div style="border:1.5px solid #e0d9cc;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -3676,7 +3733,9 @@ function _historyCardHTML(r, accountName, delOnclick) {
         <span>正常进度 <strong style="color:#313131">${r.days} 天</strong></span>
         <span>总花费 <strong style="color:#313131">${r.cost} 星</strong></span>
       </div>
+      ${dateLine}
       <div style="font-size:11px;color:#aaa;margin-top:6px;line-height:1.6;">余额 ${r.balance} · 日入 ${r.daily} · 欧皇 ${r.d10}天 / 非酋 ${r.d90}天${r.case2 ? ` · 含 ${r.waitDays} 天等待期` : ''}</div>
+      ${anchorLine}
     </div>
   `;
 }
@@ -4637,7 +4696,8 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
         <div class="cl-section">
           <div class="cl-section-title">✨ 新功能</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>历史记录</strong>：每次计算自动保存，填写页下方可快速查看最近记录，展开可看完整列表；支持按账号分别查看并标注归属、删除单条或清空。数据仅存于本机浏览器。</span></div>
+            <div class="cl-item"><span><strong>历史记录</strong>：每次计算自动保存（含预计集齐日期）；移动端填写页下方、PC 端结果区右侧空位、以及弹窗均可查看，支持跨账号查看并标注归属、删除单条或清空。数据仅存于本机浏览器。</span></div>
+            <div class="cl-item"><span><strong>同目标锚定</strong>：对同一目标的重复预测，会锚定最初那次的预计集齐日期，直观显示「已追踪 N 天 / 较原计划晚几天」——运气差没抽到部件导致日期顺延时，一眼看清进度而非每次重置。</span></div>
             <div class="cl-item"><span><strong>多账号支持</strong>：可创建多个账号，各自独立保存持有与规划数据，全站及「我的衣橱」页实时同步切换。</span></div>
           </div>
         </div>
