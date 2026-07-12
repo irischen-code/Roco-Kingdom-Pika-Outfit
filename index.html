@@ -3157,19 +3157,19 @@ function openAltOwnedModal() {
     const disabled  = !suitOwned;
     const item = document.createElement('div');
     item.dataset.sid = s.id;
-    item.style.cssText = `position:relative; border-radius:12px; overflow:hidden; aspect-ratio:150/168; border:3px solid ${selected ? '#FBC839' : 'transparent'}; transition:border-color 0.15s; cursor:${disabled ? 'not-allowed' : 'pointer'};`;
+    item.style.cssText = `position:relative; box-sizing:border-box; border-radius:12px; overflow:hidden; aspect-ratio:150/168; border:3px solid ${selected ? '#FBC839' : 'transparent'}; transition:border-color 0.15s; cursor:${disabled ? 'not-allowed' : 'pointer'};`;
     item.innerHTML = `
       <img src="assets/images/suitcard-alt/${s.sub}.png" style="width:100%;height:100%;object-fit:cover;display:block;filter:${disabled ? 'grayscale(1)' : 'none'}">
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,${disabled ? '0.55' : '0.35'});display:${(selected && !disabled) ? 'none' : 'block'};"></div>
+      <div class="alt-mask" style="position:absolute;inset:0;background:rgba(0,0,0,${disabled ? '0.55' : '0.35'});display:${(selected && !disabled) ? 'none' : 'block'};"></div>
       ${disabled ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:9px;font-weight:700;text-align:center;line-height:1.4;">套装<br>未集齐</span></div>` : ''}
-      <div style="position:absolute;top:4px;right:4px;width:18px;height:18px;background:#FBC839;border-radius:50%;display:${(selected && !disabled) ? 'flex' : 'none'};align-items:center;justify-content:center;font-size:11px;font-weight:700;">✓</div>
+      <div class="alt-check" style="position:absolute;top:4px;right:4px;width:18px;height:18px;background:#FBC839;border-radius:50%;display:${(selected && !disabled) ? 'flex' : 'none'};align-items:center;justify-content:center;font-size:11px;font-weight:700;">✓</div>
     `;
     if (!disabled) {
       item.onclick = () => {
         const isNowSelected = item.style.borderColor === 'rgb(251, 200, 57)';
         item.style.borderColor = isNowSelected ? 'transparent' : '#FBC839';
-        item.querySelectorAll('div')[0].style.display = isNowSelected ? 'block' : 'none';
-        item.querySelectorAll('div')[2].style.display = isNowSelected ? 'none' : 'flex';
+        item.querySelector('.alt-mask').style.display = isNowSelected ? 'block' : 'none';
+        item.querySelector('.alt-check').style.display = isNowSelected ? 'none' : 'flex';
       };
     }
     list.appendChild(item);
