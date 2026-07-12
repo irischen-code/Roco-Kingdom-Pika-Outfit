@@ -4308,7 +4308,7 @@ function buildWardrobeCardDOM(username) {
     const label   = suit.sub.replace('印象', '') + '-异色';
     const overlay = !altOwned ? `
       <div class="wc-overlay">
-        <div class="wc-progress-text">${suitOwned ? '已集齐未解锁' : '套装暂未集齐'}</div>
+        <div class="wc-progress-text">${suitOwned ? '集齐未<br>解锁' : '套装<br>未集齐'}</div>
       </div>` : '';
     return `<div class="wc-card-wrap">
       <div class="wc-card-item${grayed}">
