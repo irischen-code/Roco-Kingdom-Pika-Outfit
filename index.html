@@ -4367,6 +4367,33 @@ function _setGenLabel(label) {
   const el = document.getElementById('gen-label');
   if (el && label) el.textContent = label;
 }
+
+// 实时同步百分比数字与进度条宽度
+let _syncProgressInterval = null;
+function _startSyncProgress() {
+  if (_syncProgressInterval) clearInterval(_syncProgressInterval);
+  _syncProgressInterval = setInterval(() => {
+    const fill = document.getElementById('gen-bar-fill');
+    const pctEl = document.getElementById('gen-pct');
+    if (!fill || !pctEl) return;
+
+    // 读取进度条的实际宽度百分比
+    const containerWidth = fill.parentElement?.offsetWidth || 0;
+    const fillWidth = fill.offsetWidth || 0;
+    const pct = containerWidth > 0 ? Math.round((fillWidth / containerWidth) * 100) : 0;
+
+    // 更新百分比数字
+    pctEl.textContent = pct + '%';
+  }, 50); // 每50ms更新一次，足够频繁又不影响性能
+}
+
+function _stopSyncProgress() {
+  if (_syncProgressInterval) {
+    clearInterval(_syncProgressInterval);
+    _syncProgressInterval = null;
+  }
+}
+
 function _setGenProgressFull(pct, label) {
   const p = Math.min(Math.round(pct), 100);
   const fill = document.getElementById('gen-bar-fill');
@@ -4380,6 +4407,7 @@ function _startPreparingAnim() {
   const pctEl = document.getElementById('gen-pct');
   if (fill) { fill.style.width = '0%'; fill.classList.add('preparing'); }
   if (pctEl) pctEl.textContent = '0%';
+  _startSyncProgress(); // 启动实时同步
 }
 function _startRenderingAnim(label) {
   const fill = document.getElementById('gen-bar-fill');
@@ -4391,6 +4419,7 @@ function _startRenderingAnim(label) {
 function _stopAllAnim() {
   const fill = document.getElementById('gen-bar-fill');
   if (fill) fill.classList.remove('preparing', 'rendering');
+  _stopSyncProgress(); // 清理同步定时器
 }
 
 // 确保 html2canvas 就绪：已加载则立即返回；否则主动补加载（本地优先，失败回退CDN）并轮询等待，最多 maxMs
