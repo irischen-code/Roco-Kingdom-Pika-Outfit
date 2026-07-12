@@ -2687,6 +2687,8 @@ function buildStrategyPanels(p1Targets, today, totalCost = 0, incomeAtD = 0) {
 
   if (veteran && hasSurplus) {
     const surplus = Math.round(incomeAtD - totalCost);
+    // 存储盈余值到全局变量供实时计算函数使用
+    window.poolClearSurplus = surplus;
 
     // 获取所有已入池的套装（用于选择）
     const targetedIds = new Set(p1Targets.map(t => t.suitId));
@@ -2965,6 +2967,8 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
 
   if (veteran_case2 && hasSurplus_case2) {
     const surplus_case2 = Math.round(incomeAtD - totalCost);
+    // 存储盈余值到全局变量供实时计算函数使用
+    window.poolClearSurplusC2 = surplus_case2;
 
     // 获取所有已入池的套装（用于选择）
     const inPoolClearable_c2 = [];
@@ -5393,9 +5397,17 @@ function updatePoolClearBudget(suitId, isChecked, cost) {
   const resultEl = document.getElementById('pool-clear-result');
   if (resultEl) {
     if (selectedCost > 0) {
-      resultEl.textContent = `（实时计算功能已加载，共选中 ${selectedCost}★）`;
+      const text = `（实时计算功能已加载，共选中 ${selectedCost}★）`;
+      resultEl.innerHTML = text;
+      // 检查是否超过盈余
+      if (window.poolClearSurplus !== undefined && selectedCost > window.poolClearSurplus) {
+        resultEl.style.color = 'var(--red)';
+      } else {
+        resultEl.style.color = '';
+      }
     } else {
       resultEl.textContent = '（勾选下方套装查看新预算）';
+      resultEl.style.color = '';
     }
   }
 }
@@ -5410,9 +5422,17 @@ function updatePoolClearBudgetC2(suitId, isChecked, cost) {
   const resultEl = document.getElementById('pool-clear-result-c2');
   if (resultEl) {
     if (selectedCost > 0) {
-      resultEl.textContent = `（实时计算功能已加载，共选中 ${selectedCost}★）`;
+      const text = `（实时计算功能已加载，共选中 ${selectedCost}★）`;
+      resultEl.innerHTML = text;
+      // 检查是否超过盈余
+      if (window.poolClearSurplusC2 !== undefined && selectedCost > window.poolClearSurplusC2) {
+        resultEl.style.color = 'var(--red)';
+      } else {
+        resultEl.style.color = '';
+      }
     } else {
       resultEl.textContent = '（勾选下方套装查看新预算）';
+      resultEl.style.color = '';
     }
   }
 }
