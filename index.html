@@ -1514,6 +1514,15 @@
     .wc-stat-num { font-size: 20px; font-weight: 700; color: #131313; line-height: 1.2; }
     .wc-stat-total { font-size: 20px; font-weight: 400; color: #62605E; }
     .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 6px 0; flex-shrink: 0; }
+    /* 衣橱页顶部统计条（页面用，比长图内的紧凑） */
+    .wp-stats-row { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 6px 0 18px; }
+    .wp-stat-col { flex: 1; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; padding: 0 4px; }
+    .wp-stat-icon { height: 34px; width: auto; display: block; flex-shrink: 0; }
+    .wp-stat-text { display: flex; flex-direction: column; gap: 1px; }
+    .wp-stat-label { font-size: 11px; color: #62605E; font-weight: 500; white-space: nowrap; }
+    .wp-stat-num { font-size: 15px; font-weight: 700; color: #131313; line-height: 1.15; }
+    .wp-stat-total { font-size: 12px; font-weight: 400; color: #62605E; }
+    .wp-stat-sep { width: 1px; height: 26px; background: #C8BFB2; flex-shrink: 0; }
     /* 按稀有度分区，每行最多 8 张 */
     .wc-section { margin-bottom: 24px; }
     .wc-rarity-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1936,6 +1945,7 @@
     </div>
     <div class="wardrobe-input-card">
       <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wardrobe-title-banner">
+      <div class="wp-stats-row" id="wardrobe-page-stats"></div>
       <div style="text-align:center; font-size:15px; color:#888; margin-bottom:16px; position:relative;">
         当前账号：<span id="wardrobe-account-label" style="font-weight:800; color:#555;"></span><button onclick="toggleWardrobeDropdown(event)" id="wardrobe-dropdown-btn" style="background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:0 0 0 5px;line-height:1;vertical-align:middle;">▾</button>
         <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:130px;z-index:100;overflow:hidden;"></div>
@@ -2023,6 +2033,7 @@ function switchView(view) {
   document.getElementById('view-planner').classList.toggle('hidden', view !== 'planner');
   document.getElementById('view-pool').classList.toggle('hidden', view !== 'pool');
   document.getElementById('view-wardrobe').classList.toggle('hidden', view !== 'wardrobe');
+  if (view === 'wardrobe') renderWardrobePageStats();
   document.querySelectorAll('.nav-tab, .bnav-item').forEach(t => {
     t.classList.toggle('active', t.dataset.view === view);
   });
@@ -3877,6 +3888,7 @@ function updateWardrobeAccountLabel() {
   const active = profiles.find(p => p.id === _getActiveId());
   const nameEl = document.getElementById('wardrobe-account-label');
   if (nameEl && active) nameEl.textContent = active.name;
+  renderWardrobePageStats();     // 账号切换后同步刷新统计条
 }
 function toggleWardrobeDropdown(e) {
   e.stopPropagation();
@@ -4200,6 +4212,27 @@ function getWardrobeStats() {
     }
   }
   return { ownedSuits, totalSuits, ownedThemes, totalThemes, ownedParts, totalParts };
+}
+
+// 衣橱页顶部实时统计条（与长图内一致，页面用紧凑版）
+function renderWardrobePageStats() {
+  const el = document.getElementById('wardrobe-page-stats');
+  if (!el) return;
+  const s = getWardrobeStats();
+  const col = (icon, label, n, total) =>
+    `<div class="wp-stat-col">
+      <img src="assets/icon/${icon}" class="wp-stat-icon" alt="">
+      <div class="wp-stat-text">
+        <div class="wp-stat-label">${label}</div>
+        <div class="wp-stat-num">${n}<span class="wp-stat-total">/${total}</span></div>
+      </div>
+    </div>`;
+  el.innerHTML =
+    col('wardrobe-theme.png', '已集齐主题', s.ownedThemes, s.totalThemes)
+    + '<div class="wp-stat-sep"></div>'
+    + col('wardrobe-suit.png', '已集齐套装', s.ownedSuits, s.totalSuits)
+    + '<div class="wp-stat-sep"></div>'
+    + col('wardrobe-part.png', '已收集部件', s.ownedParts, s.totalParts);
 }
 
 function buildWardrobeCardDOM(username) {
@@ -4697,6 +4730,7 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
           <div class="cl-items">
             <div class="cl-item"><span><strong>历史记录</strong>：每次计算自动保存（含预计集齐日期）；移动端填写页下方、PC 端结果区右侧空位、以及弹窗均可查看，支持跨账号查看并标注归属、删除单条或清空。数据仅存于本机浏览器。</span></div>
             <div class="cl-item"><span><strong>同目标锚定</strong>：对同一目标的重复预测，会锚定最初那次的预计集齐日期，直观显示「已追踪 N 天 / 较原计划晚几天」——运气差没抽到部件导致日期顺延时，一眼看清进度而非每次重置。</span></div>
+            <div class="cl-item"><span><strong>衣橱页收集进度</strong>：「我的衣橱」页顶部新增实时统计条，一眼看到已集齐主题 / 已集齐套装 / 已收集部件的进度。</span></div>
             <div class="cl-item"><span><strong>多账号支持</strong>：可创建多个账号，各自独立保存持有与规划数据，全站及「我的衣橱」页实时同步切换。</span></div>
           </div>
         </div>
