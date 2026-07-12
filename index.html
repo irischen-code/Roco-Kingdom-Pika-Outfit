@@ -1609,7 +1609,8 @@
       padding: 13px 16px; font-size: 14px; font-weight: 700; color: #313131; cursor: pointer;
       font-family: inherit; display: flex; align-items: center; justify-content: space-between;
     }
-    .hist-inline { flex-shrink: 0; }
+    /* 内联历史 bar 默认隐藏（PC 端不露出）；仅移动端步骤1/2 通过媒体查询显示 */
+    .hist-inline { flex-shrink: 0; display: none; }
     #history-tabs::-webkit-scrollbar { display: none; }
   </style>
   <!-- html2canvas：本地同源加载（国内无需 VPN 也稳），失败时才回退到境外CDN -->
