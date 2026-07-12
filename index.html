@@ -1552,7 +1552,7 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 5px;
     }
-    .wc-progress-text { color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
+    .wc-progress-text { color: #fff; font-size: 12px; font-weight: 700; line-height: 1; text-align: center; }
     .wc-progress-bar-bg { width: 64%; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; }
     .wc-progress-fill { height: 100%; background: #fff; border-radius: 2px; }
     .wc-footer {
@@ -4308,7 +4308,7 @@ function buildWardrobeCardDOM(username) {
     const label   = suit.sub.replace('印象', '') + '-异色';
     const overlay = !altOwned ? `
       <div class="wc-overlay">
-        <div class="wc-progress-text">${suitOwned ? '集齐未<br>解锁' : '套装<br>未集齐'}</div>
+        <div class="wc-progress-text">${suitOwned ? '集齐<br>未解锁' : '套装<br>未集齐'}</div>
       </div>` : '';
     return `<div class="wc-card-wrap">
       <div class="wc-card-item${grayed}">
