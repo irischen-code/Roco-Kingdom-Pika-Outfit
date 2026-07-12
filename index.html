@@ -2818,7 +2818,7 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
   </div>`;
 
   // 先计算Case2的金色散件信息（用于panel1标题的info按钮）
-  const hasPurpleCheap_c2 = allPadDao.some(c => c.rarity === 'purple');
+  const hasPurpleCheap2 = allPadDao.some(c => c.rarity === 'purple');
   const hasGoldCheap2 = allPadDao.some(c => c.rarity === 'gold');
 
   let goldPartsPopupContent = '';
