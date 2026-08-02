@@ -4108,26 +4108,70 @@ function renderDualTimeline() {
     const monthlyWrapper = monthlyTrack.parentElement;
     const poolWrapper = poolTrack.parentElement;
 
-    // 设置初始滚动位置到最右边（显示最新的主题）
-    const maxScroll = monthlyTrack.scrollWidth - monthlyWrapper.clientWidth;
-    monthlyWrapper.scrollLeft = maxScroll;
-    poolWrapper.scrollLeft = maxScroll;
+    // 根据当前日期找到对应的月刊和入池主题
+    const today = todayStr(); // YYYY-MM-DD
+    const todayParts = today.split('-');
+    const todayMD = `${parseInt(todayParts[1])}.${todayParts[2]}`; // M.DD 格式的当前日期
+
+    // 找到当前日期对应的月刊主题（其月刊周期包含今天）
+    let currentMonthlyDate = null;
+    for (const t of monthlyThemes) {
+      const [start, end] = t.monthlyPeriod.split('-');
+      const startNum = monthDayToNum(start);
+      const endNum = monthDayToNum(end);
+      const todayNum = monthDayToNum(todayMD);
+      if (todayNum >= startNum && todayNum <= endNum) {
+        currentMonthlyDate = start;
+        break;
+      }
+    }
+
+    // 找到当前日期对应的最近入池主题（最近且在今天之前或今天）
+    let currentPoolDate = null;
+    const todayNum = monthDayToNum(todayMD);
+    let maxPoolNum = 0;
+    for (const t of themes) {
+      const poolNum = monthDayToNum(normalizeDateStr(t.poolDateMD));
+      if (poolNum <= todayNum && poolNum > maxPoolNum) {
+        maxPoolNum = poolNum;
+        currentPoolDate = normalizeDateStr(t.poolDateMD);
+      }
+    }
+
+    // 计算滚动位置：找到对应主题在grid中的位置（左侧对齐）
+    if (currentMonthlyDate) {
+      const col = dateToCol[currentMonthlyDate];
+      if (col) {
+        const scrollPos = (col - 1) * 216;
+        monthlyWrapper.scrollLeft = Math.max(0, scrollPos);
+      }
+    }
+    if (currentPoolDate) {
+      const col = dateToCol[currentPoolDate];
+      if (col) {
+        const scrollPos = (col - 1) * 216;
+        poolWrapper.scrollLeft = Math.max(0, scrollPos);
+      }
+    }
 
     let syncing = false;
+    let syncTimeout = null;
     monthlyWrapper.addEventListener('scroll', () => {
       if (!syncing) {
         syncing = true;
         poolWrapper.scrollLeft = monthlyWrapper.scrollLeft;
-        setTimeout(() => { syncing = false; }, 10);
+        if (syncTimeout) clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => { syncing = false; }, 0);
       }
-    });
+    }, { passive: true });
     poolWrapper.addEventListener('scroll', () => {
       if (!syncing) {
         syncing = true;
         monthlyWrapper.scrollLeft = poolWrapper.scrollLeft;
-        setTimeout(() => { syncing = false; }, 10);
+        if (syncTimeout) clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => { syncing = false; }, 0);
       }
-    });
+    }, { passive: true });
   }, 150);
 }
 
