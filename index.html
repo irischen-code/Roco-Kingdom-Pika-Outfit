@@ -4020,40 +4020,46 @@ function renderDualTimeline() {
   for (const th of THEMES_RAW) {
     if (th.suspended) continue;
     const monthlyPeriod = MONTHLY_PERIODS[th.theme] || '-';
-    const poolDate = th.date;
+    const poolDateYMD = th.date; // 2026-07-17 format
+
+    // 将 YYYY-MM-DD 转为 M.DD 格式
+    const poolDateParts = poolDateYMD.split('-');
+    const poolDateMD = `${parseInt(poolDateParts[1])}.${poolDateParts[2]}`;
 
     themes.push({
       theme: th.theme,
       monthlyPeriod: monthlyPeriod,
-      poolDate: poolDate,
-      poolDateNum: dateToNum(poolDate),
-      monthlyStartNum: monthlyPeriod === '-' ? 0 : dateToNum(monthlyPeriod.split('-')[0] + '-01'),
+      poolDate: poolDateYMD,
+      poolDateMD: poolDateMD,
+      poolDateNum: dateToNum(poolDateYMD),
     });
   }
 
-  // 提取所有日期点（按开始日期：月刊开始日期或入池日期）
-  const datePoints = new Set();
+  // 收集所有日期点
+  const dateSet = new Set();
   for (const t of themes) {
+    // 月刊开始日期
     if (t.monthlyPeriod !== '-') {
-      datePoints.add(t.monthlyPeriod.split('-')[0]); // 月刊开始月份
+      const startDate = t.monthlyPeriod.split('-')[0]; // 7.16
+      dateSet.add(startDate);
     }
-    const [month, day] = t.poolDate.split('-').pop().split('.');
-    datePoints.add(`${month}.${day}`);
+    // 入池日期
+    dateSet.add(t.poolDateMD);
   }
 
-  const sortedDates = Array.from(datePoints)
-    .map(d => ({ str: d, num: dateToNum('2026-' + d) }))
+  // 排序日期
+  const sortedDates = Array.from(dateSet)
+    .map(d => ({ str: d, num: monthDayToNum(d) }))
     .sort((a, b) => a.num - b.num);
 
-  // 构建月刊时间轴（按月刊周期排序）
+  // 构建月刊时间轴
   const monthlyTrack = document.getElementById('monthlyTrack');
   monthlyTrack.innerHTML = '';
 
   const monthlyThemes = themes
     .filter(t => t.monthlyPeriod !== '-')
-    .sort((a, b) => dateToNum(b.poolDate) - dateToNum(a.poolDate));
+    .sort((a, b) => b.poolDateNum - a.poolDateNum);
 
-  // 为每个月刊主题计算位置
   for (const t of monthlyThemes) {
     const item = document.createElement('div');
     item.className = 'timeline-item-wrapper';
@@ -4063,7 +4069,6 @@ function renderDualTimeline() {
     img.src = `assets/images/posters/${t.theme}.png`;
     img.alt = t.theme;
     img.loading = 'lazy';
-    img.onerror = () => img.style.display = 'none';
 
     const info = document.createElement('div');
     info.className = 'timeline-info';
@@ -4075,13 +4080,11 @@ function renderDualTimeline() {
     item.appendChild(img);
     item.appendChild(info);
 
-    // 计算左边距（基于月刊开始日期）
-    const startPart = t.monthlyPeriod.split('-')[0];
-    const [month, day] = startPart.split('.');
-    const dateStr = `${month}.${String(day).padStart(2, '0')}`;
-    const dateIndex = sortedDates.findIndex(d => d.str === dateStr);
+    // 计算位置
+    const startDate = t.monthlyPeriod.split('-')[0];
+    const dateIndex = sortedDates.findIndex(d => d.str === startDate);
     if (dateIndex >= 0) {
-      item.style.marginLeft = (dateIndex * 216) + 'px'; // 216 = 200 (width) + 16 (gap)
+      item.style.marginLeft = (dateIndex * 216) + 'px';
     }
 
     monthlyTrack.appendChild(item);
@@ -4107,7 +4110,7 @@ function renderDualTimeline() {
     const info = document.createElement('div');
     info.className = 'timeline-info';
     info.innerHTML = `
-      <div class="timeline-date">${formatPoolDate(t.poolDate)}</div>
+      <div class="timeline-date">${t.poolDateMD}</div>
       <div class="timeline-name">${t.theme}</div>
     `;
 
@@ -4115,11 +4118,7 @@ function renderDualTimeline() {
     item.appendChild(info);
 
     // 计算左边距（基于入池日期）
-    const parts = t.poolDate.split('-');
-    const month = parseInt(parts[1]);
-    const day = parts[2];
-    const formattedDate = `${month}.${day}`;
-    const dateIndex = sortedDates.findIndex(d => d.str === formattedDate);
+    const dateIndex = sortedDates.findIndex(d => d.str === t.poolDateMD);
     if (dateIndex >= 0) {
       item.style.marginLeft = (dateIndex * 216) + 'px';
     }
@@ -4165,6 +4164,13 @@ function dateToNum(dateStr) {
   if (!dateStr || dateStr === '-') return 0;
   const parts = dateStr.split('-');
   return parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+}
+
+function monthDayToNum(mdStr) {
+  // 将 M.DD 或 MM.DD 转换为可比较的数字
+  if (!mdStr) return 0;
+  const [month, day] = mdStr.split('.');
+  return parseInt(month) * 100 + parseInt(day);
 }
 
 function renderPoolThemes() {
