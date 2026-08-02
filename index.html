@@ -4103,10 +4103,16 @@ function renderDualTimeline() {
     poolTrack.appendChild(item);
   }
 
-  // 同步滚动
+  // 同步滚动和初始位置设置
   setTimeout(() => {
     const monthlyWrapper = monthlyTrack.parentElement;
     const poolWrapper = poolTrack.parentElement;
+
+    // 设置初始滚动位置到最右边（显示最新的主题）
+    const maxScroll = monthlyTrack.scrollWidth - monthlyWrapper.clientWidth;
+    monthlyWrapper.scrollLeft = maxScroll;
+    poolWrapper.scrollLeft = maxScroll;
+
     let syncing = false;
     monthlyWrapper.addEventListener('scroll', () => {
       if (!syncing) {
