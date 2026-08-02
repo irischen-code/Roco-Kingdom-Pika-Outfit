@@ -876,13 +876,16 @@
     }
 
     .timeline-track {
-      display: flex; gap: 16px; min-width: max-content;
+      display: flex; gap: 0; min-width: max-content;
       padding: 0; position: relative;
       align-items: flex-start;
     }
     .timeline-item-wrapper {
       flex-shrink: 0; display: flex; flex-direction: column;
-      align-items: center; gap: 8px;
+      align-items: center; gap: 8px; margin-right: 0;
+    }
+    .timeline-item-wrapper:first-child {
+      margin-left: 0;
     }
     .timeline-poster-img {
       width: 200px; aspect-ratio: 16/9;
@@ -4012,9 +4015,8 @@ function renderTimeline() {
 // ════════════════════════════════════════════════════
 
 function renderDualTimeline() {
-  // 收集所有主题及其月刊周期和入池时间
+  // 收集所有主题及其信息
   const themes = [];
-
   for (const th of THEMES_RAW) {
     if (th.suspended) continue;
     const monthlyPeriod = MONTHLY_PERIODS[th.theme] || '-';
@@ -4024,27 +4026,34 @@ function renderDualTimeline() {
       theme: th.theme,
       monthlyPeriod: monthlyPeriod,
       poolDate: poolDate,
+      poolDateNum: dateToNum(poolDate),
+      monthlyStartNum: monthlyPeriod === '-' ? 0 : dateToNum(monthlyPeriod.split('-')[0] + '-01'),
     });
   }
 
-  // 按入池日期排序（从新到旧）
-  themes.sort((a, b) => {
-    const aDate = dateToNum(a.poolDate);
-    const bDate = dateToNum(b.poolDate);
-    return bDate - aDate;
-  });
+  // 提取所有日期点（按开始日期：月刊开始日期或入池日期）
+  const datePoints = new Set();
+  for (const t of themes) {
+    if (t.monthlyPeriod !== '-') {
+      datePoints.add(t.monthlyPeriod.split('-')[0]); // 月刊开始月份
+    }
+    const [month, day] = t.poolDate.split('-').pop().split('.');
+    datePoints.add(`${month}.${day}`);
+  }
 
-  // 构建月刊时间轴
+  const sortedDates = Array.from(datePoints)
+    .map(d => ({ str: d, num: dateToNum('2026-' + d) }))
+    .sort((a, b) => a.num - b.num);
+
+  // 构建月刊时间轴（按月刊周期排序）
   const monthlyTrack = document.getElementById('monthlyTrack');
   monthlyTrack.innerHTML = '';
 
-  // 敬请期待占位卡
-  const comingSoon = document.createElement('div');
-  comingSoon.className = 'timeline-item-card coming-soon';
-  monthlyTrack.appendChild(comingSoon);
+  const monthlyThemes = themes
+    .filter(t => t.monthlyPeriod !== '-')
+    .sort((a, b) => dateToNum(b.poolDate) - dateToNum(a.poolDate));
 
-  // 有月刊周期的主题（反向排序：最新的在前）
-  const monthlyThemes = themes.filter(t => t.monthlyPeriod !== '-');
+  // 为每个月刊主题计算位置
   for (const t of monthlyThemes) {
     const item = document.createElement('div');
     item.className = 'timeline-item-wrapper';
@@ -4065,14 +4074,26 @@ function renderDualTimeline() {
 
     item.appendChild(img);
     item.appendChild(info);
+
+    // 计算左边距（基于月刊开始日期）
+    const startPart = t.monthlyPeriod.split('-')[0];
+    const [month, day] = startPart.split('.');
+    const dateStr = `${month}.${String(day).padStart(2, '0')}`;
+    const dateIndex = sortedDates.findIndex(d => d.str === dateStr);
+    if (dateIndex >= 0) {
+      item.style.marginLeft = (dateIndex * 216) + 'px'; // 216 = 200 (width) + 16 (gap)
+    }
+
     monthlyTrack.appendChild(item);
   }
 
-  // 构建入池时间轴
+  // 构建入池时间轴（按入池日期排序）
   const poolTrack = document.getElementById('poolTrack');
   poolTrack.innerHTML = '';
 
-  for (const t of themes) {
+  const sortedPool = [...themes].sort((a, b) => b.poolDateNum - a.poolDateNum);
+
+  for (const t of sortedPool) {
     const item = document.createElement('div');
     item.className = 'timeline-item-wrapper';
 
@@ -4086,12 +4107,22 @@ function renderDualTimeline() {
     const info = document.createElement('div');
     info.className = 'timeline-info';
     info.innerHTML = `
-      <div class="timeline-date">${t.poolDate}</div>
+      <div class="timeline-date">${formatPoolDate(t.poolDate)}</div>
       <div class="timeline-name">${t.theme}</div>
     `;
 
     item.appendChild(img);
     item.appendChild(info);
+
+    // 计算左边距（基于入池日期）
+    const [year, dateStr] = t.poolDate.split('-');
+    const [month, day] = dateStr.split('.');
+    const formattedDate = `${month}.${String(day).padStart(2, '0')}`;
+    const dateIndex = sortedDates.findIndex(d => d.str === formattedDate);
+    if (dateIndex >= 0) {
+      item.style.marginLeft = (dateIndex * 216) + 'px';
+    }
+
     poolTrack.appendChild(item);
   }
 
@@ -4100,34 +4131,31 @@ function renderDualTimeline() {
     const monthlyWrapper = document.getElementById('monthlyTrack').parentElement;
     const poolWrapper = document.getElementById('poolTrack').parentElement;
 
-    // 计算当期主题的位置（第一个wrapper的位置）
-    const firstItem = document.querySelector('.monthly-track .timeline-item-wrapper');
-    if (firstItem) {
-      // 使当期主题显示在左侧第一列
-      const offset = firstItem.offsetLeft;
-      monthlyWrapper.scrollLeft = offset;
-      poolWrapper.scrollLeft = offset;
-    }
-
-    // 同步滚动（使用flag防止互相触发导致抖动）
-    let isScrolling = false;
-
+    // 同步滚动
+    let syncing = false;
     monthlyWrapper.addEventListener('scroll', () => {
-      if (!isScrolling) {
-        isScrolling = true;
+      if (!syncing) {
+        syncing = true;
         poolWrapper.scrollLeft = monthlyWrapper.scrollLeft;
-        setTimeout(() => { isScrolling = false; }, 10);
+        setTimeout(() => { syncing = false; }, 10);
       }
     });
 
     poolWrapper.addEventListener('scroll', () => {
-      if (!isScrolling) {
-        isScrolling = true;
+      if (!syncing) {
+        syncing = true;
         monthlyWrapper.scrollLeft = poolWrapper.scrollLeft;
-        setTimeout(() => { isScrolling = false; }, 10);
+        setTimeout(() => { syncing = false; }, 10);
       }
     });
   }, 150);
+}
+
+function formatPoolDate(dateStr) {
+  // 将 YYYY-MM-DD 格式转为 M.DD
+  const [year, date] = dateStr.split('-');
+  const [month, day] = date.split('.');
+  return `${month}.${String(day).padStart(2, '0')}`;
 }
 
 function dateToNum(dateStr) {
