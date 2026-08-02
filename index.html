@@ -874,9 +874,26 @@
       background: rgba(0,0,0,0.2); border-radius: 2px;
     }
 
+    /* 共享滚动容器：两条时间轴共享同一个水平滚动 */
+    .timeline-unified-scroll-wrapper {
+      overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth;
+      padding: 8px 0; -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.2) transparent;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .timeline-unified-scroll-wrapper::-webkit-scrollbar {
+      height: 4px;
+    }
+    .timeline-unified-scroll-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .timeline-unified-scroll-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2); border-radius: 2px;
+    }
+
     .timeline-track {
       display: grid; grid-auto-flow: column; grid-auto-columns: 216px;
-      gap: 0; padding: 0; align-items: start;
+      gap: 0; padding: 0; align-items: start; flex-shrink: 0;
     }
     .timeline-item-wrapper {
       display: flex; flex-direction: column;
@@ -2016,17 +2033,17 @@
       <!-- 当期月刊时间轴 -->
       <div class="timeline-section">
         <div class="timeline-label">皮卡月刊时间轴</div>
-        <div class="timeline-scroll-wrapper">
-          <div class="timeline-track monthly-track" id="monthlyTrack"></div>
-        </div>
       </div>
 
-      <!-- 入池时间轴 -->
+      <!-- 共享滚动容器 -->
+      <div class="timeline-unified-scroll-wrapper">
+        <div class="timeline-track monthly-track" id="monthlyTrack"></div>
+        <div class="timeline-track pool-track" id="poolTrack"></div>
+      </div>
+
+      <!-- 入池时间轴标签 -->
       <div class="timeline-section">
         <div class="timeline-label">随机商店时间轴</div>
-        <div class="timeline-scroll-wrapper">
-          <div class="timeline-track pool-track" id="poolTrack"></div>
-        </div>
       </div>
     </div>
 
@@ -4103,12 +4120,12 @@ function renderDualTimeline() {
     poolTrack.appendChild(item);
   }
 
-  // 同步滚动和初始位置设置
+  // 初始滚动位置设置（共享容器）
   setTimeout(() => {
-    const monthlyWrapper = monthlyTrack.parentElement;
-    const poolWrapper = poolTrack.parentElement;
+    const unifiedScroll = document.querySelector('.timeline-unified-scroll-wrapper');
+    if (!unifiedScroll) return;
 
-    // 根据当前日期找到对应的月刊和入池主题
+    // 根据当前日期找到对应的月刊主题（共享容器中两条轨道同步滚动，只需定位一个即可）
     const today = todayStr(); // YYYY-MM-DD
     const todayParts = today.split('-');
     const todayMD = `${parseInt(todayParts[1])}.${todayParts[2]}`; // M.DD 格式的当前日期
@@ -4126,53 +4143,15 @@ function renderDualTimeline() {
       }
     }
 
-    // 找到当前日期对应的最近入池主题（最近且在今天之前或今天）
-    let currentPoolDate = null;
-    const todayNum = monthDayToNum(todayMD);
-    let maxPoolNum = 0;
-    for (const t of themes) {
-      const poolNum = monthDayToNum(normalizeDateStr(t.poolDateMD));
-      if (poolNum <= todayNum && poolNum > maxPoolNum) {
-        maxPoolNum = poolNum;
-        currentPoolDate = normalizeDateStr(t.poolDateMD);
-      }
-    }
-
     // 计算滚动位置：找到对应主题在grid中的位置（左侧对齐）
     if (currentMonthlyDate) {
       const col = dateToCol[currentMonthlyDate];
       if (col) {
         const scrollPos = (col - 1) * 216;
-        monthlyWrapper.scrollLeft = Math.max(0, scrollPos);
+        unifiedScroll.scrollLeft = Math.max(0, scrollPos);
       }
     }
-    if (currentPoolDate) {
-      const col = dateToCol[currentPoolDate];
-      if (col) {
-        const scrollPos = (col - 1) * 216;
-        poolWrapper.scrollLeft = Math.max(0, scrollPos);
-      }
-    }
-
-    let syncing = false;
-    let syncTimeout = null;
-    monthlyWrapper.addEventListener('scroll', () => {
-      if (!syncing) {
-        syncing = true;
-        poolWrapper.scrollLeft = monthlyWrapper.scrollLeft;
-        if (syncTimeout) clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(() => { syncing = false; }, 0);
-      }
-    }, { passive: true });
-    poolWrapper.addEventListener('scroll', () => {
-      if (!syncing) {
-        syncing = true;
-        monthlyWrapper.scrollLeft = poolWrapper.scrollLeft;
-        if (syncTimeout) clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(() => { syncing = false; }, 0);
-      }
-    }, { passive: true });
-  }, 150);
+  }, 50);
 }
 
 function formatPoolDate(dateStr) {
