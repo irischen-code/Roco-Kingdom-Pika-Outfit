@@ -2015,7 +2015,7 @@
 
       <!-- 当期月刊时间轴 -->
       <div class="timeline-section">
-        <div class="timeline-label">当期月刊时间轴（上）</div>
+        <div class="timeline-label">皮卡月刊时间轴</div>
         <div class="timeline-scroll-wrapper">
           <div class="timeline-track monthly-track" id="monthlyTrack"></div>
         </div>
@@ -2023,7 +2023,7 @@
 
       <!-- 入池时间轴 -->
       <div class="timeline-section">
-        <div class="timeline-label">入池时间轴（下）</div>
+        <div class="timeline-label">随机商店时间轴</div>
         <div class="timeline-scroll-wrapper">
           <div class="timeline-track pool-track" id="poolTrack"></div>
         </div>
@@ -2195,8 +2195,8 @@ const MONTHLY_PERIODS = {
   '野外考察队': '5.08-5.21',
   '深海的馈赠': '5.21-6.05',
   '魔法嘉年华': '6.05-6.19',
-  '梦境流浪者': '6.19-7.3',
-  '乐团协奏曲': '7.3-7.16',
+  '梦境流浪者': '6.19-7.03',
+  '乐团协奏曲': '7.03-7.16',
   '秘密潜入计划': '7.16-7.30',
   '年轮诗社': '7.31-8.14',
 };
@@ -5707,6 +5707,50 @@ function updatePoolClearBudgetC2(suitId, isChecked, cost) {
     }
   }
 }
+
+// 图片放大浮层功能
+(function() {
+  const modal = document.createElement('div');
+  modal.id = 'poster-modal';
+  modal.style.cssText = `
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+  `;
+
+  const img = document.createElement('img');
+  img.style.cssText = `
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  `;
+
+  modal.appendChild(img);
+  document.body.appendChild(modal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  // 为所有海报图片添加点击事件
+  setTimeout(() => {
+    document.querySelectorAll('.timeline-poster-img').forEach(posterImg => {
+      posterImg.style.cursor = 'pointer';
+      posterImg.addEventListener('click', (e) => {
+        e.stopPropagation();
+        img.src = posterImg.src;
+        modal.style.display = 'flex';
+      });
+    });
+  }, 100);
+})();
 </script>
 </body>
 </html>
