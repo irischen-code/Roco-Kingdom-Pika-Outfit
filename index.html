@@ -4044,7 +4044,7 @@ function renderDualTimeline() {
 
   const sortedDates = Array.from(dateSet)
     .map(d => ({ str: d, num: monthDayToNum(d) }))
-    .sort((a, b) => a.num - b.num);
+    .sort((a, b) => b.num - a.num); // 倒序：从新到旧
 
   // 规范化日期格式并创建列映射
   const dateToCol = {};
