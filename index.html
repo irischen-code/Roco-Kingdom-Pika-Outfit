@@ -854,6 +854,7 @@
     .timeline-item .tl-count { color: #9A73F9; margin-top: 3px; }
 
     /* ── Dual Timeline (Monthly & Pool) ── */
+
     .timeline-section { margin-bottom: 20px; }
     .timeline-label {
       font-size: 12px; font-weight: 600; color: var(--text-muted);
@@ -924,6 +925,131 @@
     .timeline-name {
       font-weight: 700; color: var(--text); font-size: 12px;
       line-height: 1.3;
+    }
+
+    /* 时间轴信息按钮 */
+    .timeline-info-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      margin-left: 8px;
+    }
+    .timeline-info-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: var(--text);
+    }
+
+    /* 模态框样式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+    }
+    .timeline-info-modal {
+      position: relative;
+      background: #FBF7EE;
+      border-radius: 16px;
+      border: 2px solid #313131;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      max-width: 360px;
+      width: 85%;
+      max-height: auto;
+      overflow-y: auto;
+      z-index: 1001;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      gap: 12px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #313131;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      color: #313131;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 8px;
+    }
+    .modal-body {
+      padding: 14px 16px;
+    }
+    .timeline-info-section {
+      margin-bottom: 14px;
+    }
+    .timeline-info-section:last-child {
+      margin-bottom: 0;
+    }
+    .timeline-info-section h4 {
+      margin: 0 0 6px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #313131;
+    }
+    .timeline-info-section p {
+      margin: 4px 0;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .timeline-info-section .example {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .timeline-info-section .note {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .timeline-info-section ul {
+      margin: 6px 0 0 0;
+      padding-left: 18px;
+      list-style: disc;
+    }
+    .timeline-info-section li {
+      margin: 3px 0;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.5;
     }
 
     /* ── Pool overview page ── */
@@ -2028,22 +2154,12 @@
   <div class="pool-view">
 
     <div class="card">
-      <div class="card-title"><img src="assets/icon/card.png" alt="">主题时装进入随机商店时间轴</div>
-
-      <!-- 当期月刊时间轴 -->
-      <div class="timeline-section">
-        <div class="timeline-label">皮卡月刊时间轴</div>
-      </div>
+      <div class="card-title"><img src="assets/icon/card.png" alt="">皮卡月刊 / 随机商店时间轴 <button class="timeline-info-btn" onclick="openTimelineInfo()">ⓘ</button></div>
 
       <!-- 共享滚动容器 -->
       <div class="timeline-unified-scroll-wrapper">
         <div class="timeline-track monthly-track" id="monthlyTrack"></div>
         <div class="timeline-track pool-track" id="poolTrack"></div>
-      </div>
-
-      <!-- 入池时间轴标签 -->
-      <div class="timeline-section">
-        <div class="timeline-label">随机商店时间轴</div>
       </div>
     </div>
 
@@ -5780,6 +5896,58 @@ function updatePoolClearBudgetC2(suitId, isChecked, cost) {
     });
   }, 100);
 })();
+
+// 时间轴信息弹窗
+function openTimelineInfo() {
+  const modal = document.getElementById('timeline-info-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeTimelineInfo() {
+  const modal = document.getElementById('timeline-info-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('timeline-info-modal');
+  const backdrop = document.getElementById('timeline-info-backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', closeTimelineInfo);
+  }
+});
 </script>
+
+<!-- 时间轴信息弹窗 -->
+<div id="timeline-info-modal" class="modal-overlay" style="display: none;">
+  <div id="timeline-info-backdrop" class="modal-backdrop"></div>
+  <div class="modal-content timeline-info-modal">
+    <div class="modal-header">
+      <h3>皮卡月刊 / 随机商店时间轴</h3>
+      <button class="modal-close" onclick="closeTimelineInfo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="timeline-info-section">
+        <h4>上行 - 皮卡月刊</h4>
+        <p>显示主题在皮卡商店的上架时间段</p>
+        <p class="example">例：年轮诗社 7.31 - 8.14</p>
+      </div>
+      <div class="timeline-info-section">
+        <h4>下行 - 随机商店</h4>
+        <p>显示主题进入随机商店的日期</p>
+        <p class="note">（商店下架后约42天进入）</p>
+        <p class="example">例：年轮诗社 9.25</p>
+      </div>
+      <div class="timeline-info-section">
+        <h4>💡 使用提示</h4>
+        <ul>
+          <li>左右滑动浏览不同主题</li>
+          <li>两条时间轴同步滚动</li>
+          <li>点击海报可放大查看</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
