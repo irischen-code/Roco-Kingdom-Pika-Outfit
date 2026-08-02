@@ -4047,9 +4047,12 @@ function renderDualTimeline() {
     .map(d => ({ str: d, num: monthDayToNum(d) }))
     .sort((a, b) => a.num - b.num);
 
+  // 规范化日期格式并创建列映射
   const dateToCol = {};
   sortedDates.forEach((d, idx) => {
+    const normalized = normalizeDateStr(d.str);
     dateToCol[d.str] = idx + 1;
+    dateToCol[normalized] = idx + 1; // 也映射规范化后的格式
   });
 
   // 月刊时间轴
@@ -4071,7 +4074,8 @@ function renderDualTimeline() {
     info.innerHTML = `<div class="timeline-date">${t.monthlyPeriod}</div><div class="timeline-name">${t.theme}</div>`;
     item.appendChild(img);
     item.appendChild(info);
-    const col = dateToCol[t.monthlyPeriod.split('-')[0]];
+    const startDate = normalizeDateStr(t.monthlyPeriod.split('-')[0]);
+    const col = dateToCol[startDate];
     if (col) item.style.gridColumn = col;
     monthlyTrack.appendChild(item);
   }
@@ -4094,7 +4098,8 @@ function renderDualTimeline() {
     info.innerHTML = `<div class="timeline-date">${t.poolDateMD}</div><div class="timeline-name">${t.theme}</div>`;
     item.appendChild(img);
     item.appendChild(info);
-    const col = dateToCol[t.poolDateMD];
+    const normalizedPoolDate = normalizeDateStr(t.poolDateMD);
+    const col = dateToCol[normalizedPoolDate];
     if (col) item.style.gridColumn = col;
     poolTrack.appendChild(item);
   }
@@ -4141,6 +4146,13 @@ function monthDayToNum(mdStr) {
   if (!mdStr) return 0;
   const [month, day] = mdStr.split('.');
   return parseInt(month) * 100 + parseInt(day);
+}
+
+function normalizeDateStr(mdStr) {
+  // 将 M.DD 转换为标准格式 M.DD（去掉leading zero）
+  if (!mdStr) return mdStr;
+  const [month, day] = mdStr.split('.');
+  return `${parseInt(month)}.${parseInt(day)}`;
 }
 
 function renderPoolThemes() {
