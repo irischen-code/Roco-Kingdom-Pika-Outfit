@@ -854,6 +854,68 @@
     .timeline-item .tl-name  { font-weight: 600; color: var(--text); font-size: 12px; }
     .timeline-item .tl-count { color: #9A73F9; margin-top: 3px; }
 
+    /* ── Dual Timeline (Monthly & Pool) ── */
+    .timeline-section { margin-bottom: 20px; }
+    .timeline-label {
+      font-size: 12px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 8px; display: block;
+    }
+    .timeline-scroll-wrapper {
+      overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth;
+      padding: 8px 0; -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.2) transparent;
+    }
+    .timeline-scroll-wrapper::-webkit-scrollbar {
+      height: 4px;
+    }
+    .timeline-scroll-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .timeline-scroll-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2); border-radius: 2px;
+    }
+
+    .timeline-track {
+      display: flex; gap: 0; min-width: max-content;
+      padding: 0; position: relative;
+    }
+    .timeline-item-card {
+      flex-shrink: 0; width: 140px; padding: 12px;
+      background: #FBF7EE; border: 2px solid #313131; border-radius: 12px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      position: relative;
+    }
+    .timeline-item-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .timeline-item-card img {
+      width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      border-radius: 6px; margin-bottom: 8px; display: block;
+    }
+    .timeline-item-card .date-label {
+      font-size: 11px; color: var(--text-muted); font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .timeline-item-card .theme-name {
+      font-size: 12px; font-weight: 700; color: var(--text);
+      line-height: 1.3; word-break: break-word;
+    }
+    .timeline-item-card .pool-info {
+      font-size: 10px; color: #9A73F9; margin-top: 4px; font-weight: 600;
+    }
+
+    /* 敬请期待占位卡 */
+    .timeline-item-card.coming-soon {
+      background: linear-gradient(135deg, #E8E3D6 0%, #F3EADC 100%);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 120px;
+    }
+    .timeline-item-card.coming-soon::before {
+      content: '敬请期待'; font-size: 18px; font-weight: 800;
+      color: var(--text-muted); text-align: center;
+    }
+
     /* ── Pool overview page ── */
     #view-pool { background: #FBC839; min-height: calc(100vh - 56px); }
     .pool-view { padding: 20px; max-width: 960px; margin: 0 auto; background: transparent; }
@@ -1957,8 +2019,21 @@
 
     <div class="card">
       <div class="card-title"><img src="assets/icon/card.png" alt="">主题时装进入随机商店时间轴</div>
-      <div class="timeline-wrap">
-        <div class="timeline-track" id="timelineTrack"></div>
+
+      <!-- 当期月刊时间轴 -->
+      <div class="timeline-section">
+        <div class="timeline-label">当期月刊时间轴（上）</div>
+        <div class="timeline-scroll-wrapper">
+          <div class="timeline-track monthly-track" id="monthlyTrack"></div>
+        </div>
+      </div>
+
+      <!-- 入池时间轴 -->
+      <div class="timeline-section">
+        <div class="timeline-label">入池时间轴（下）</div>
+        <div class="timeline-scroll-wrapper">
+          <div class="timeline-track pool-track" id="poolTrack"></div>
+        </div>
       </div>
     </div>
 
@@ -2113,6 +2188,25 @@ const PART_NAMES_7 = ['头饰','上衣','裤子','背包','手套','袜子','鞋
 const GOLD_PARTS  = {头饰:41, 连体服装:74, 背包:34, 手套:17, 袜子:9, 鞋子:20};
 const PURP_PARTS  = {头饰:20, 连体服装:42, 背包:18, 手套:6,  袜子:4, 鞋子:8 };
 const FIELD_PARTS = {头饰:20, 上衣:21, 裤子:21, 背包:18, 手套:6, 袜子:4, 鞋子:8};
+
+// 月刊上架周期映射表（初次贩售周期）
+const MONTHLY_PERIODS = {
+  '毛绒巡林者': '-',
+  '重逢圆舞曲': '-',
+  '雪山研究员': '-',
+  '誓约圣骑士': '-',
+  '壁炉边伙伴': '-',
+  '治愈童话书': '3.26-4.10',
+  '晚安睡衣派对': '4.10-4.24',
+  '嘭！炼金药剂': '4.24-5.08',
+  '野外考察队': '5.08-5.21',
+  '深海的馈赠': '5.21-6.05',
+  '魔法嘉年华': '6.05-6.19',
+  '梦境流浪者': '6.19-7.3',
+  '乐团协奏曲': '7.3-7.16',
+  '秘密潜入计划': '7.16-7.30',
+  '年轮诗社': '7.31-8.14',
+};
 
 const THEMES_RAW = [
   { theme:'毛绒巡林者',    date:'2026-03-26', direct:true,  suits:[
@@ -3921,6 +4015,92 @@ function renderTimeline() {
 // UI: POOL OVERVIEW THEME LIST
 // ════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════
+// DUAL TIMELINE: MONTHLY & POOL
+// ════════════════════════════════════════════════════
+
+function renderDualTimeline() {
+  // 收集所有主题及其月刊周期和入池时间
+  const themes = [];
+
+  for (const th of THEMES_RAW) {
+    if (th.suspended) continue;
+    const monthlyPeriod = MONTHLY_PERIODS[th.theme] || '-';
+    const poolDate = th.date;
+
+    themes.push({
+      theme: th.theme,
+      monthlyPeriod: monthlyPeriod,
+      poolDate: poolDate,
+    });
+  }
+
+  // 按入池日期排序（从新到旧）
+  themes.sort((a, b) => {
+    const aDate = dateToNum(a.poolDate);
+    const bDate = dateToNum(b.poolDate);
+    return bDate - aDate;
+  });
+
+  // 构建月刊时间轴
+  const monthlyTrack = document.getElementById('monthlyTrack');
+  monthlyTrack.innerHTML = '';
+
+  // 敬请期待占位卡
+  const comingSoon = document.createElement('div');
+  comingSoon.className = 'timeline-item-card coming-soon';
+  monthlyTrack.appendChild(comingSoon);
+
+  // 有月刊周期的主题（反向排序：最新的在前）
+  const monthlyThemes = themes.filter(t => t.monthlyPeriod !== '-');
+  for (const t of monthlyThemes) {
+    const card = document.createElement('div');
+    card.className = 'timeline-item-card';
+    card.innerHTML = `
+      <img src="assets/images/posters/${t.theme}.png" alt="${t.theme}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E'">
+      <div class="date-label">${t.monthlyPeriod}</div>
+      <div class="theme-name">${t.theme}</div>
+    `;
+    monthlyTrack.appendChild(card);
+  }
+
+  // 构建入池时间轴
+  const poolTrack = document.getElementById('poolTrack');
+  poolTrack.innerHTML = '';
+
+  for (const t of themes) {
+    const card = document.createElement('div');
+    card.className = 'timeline-item-card';
+    card.innerHTML = `
+      <img src="assets/images/posters/${t.theme}.png" alt="${t.theme}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3C/svg%3E'">
+      <div class="date-label">${t.poolDate}</div>
+      <div class="theme-name">${t.theme}</div>
+      <div class="pool-info">已入池</div>
+    `;
+    poolTrack.appendChild(card);
+  }
+
+  // 同步滚动
+  setTimeout(() => {
+    const monthlyWrapper = document.getElementById('monthlyTrack').parentElement;
+    const poolWrapper = document.getElementById('poolTrack').parentElement;
+
+    const syncScroll = (source, target) => {
+      target.scrollLeft = source.scrollLeft;
+    };
+
+    monthlyWrapper.addEventListener('scroll', () => syncScroll(monthlyWrapper, poolWrapper));
+    poolWrapper.addEventListener('scroll', () => syncScroll(poolWrapper, monthlyWrapper));
+  }, 100);
+}
+
+function dateToNum(dateStr) {
+  // 将 YYYY-MM-DD 转换为可比较的数字
+  if (!dateStr || dateStr === '-') return 0;
+  const parts = dateStr.split('-');
+  return parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
+}
+
 function renderPoolThemes() {
   const el = document.getElementById('pool-theme-list');
   for (const th of THEMES_RAW) {
@@ -4568,7 +4748,7 @@ if (_hadSaved) {
   for (const th of THEMES_RAW) updateThemeAllBtn(th.theme);
 }
 renderTargetList();
-renderTimeline();
+renderDualTimeline();
 renderPoolThemes();
 updatePoolStats();
 updateAccountDisplay();
