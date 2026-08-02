@@ -876,16 +876,15 @@
     }
 
     .timeline-track {
-      display: flex; gap: 0; min-width: max-content;
-      padding: 0; position: relative;
-      align-items: flex-start;
+      display: grid; grid-auto-flow: column; grid-auto-columns: 216px;
+      gap: 0; padding: 0; align-items: start;
     }
     .timeline-item-wrapper {
-      flex-shrink: 0; display: flex; flex-direction: column;
-      align-items: center; gap: 8px; margin-right: 0;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
     }
-    .timeline-item-wrapper:first-child {
-      margin-left: 0;
+    .timeline-item-wrapper.empty {
+      min-height: 200px;
     }
     .timeline-poster-img {
       width: 200px; aspect-ratio: 16/9;
@@ -2190,7 +2189,7 @@ const MONTHLY_PERIODS = {
   '重逢圆舞曲': '-',
   '雪山研究员': '-',
   '誓约圣骑士': '-',
-  '壁炉边伙伴': '-',
+  '壁炉边伙伴': '-', // 例外情况，不显示在时间轴
   '治愈童话书': '3.26-4.10',
   '晚安睡衣派对': '4.10-4.24',
   '嘭！炼金药剂': '4.24-5.08',
@@ -4015,14 +4014,14 @@ function renderTimeline() {
 // ════════════════════════════════════════════════════
 
 function renderDualTimeline() {
-  // 收集所有主题及其信息
   const themes = [];
   for (const th of THEMES_RAW) {
     if (th.suspended) continue;
     const monthlyPeriod = MONTHLY_PERIODS[th.theme] || '-';
-    const poolDateYMD = th.date; // 2026-07-17 format
+    // 排除壁炉边伙伴
+    if (th.theme === '壁炉边伙伴') continue;
 
-    // 将 YYYY-MM-DD 转为 M.DD 格式
+    const poolDateYMD = th.date;
     const poolDateParts = poolDateYMD.split('-');
     const poolDateMD = `${parseInt(poolDateParts[1])}.${poolDateParts[2]}`;
 
@@ -4035,103 +4034,89 @@ function renderDualTimeline() {
     });
   }
 
-  // 收集所有日期点
+  // 生成时间网格
   const dateSet = new Set();
   for (const t of themes) {
-    // 月刊开始日期
     if (t.monthlyPeriod !== '-') {
-      const startDate = t.monthlyPeriod.split('-')[0]; // 7.16
-      dateSet.add(startDate);
+      dateSet.add(t.monthlyPeriod.split('-')[0]);
     }
-    // 入池日期
     dateSet.add(t.poolDateMD);
   }
 
-  // 排序日期
   const sortedDates = Array.from(dateSet)
     .map(d => ({ str: d, num: monthDayToNum(d) }))
     .sort((a, b) => a.num - b.num);
 
-  // 构建月刊时间轴
+  const dateToCol = {};
+  sortedDates.forEach((d, idx) => {
+    dateToCol[d.str] = idx + 1;
+  });
+
+  // 月刊时间轴
   const monthlyTrack = document.getElementById('monthlyTrack');
   monthlyTrack.innerHTML = '';
+  monthlyTrack.style.gridTemplateColumns = `repeat(${sortedDates.length}, 216px)`;
 
-  const monthlyThemes = themes
-    .filter(t => t.monthlyPeriod !== '-')
-    .sort((a, b) => b.poolDateNum - a.poolDateNum);
+  for (let i = 0; i < sortedDates.length; i++) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'timeline-item-wrapper empty';
+    placeholder.style.gridColumn = i + 1;
+    monthlyTrack.appendChild(placeholder);
+  }
 
+  const monthlyThemes = themes.filter(t => t.monthlyPeriod !== '-');
   for (const t of monthlyThemes) {
     const item = document.createElement('div');
     item.className = 'timeline-item-wrapper';
-
     const img = document.createElement('img');
     img.className = 'timeline-poster-img';
     img.src = `assets/images/posters/${t.theme}.png`;
     img.alt = t.theme;
     img.loading = 'lazy';
-
     const info = document.createElement('div');
     info.className = 'timeline-info';
-    info.innerHTML = `
-      <div class="timeline-date">${t.monthlyPeriod}</div>
-      <div class="timeline-name">${t.theme}</div>
-    `;
-
+    info.innerHTML = `<div class="timeline-date">${t.monthlyPeriod}</div><div class="timeline-name">${t.theme}</div>`;
     item.appendChild(img);
     item.appendChild(info);
-
-    // 计算位置
-    const startDate = t.monthlyPeriod.split('-')[0];
-    const dateIndex = sortedDates.findIndex(d => d.str === startDate);
-    if (dateIndex >= 0) {
-      item.style.marginLeft = (dateIndex * 216) + 'px';
-    }
-
+    const col = dateToCol[t.monthlyPeriod.split('-')[0]];
+    if (col) item.style.gridColumn = col;
     monthlyTrack.appendChild(item);
   }
 
-  // 构建入池时间轴（按入池日期排序）
+  // 入池时间轴
   const poolTrack = document.getElementById('poolTrack');
   poolTrack.innerHTML = '';
+  poolTrack.style.gridTemplateColumns = `repeat(${sortedDates.length}, 216px)`;
 
-  const sortedPool = [...themes].sort((a, b) => b.poolDateNum - a.poolDateNum);
+  for (let i = 0; i < sortedDates.length; i++) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'timeline-item-wrapper empty';
+    placeholder.style.gridColumn = i + 1;
+    poolTrack.appendChild(placeholder);
+  }
 
-  for (const t of sortedPool) {
+  for (const t of themes) {
     const item = document.createElement('div');
     item.className = 'timeline-item-wrapper';
-
     const img = document.createElement('img');
     img.className = 'timeline-poster-img';
     img.src = `assets/images/posters/${t.theme}.png`;
     img.alt = t.theme;
     img.loading = 'lazy';
-    img.onerror = () => img.style.display = 'none';
-
     const info = document.createElement('div');
     info.className = 'timeline-info';
-    info.innerHTML = `
-      <div class="timeline-date">${t.poolDateMD}</div>
-      <div class="timeline-name">${t.theme}</div>
-    `;
-
+    info.innerHTML = `<div class="timeline-date">${t.poolDateMD}</div><div class="timeline-name">${t.theme}</div>`;
     item.appendChild(img);
     item.appendChild(info);
-
-    // 计算左边距（基于入池日期）
-    const dateIndex = sortedDates.findIndex(d => d.str === t.poolDateMD);
-    if (dateIndex >= 0) {
-      item.style.marginLeft = (dateIndex * 216) + 'px';
-    }
-
+    const col = dateToCol[t.poolDateMD];
+    if (col) item.style.gridColumn = col;
     poolTrack.appendChild(item);
   }
 
-  // 设置初始滚动位置和同步滚动
+  // 同步滚动
   setTimeout(() => {
-    const monthlyWrapper = document.getElementById('monthlyTrack').parentElement;
-    const poolWrapper = document.getElementById('poolTrack').parentElement;
-
-    // 同步滚动
+    const monthlyWrapper = monthlyTrack.parentElement;
+    const poolWrapper = poolTrack.parentElement;
     let syncing = false;
     monthlyWrapper.addEventListener('scroll', () => {
       if (!syncing) {
@@ -4140,7 +4125,6 @@ function renderDualTimeline() {
         setTimeout(() => { syncing = false; }, 10);
       }
     });
-
     poolWrapper.addEventListener('scroll', () => {
       if (!syncing) {
         syncing = true;
