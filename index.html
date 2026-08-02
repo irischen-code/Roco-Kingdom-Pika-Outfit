@@ -4057,13 +4057,6 @@ function renderDualTimeline() {
   monthlyTrack.innerHTML = '';
   monthlyTrack.style.gridTemplateColumns = `repeat(${sortedDates.length}, 216px)`;
 
-  for (let i = 0; i < sortedDates.length; i++) {
-    const placeholder = document.createElement('div');
-    placeholder.className = 'timeline-item-wrapper empty';
-    placeholder.style.gridColumn = i + 1;
-    monthlyTrack.appendChild(placeholder);
-  }
-
   const monthlyThemes = themes.filter(t => t.monthlyPeriod !== '-');
   for (const t of monthlyThemes) {
     const item = document.createElement('div');
@@ -4087,13 +4080,6 @@ function renderDualTimeline() {
   const poolTrack = document.getElementById('poolTrack');
   poolTrack.innerHTML = '';
   poolTrack.style.gridTemplateColumns = `repeat(${sortedDates.length}, 216px)`;
-
-  for (let i = 0; i < sortedDates.length; i++) {
-    const placeholder = document.createElement('div');
-    placeholder.className = 'timeline-item-wrapper empty';
-    placeholder.style.gridColumn = i + 1;
-    poolTrack.appendChild(placeholder);
-  }
 
   for (const t of themes) {
     const item = document.createElement('div');
