@@ -4115,9 +4115,10 @@ function renderDualTimeline() {
     item.appendChild(info);
 
     // 计算左边距（基于入池日期）
-    const [year, dateStr] = t.poolDate.split('-');
-    const [month, day] = dateStr.split('.');
-    const formattedDate = `${month}.${String(day).padStart(2, '0')}`;
+    const parts = t.poolDate.split('-');
+    const month = parseInt(parts[1]);
+    const day = parts[2];
+    const formattedDate = `${month}.${day}`;
     const dateIndex = sortedDates.findIndex(d => d.str === formattedDate);
     if (dateIndex >= 0) {
       item.style.marginLeft = (dateIndex * 216) + 'px';
@@ -4153,9 +4154,10 @@ function renderDualTimeline() {
 
 function formatPoolDate(dateStr) {
   // 将 YYYY-MM-DD 格式转为 M.DD
-  const [year, date] = dateStr.split('-');
-  const [month, day] = date.split('.');
-  return `${month}.${String(day).padStart(2, '0')}`;
+  const parts = dateStr.split('-');
+  const month = parseInt(parts[1]);
+  const day = parts[2];
+  return `${month}.${day}`;
 }
 
 function dateToNum(dateStr) {
