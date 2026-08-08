@@ -1107,59 +1107,59 @@
       text-align: center;
       flex: 1;
     }
+    .calendar-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .calendar-week {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     .calendar-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: 12px;
+      text-align: center;
+      margin-bottom: 0;
     }
     .calendar-weekday {
-      text-align: center;
       font-size: 12px;
       font-weight: 700;
       color: var(--text-muted);
-      padding: 6px 0;
+      padding: 0;
     }
-    .calendar-dates-grid {
+    .calendar-dates-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 12px;
+      text-align: center;
+      align-items: center;
     }
     .calendar-date {
-      aspect-ratio: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #F3EADC;
+      font-size: 14px;
+      font-weight: 700;
       color: #313131;
-      border: 1px solid transparent;
-      transition: all 0.2s;
-    }
-    .calendar-date:hover {
-      background: #E3DAC8;
-      border-color: #313131;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: default;
     }
     .calendar-date.empty {
-      background: transparent;
-      cursor: default;
-      color: transparent;
+      color: #ddd;
     }
-    .calendar-date.empty:hover {
-      background: transparent;
-      border-color: transparent;
-    }
-    .calendar-events-grid {
+    .calendar-events-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
+      gap: 12px;
+      align-items: stretch;
+      min-height: 36px;
     }
     .calendar-event-block {
-      height: 32px;
-      border-radius: 6px;
+      grid-column: span 1;
+      height: 36px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       padding: 0 8px;
@@ -1168,20 +1168,29 @@
       color: #313131;
       cursor: pointer;
       transition: all 0.2s;
-      opacity: 0.7;
+      opacity: 0.75;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .calendar-event-block:hover {
       opacity: 1;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
+    .calendar-event-block.full-width {
+      grid-column: span 7;
+    }
     .calendar-event-block.purple {
-      background: rgba(154, 115, 249, 0.3);
+      background: rgba(154, 115, 249, 0.35);
+      border: 1px solid rgba(154, 115, 249, 0.5);
     }
     .calendar-event-block.gold {
-      background: rgba(240, 170, 94, 0.3);
+      background: rgba(240, 170, 94, 0.35);
+      border: 1px solid rgba(240, 170, 94, 0.5);
     }
     .calendar-event-block.other {
-      background: rgba(120, 120, 120, 0.2);
+      background: rgba(120, 120, 120, 0.25);
+      border: 1px solid rgba(120, 120, 120, 0.4);
     }
     .calendar-right {
       display: flex;
@@ -6134,68 +6143,131 @@ function renderMonthlyCalendar() {
 
   document.getElementById('calendar-month-title').textContent = monthNames[calendarState.currentMonth];
 
-  const weekdaysContainer = document.getElementById('calendar-weekdays');
-  const datesContainer = document.getElementById('calendar-dates-grid');
-  const eventsContainer = document.getElementById('calendar-events-grid');
-
-  weekdaysContainer.innerHTML = '';
-  datesContainer.innerHTML = '';
-  eventsContainer.innerHTML = '';
-
-  // 添加周名
-  for (const day of weekdayNames) {
-    const dayEl = document.createElement('div');
-    dayEl.className = 'calendar-weekday';
-    dayEl.textContent = day;
-    weekdaysContainer.appendChild(dayEl);
-  }
+  const timelineContainer = document.getElementById('calendar-timeline');
+  timelineContainer.innerHTML = '';
 
   // 获取该月的第一天
   const firstDay = new Date(calendarState.currentYear, calendarState.currentMonth, 1);
   const startDate = new Date(firstDay);
-  // 调整到当周的周一（getDay: 0=周日, 1=周一, ..., 6=周六）
-  const daysToSubtract = (firstDay.getDay() + 6) % 7; // 周日 -> 6, 周一 -> 0, ..., 周六 -> 5
+  const daysToSubtract = (firstDay.getDay() + 6) % 7;
   startDate.setDate(startDate.getDate() - daysToSubtract);
 
-  // 生成日期网格
+  // 生成5周的日期
   let currentDate = new Date(startDate);
   const datesShown = [];
+  const weekGroups = [];
 
-  for (let i = 0; i < 35; i++) {
-    const dateStr = currentDate.toISOString().split('T')[0];
-    datesShown.push(dateStr);
-
-    if (currentDate.getMonth() === calendarState.currentMonth) {
-      const dateEl = document.createElement('div');
-      dateEl.className = 'calendar-date';
-      dateEl.textContent = currentDate.getDate();
-      dateEl.dataset.date = dateStr;
-      datesContainer.appendChild(dateEl);
-    } else {
-      const emptyEl = document.createElement('div');
-      emptyEl.className = 'calendar-date empty';
-      datesContainer.appendChild(emptyEl);
+  for (let week = 0; week < 5; week++) {
+    const weekDates = [];
+    for (let day = 0; day < 7; day++) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      datesShown.push(dateStr);
+      weekDates.push({
+        date: new Date(currentDate),
+        dateStr,
+        isCurrentMonth: currentDate.getMonth() === calendarState.currentMonth,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    currentDate.setDate(currentDate.getDate() + 1);
+    weekGroups.push(weekDates);
   }
 
   // 生成事件块
   const eventBlocks = generateEventBlocks(datesShown);
 
-  for (const block of eventBlocks) {
-    const blockEl = document.createElement('div');
-    blockEl.className = `calendar-event-block ${block.rarity}`;
-    blockEl.textContent = block.theme;
-    blockEl.style.gridColumnStart = block.startCol;
-    blockEl.style.gridColumnEnd = block.endCol + 1; // grid-column-end is exclusive
-    blockEl.onclick = () => selectThemeFromCalendar(block.theme);
-    eventsContainer.appendChild(blockEl);
+  // 为每一周生成行
+  for (let week = 0; week < weekGroups.length; week++) {
+    const weekEl = document.createElement('div');
+    weekEl.className = 'calendar-week';
+
+    // 如果是第一周，显示周名
+    if (week === 0) {
+      const weekdaysRow = document.createElement('div');
+      weekdaysRow.className = 'calendar-weekdays';
+      for (const day of weekdayNames) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-weekday';
+        dayEl.textContent = day;
+        weekdaysRow.appendChild(dayEl);
+      }
+      weekEl.appendChild(weekdaysRow);
+    }
+
+    // 添加日期行
+    const datesRow = document.createElement('div');
+    datesRow.className = 'calendar-dates-row';
+    for (const dayInfo of weekGroups[week]) {
+      const dateEl = document.createElement('div');
+      dateEl.className = dayInfo.isCurrentMonth ? 'calendar-date' : 'calendar-date empty';
+      dateEl.textContent = dayInfo.isCurrentMonth ? dayInfo.date.getDate() : '';
+      datesRow.appendChild(dateEl);
+    }
+    weekEl.appendChild(datesRow);
+
+    // 添加事件行
+    const eventsRow = document.createElement('div');
+    eventsRow.className = 'calendar-events-row';
+
+    // 找出这一周的事件块
+    const weekStart = week * 7;
+    const weekEnd = weekStart + 7;
+    const weekEventBlocks = eventBlocks.filter(block => {
+      const blockStart = block.startIdx;
+      const blockEnd = block.endIdx + 1;
+      return blockStart < weekEnd && blockEnd > weekStart;
+    });
+
+    // 创建列映射
+    const columnMap = new Map();
+    for (const block of weekEventBlocks) {
+      const blockStart = Math.max(block.startIdx, weekStart);
+      const blockEnd = Math.min(block.endIdx + 1, weekEnd);
+      const col = blockStart - weekStart;
+      const span = blockEnd - blockStart;
+
+      if (!columnMap.has(col)) {
+        columnMap.set(col, []);
+      }
+      columnMap.get(col).push({
+        theme: block.theme,
+        rarity: block.rarity,
+        span,
+        isFullWidth: span === 7,
+      });
+    }
+
+    // 如果没有事件，添加空占位符
+    if (weekEventBlocks.length === 0) {
+      const emptyEl = document.createElement('div');
+      emptyEl.style.height = '0';
+      eventsRow.appendChild(emptyEl);
+    } else {
+      // 为每一列添加事件块
+      for (let col = 0; col < 7; col++) {
+        if (columnMap.has(col)) {
+          const events = columnMap.get(col);
+          for (const event of events) {
+            const blockEl = document.createElement('div');
+            blockEl.className = `calendar-event-block ${event.rarity}`;
+            blockEl.textContent = event.isFullWidth ? event.theme : '';
+            blockEl.style.gridColumn = `${col + 1} / span ${event.span}`;
+            if (event.isFullWidth) {
+              blockEl.classList.add('full-width');
+            }
+            blockEl.onclick = () => selectThemeFromCalendar(event.theme);
+            eventsRow.appendChild(blockEl);
+          }
+        }
+      }
+    }
+
+    weekEl.appendChild(eventsRow);
+    timelineContainer.appendChild(weekEl);
   }
 }
 
 function generateEventBlocks(datesShown) {
   const blocks = [];
-  const dateStringSet = new Set(datesShown);
 
   for (const themeData of THEMES_RAW) {
     const period = MONTHLY_PERIODS[themeData.theme];
@@ -6225,14 +6297,14 @@ function generateEventBlocks(datesShown) {
       }
     }
 
-    // 如果找到了该主题在当前月份中的日期
+    // 如果找到了该主题在当前日期范围中的日期
     if (firstIdx !== -1 && lastIdx !== -1) {
       const rarity = themeData.suits[0]?.rarity || 'gold';
       blocks.push({
         theme: themeData.theme,
         rarity,
-        startCol: firstIdx + 1, // grid-column-start 从 1 开始
-        endCol: lastIdx + 1,
+        startIdx: firstIdx,
+        endIdx: lastIdx,
       });
     }
   }
@@ -6311,9 +6383,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="calendar-month-title" id="calendar-month-title">8月</div>
           <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
         </div>
-        <div class="calendar-weekdays" id="calendar-weekdays"></div>
-        <div class="calendar-dates-grid" id="calendar-dates-grid"></div>
-        <div class="calendar-events-grid" id="calendar-events-grid"></div>
+        <div class="calendar-timeline" id="calendar-timeline"></div>
       </div>
       <!-- 右侧：主题详情 -->
       <div class="calendar-right">
