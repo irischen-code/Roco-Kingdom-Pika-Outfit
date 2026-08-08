@@ -1083,22 +1083,22 @@
       gap: 12px;
     }
     .calendar-nav-btn {
-      background: none;
-      border: 2px solid #313131;
+      background: #313131;
+      border: none;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #313131;
+      color: #FBF7EE;
       font-weight: 700;
       transition: all 0.2s;
     }
     .calendar-nav-btn:hover {
-      background: rgba(0, 0, 0, 0.08);
+      background: #555;
     }
     .calendar-month-title {
       font-size: 18px;
@@ -1110,19 +1110,19 @@
     .calendar-timeline {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
     }
     .calendar-week {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 0;
     }
     .calendar-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 12px;
+      gap: 0;
       text-align: center;
-      margin-bottom: 0;
+      margin-bottom: 8px;
     }
     .calendar-weekday {
       font-size: 12px;
@@ -1133,9 +1133,10 @@
     .calendar-dates-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 12px;
+      gap: 0;
       text-align: center;
       align-items: center;
+      margin-bottom: 8px;
     }
     .calendar-date {
       font-size: 14px;
@@ -1152,41 +1153,38 @@
     .calendar-events-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 12px;
-      align-items: stretch;
-      min-height: 36px;
+      gap: 0;
+      align-items: center;
+      min-height: 44px;
     }
     .calendar-event-block {
       grid-column: span 1;
-      height: 36px;
+      height: 40px;
       border-radius: 8px;
       display: flex;
       align-items: center;
-      padding: 0 8px;
-      font-size: 12px;
+      padding: 0 10px;
+      font-size: 13px;
       font-weight: 600;
-      color: #313131;
+      color: #FBF7EE;
       cursor: pointer;
       transition: all 0.2s;
-      opacity: 0.75;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      border: none;
     }
     .calendar-event-block:hover {
-      opacity: 1;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
     .calendar-event-block.full-width {
       grid-column: span 7;
     }
     .calendar-event-block.purple {
-      background: rgba(154, 115, 249, 0.35);
-      border: 1px solid rgba(154, 115, 249, 0.5);
+      background: rgba(96, 55, 173, 0.75);
     }
     .calendar-event-block.gold {
-      background: rgba(240, 170, 94, 0.35);
-      border: 1px solid rgba(240, 170, 94, 0.5);
+      background: rgba(236, 121, 0, 0.75);
     }
     .calendar-event-block.other {
       background: rgba(120, 120, 120, 0.25);
@@ -6217,47 +6215,24 @@ function renderMonthlyCalendar() {
       return blockStart < weekEnd && blockEnd > weekStart;
     });
 
-    // 创建列映射
-    const columnMap = new Map();
-    for (const block of weekEventBlocks) {
-      const blockStart = Math.max(block.startIdx, weekStart);
-      const blockEnd = Math.min(block.endIdx + 1, weekEnd);
-      const col = blockStart - weekStart;
-      const span = blockEnd - blockStart;
+    // 直接添加所有事件块到同一行
+    if (weekEventBlocks.length > 0) {
+      for (const block of weekEventBlocks) {
+        const blockStart = Math.max(block.startIdx, weekStart);
+        const blockEnd = Math.min(block.endIdx + 1, weekEnd);
+        const col = blockStart - weekStart + 1; // grid-column 从 1 开始
+        const span = blockEnd - blockStart;
+        const isFullWidth = span === 7;
 
-      if (!columnMap.has(col)) {
-        columnMap.set(col, []);
-      }
-      columnMap.get(col).push({
-        theme: block.theme,
-        rarity: block.rarity,
-        span,
-        isFullWidth: span === 7,
-      });
-    }
-
-    // 如果没有事件，添加空占位符
-    if (weekEventBlocks.length === 0) {
-      const emptyEl = document.createElement('div');
-      emptyEl.style.height = '0';
-      eventsRow.appendChild(emptyEl);
-    } else {
-      // 为每一列添加事件块
-      for (let col = 0; col < 7; col++) {
-        if (columnMap.has(col)) {
-          const events = columnMap.get(col);
-          for (const event of events) {
-            const blockEl = document.createElement('div');
-            blockEl.className = `calendar-event-block ${event.rarity}`;
-            blockEl.textContent = event.isFullWidth ? event.theme : '';
-            blockEl.style.gridColumn = `${col + 1} / span ${event.span}`;
-            if (event.isFullWidth) {
-              blockEl.classList.add('full-width');
-            }
-            blockEl.onclick = () => selectThemeFromCalendar(event.theme);
-            eventsRow.appendChild(blockEl);
-          }
+        const blockEl = document.createElement('div');
+        blockEl.className = `calendar-event-block ${block.rarity}`;
+        blockEl.textContent = isFullWidth ? block.theme : '';
+        blockEl.style.gridColumn = `${col} / span ${span}`;
+        if (isFullWidth) {
+          blockEl.classList.add('full-width');
         }
+        blockEl.onclick = () => selectThemeFromCalendar(block.theme);
+        eventsRow.appendChild(blockEl);
       }
     }
 
