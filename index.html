@@ -1536,13 +1536,20 @@
       padding: 1px 7px; border-radius: 10px;
     }
     .cl-items { display: flex; flex-direction: column; gap: 5px; }
+    /* 正文用系统字体：洛克官方字体是装饰性字体，长段落阅读吃力。
+       必须连子元素一起覆盖——正文实际在 .cl-item > span 里，而全局的
+       `*` 通配规则直接命中了该 span，会盖过从 .cl-item 继承下来的字体。 */
+    .cl-item, .cl-item * {
+      font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
     .cl-item {
       font-size: 12.5px; color: #313131; line-height: 1.75;
       display: flex; gap: 7px;
-      font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
       font-weight: 300;
       letter-spacing: 0.015em;
     }
+    /* 系统字体下 700 偏重，正文加粗降一档更协调 */
+    .cl-item strong { font-weight: 600; }
     .cl-item::before {
       content: '·';
       color: #FBC839; font-weight: 700; font-size: 16px;
