@@ -1243,6 +1243,11 @@
       background: rgba(120, 120, 120, 0.25);
       border: 1px solid rgba(120, 120, 120, 0.4);
     }
+    /* 选中态：不透明。z-index 抬高，避免被相邻色条的半透明部分盖住换档日 */
+    .calendar-event-block.selected { z-index: 1; }
+    .calendar-event-block.selected.purple { background: #6037AD; }
+    .calendar-event-block.selected.gold   { background: #EC7900; }
+    .calendar-event-block.selected.other  { background: #787878; }
     .calendar-right {
       display: flex;
       flex-direction: column;
@@ -6153,15 +6158,18 @@ function openMonthlyCalendar() {
     const now = new Date();
     calendarState.currentMonth = now.getMonth();
     calendarState.currentYear = now.getFullYear();
+    // 默认选中「今天正在上架」的那一期，保证打开时高亮块就在当前月内可见
+    const today = now.getFullYear() + '-'
+      + String(now.getMonth() + 1).padStart(2, '0') + '-'
+      + String(now.getDate()).padStart(2, '0');
+    const bars = getMonthlyBars(now.getFullYear());
+    const current = bars.find(b => today >= b.start && today <= b.end)
+      || [...bars].reverse().find(b => b.start <= today)   // 空档期取最近一期
+      || bars[0];
+
+    calendarState.selectedTheme = current ? current.theme : null;
     renderMonthlyCalendar();
-    // 设置初始主题为当前月份有效的第一个主题
-    for (const themeData of THEMES_RAW) {
-      const period = MONTHLY_PERIODS[themeData.theme];
-      if (period && period !== '-') {
-        selectThemeFromCalendar(themeData.theme);
-        break;
-      }
-    }
+    if (current) selectThemeFromCalendar(current.theme);
   }
 }
 
@@ -6286,11 +6294,15 @@ function renderMonthlyCalendar() {
 
         const blockEl = document.createElement('div');
         blockEl.className = `calendar-event-block ${block.rarity}`;
+        blockEl.dataset.theme = block.theme;
         blockEl.textContent = isFullWidth ? block.theme : '';
         blockEl.style.gridColumn = `${col} / span ${span}`;
         blockEl.style.gridRow = '1';   // 全部压在同一行 → 交接日两块自然重叠、透明度叠加变深
         if (isFullWidth) {
           blockEl.classList.add('full-width');
+        }
+        if (block.theme === calendarState.selectedTheme) {
+          blockEl.classList.add('selected');   // 切月后仍保持选中高亮
         }
         blockEl.onclick = () => selectThemeFromCalendar(block.theme);
         eventsRow.appendChild(blockEl);
@@ -6374,7 +6386,6 @@ function generateEventBlocks(datesShown) {
 
 function selectThemeFromCalendar(themeName) {
   calendarState.selectedTheme = themeName;
-  const themeData = THEMES_RAW.find(t => t.theme === themeName);
   const period = MONTHLY_PERIODS[themeName] || '-';
 
   document.getElementById('calendar-theme-title').textContent = `${period} ${themeName}`;
@@ -6382,6 +6393,11 @@ function selectThemeFromCalendar(themeName) {
   // 生成海报路径
   const posterPath = `assets/images/posters/${themeName}.png`;
   document.getElementById('calendar-theme-poster').src = posterPath;
+
+  // 选中的色条变为 100% 不透明（跨周的同名色条一起高亮）
+  document.querySelectorAll('#calendar-timeline .calendar-event-block').forEach(el => {
+    el.classList.toggle('selected', el.dataset.theme === themeName);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
