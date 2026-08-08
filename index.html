@@ -1059,10 +1059,10 @@
       border-radius: 16px;
       border: 2px solid #313131;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      max-width: 700px;
-      width: 90%;
-      max-height: 70vh;
-      overflow-y: auto;
+      max-width: 900px;
+      width: 92%;
+      max-height: 92vh;
+      overflow: hidden;
       z-index: 1001;
       padding: 0;
       display: flex;
@@ -1073,7 +1073,7 @@
       top: 0;
       background: #FBF7EE;
       border-bottom: 2px solid #313131;
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
       z-index: 1002;
@@ -1096,15 +1096,16 @@
     .monthly-calendar-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      padding: 20px;
+      gap: 20px;
+      padding: 16px 20px 20px;
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
     }
     .calendar-left {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
     .calendar-header {
       display: flex;
@@ -1116,16 +1117,25 @@
       background: #313131;
       border: none;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      padding: 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #FBF7EE;
-      font-weight: 700;
-      transition: all 0.2s;
+      transition: background 0.2s;
+    }
+    .calendar-nav-btn svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      stroke: #FBF7EE;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
     .calendar-nav-btn:hover {
       background: #555;
@@ -1140,7 +1150,7 @@
     .calendar-timeline {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 10px;
     }
     .calendar-week {
       display: flex;
@@ -1152,7 +1162,7 @@
       grid-template-columns: repeat(7, 1fr);
       gap: 0;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .calendar-weekday {
       font-size: 12px;
@@ -1166,7 +1176,7 @@
       gap: 0;
       text-align: center;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .calendar-date {
       font-size: 14px;
@@ -1178,18 +1188,18 @@
       cursor: default;
     }
     .calendar-date.empty {
-      color: #ddd;
+      color: rgba(49, 49, 49, 0.28);
     }
     .calendar-events-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: 40px;
+      grid-template-rows: 34px;
       gap: 0;
       align-items: stretch;
     }
     .calendar-event-block {
       grid-column: span 1;
-      height: 40px;
+      height: 34px;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -6180,12 +6190,13 @@ function renderMonthlyCalendar() {
   const daysToSubtract = (firstDay.getDay() + 6) % 7;
   startDate.setDate(startDate.getDate() - daysToSubtract);
 
-  // 生成5周的日期
+  // 生成日期：先铺满 6 周，再裁掉完全不含本月日期的尾部周
+  // （5 周不够：如 2026 年 8 月 1 日是周日，需要 6 周才能放下 30、31 号）
   let currentDate = new Date(startDate);
   const datesShown = [];
   const weekGroups = [];
 
-  for (let week = 0; week < 5; week++) {
+  for (let week = 0; week < 6; week++) {
     const weekDates = [];
     for (let day = 0; day < 7; day++) {
       const dateStr = currentDate.toISOString().split('T')[0];
@@ -6198,6 +6209,12 @@ function renderMonthlyCalendar() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     weekGroups.push(weekDates);
+  }
+
+  // 裁掉完全不含本月日期的尾部周（多数月份只需 5 周）
+  while (weekGroups.length > 1 && !weekGroups[weekGroups.length - 1].some(d => d.isCurrentMonth)) {
+    weekGroups.pop();
+    datesShown.length = weekGroups.length * 7;
   }
 
   // 生成事件块
@@ -6227,7 +6244,7 @@ function renderMonthlyCalendar() {
     for (const dayInfo of weekGroups[week]) {
       const dateEl = document.createElement('div');
       dateEl.className = dayInfo.isCurrentMonth ? 'calendar-date' : 'calendar-date empty';
-      dateEl.textContent = dayInfo.isCurrentMonth ? dayInfo.date.getDate() : '';
+      dateEl.textContent = dayInfo.date.getDate();   // 非本月日期也显示，只是颜色淡
       datesRow.appendChild(dateEl);
     }
     weekEl.appendChild(datesRow);
@@ -6272,43 +6289,67 @@ function renderMonthlyCalendar() {
   }
 }
 
-function generateEventBlocks(datesShown) {
-  const blocks = [];
-
+// 把 MONTHLY_PERIODS 展开成排好序的 [{theme, rarity, start, end}]（YYYY-MM-DD 字符串）
+function getMonthlyBars(year) {
+  const bars = [];
   for (const themeData of THEMES_RAW) {
     const period = MONTHLY_PERIODS[themeData.theme];
-    if (period === '-') continue;
+    if (!period || period === '-') continue;
 
     const [startStr, endStr] = period.split('-');
     const [startMonth, startDay] = startStr.split('.').map(Number);
     const [endMonth, endDay] = endStr.split('.').map(Number);
+    const pad = n => String(n).padStart(2, '0');
 
-    // 计算该主题的时间范围
-    const year = calendarState.currentYear;
-    const startDateStr = `${year}-${String(startMonth).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
-    let endDateStr;
-    if (startMonth > endMonth) {
-      endDateStr = `${year + 1}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
-    } else {
-      endDateStr = `${year}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+    const start = `${year}-${pad(startMonth)}-${pad(startDay)}`;
+    // 跨年周期（如 12.20-1.05）结束日落在下一年
+    const end = startMonth > endMonth
+      ? `${year + 1}-${pad(endMonth)}-${pad(endDay)}`
+      : `${year}-${pad(endMonth)}-${pad(endDay)}`;
+
+    bars.push({
+      theme: themeData.theme,
+      rarity: themeData.suits[0]?.rarity || 'gold',
+      start,
+      end,
+    });
+  }
+
+  bars.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+
+  // 换档日必须重叠：上一期的色条延伸到下一期开始那天。
+  // 绝大多数周期本就共用换档日（如 7.03、7.16），但个别数据差一天
+  // （秘密潜入计划 7.30 → 年轮诗社 7.31），这里统一补上。
+  for (let i = 0; i < bars.length - 1; i++) {
+    const nextStart = bars[i + 1].start;
+    if (nextStart <= bars[i].end) continue;          // 已经重叠
+    const dayAfterEnd = new Date(bars[i].end + 'T00:00:00Z');
+    dayAfterEnd.setUTCDate(dayAfterEnd.getUTCDate() + 1);
+    if (nextStart === dayAfterEnd.toISOString().split('T')[0]) {
+      bars[i].end = nextStart;                       // 仅在紧邻一天时延伸，真空档不动
     }
+  }
 
-    // 找出该主题在 datesShown 中的开始和结束索引
+  return bars;
+}
+
+function generateEventBlocks(datesShown) {
+  const blocks = [];
+
+  for (const bar of getMonthlyBars(calendarState.currentYear)) {
+    // 找出该周期落在当前日历网格中的首尾索引
     let firstIdx = -1, lastIdx = -1;
-
     for (let i = 0; i < datesShown.length; i++) {
-      if (datesShown[i] >= startDateStr && datesShown[i] <= endDateStr) {
+      if (datesShown[i] >= bar.start && datesShown[i] <= bar.end) {
         if (firstIdx === -1) firstIdx = i;
         lastIdx = i;
       }
     }
 
-    // 如果找到了该主题在当前日期范围中的日期
-    if (firstIdx !== -1 && lastIdx !== -1) {
-      const rarity = themeData.suits[0]?.rarity || 'gold';
+    if (firstIdx !== -1) {
       blocks.push({
-        theme: themeData.theme,
-        rarity,
+        theme: bar.theme,
+        rarity: bar.rarity,
         startIdx: firstIdx,
         endIdx: lastIdx,
       });
@@ -6388,9 +6429,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- 左侧：日历 -->
       <div class="calendar-left">
         <div class="calendar-header">
-          <button class="calendar-nav-btn" onclick="prevMonth()">‹</button>
+          <button class="calendar-nav-btn" onclick="prevMonth()" aria-label="上一月"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button>
           <div class="calendar-month-title" id="calendar-month-title">8月</div>
-          <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
+          <button class="calendar-nav-btn" onclick="nextMonth()" aria-label="下一月"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button>
         </div>
         <div class="calendar-timeline" id="calendar-timeline"></div>
       </div>
