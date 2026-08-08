@@ -1076,17 +1076,21 @@
       padding: 16px 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       z-index: 1002;
       flex-shrink: 0;
     }
+    .calendar-modal-header .modal-close {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
     .calendar-modal-header h3 {
       margin: 0;
+      width: 100%;
       font-size: 16px;
       font-weight: 700;
       color: #313131;
-      flex: 1;
       text-align: center;
     }
     .monthly-calendar-container {
@@ -1179,10 +1183,9 @@
     .calendar-events-row {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: 40px;
       gap: 0;
-      align-items: start;
-      min-height: 0;
-      row-gap: 8px;
+      align-items: stretch;
     }
     .calendar-event-block {
       grid-column: span 1;
@@ -6255,6 +6258,7 @@ function renderMonthlyCalendar() {
         blockEl.className = `calendar-event-block ${block.rarity}`;
         blockEl.textContent = isFullWidth ? block.theme : '';
         blockEl.style.gridColumn = `${col} / span ${span}`;
+        blockEl.style.gridRow = '1';   // 全部压在同一行 → 交接日两块自然重叠、透明度叠加变深
         if (isFullWidth) {
           blockEl.classList.add('full-width');
         }
