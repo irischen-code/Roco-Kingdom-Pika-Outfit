@@ -2257,6 +2257,7 @@ function switchView(view) {
   document.getElementById('view-pool').classList.toggle('hidden', view !== 'pool');
   document.getElementById('view-wardrobe').classList.toggle('hidden', view !== 'wardrobe');
   if (view === 'wardrobe') renderWardrobePageStats();
+  if (view === 'pool') renderDualTimeline();
   document.querySelectorAll('.nav-tab, .bnav-item').forEach(t => {
     t.classList.toggle('active', t.dataset.view === view);
   });
