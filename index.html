@@ -6207,20 +6207,19 @@ function generateEventBlocks(datesShown) {
 
     // 计算该主题的时间范围
     const year = calendarState.currentYear;
-    let startDate = new Date(year, startMonth - 1, startDay);
-    let endDate = new Date(year, endMonth - 1, endDay);
-
-    // 处理跨年情况（仅当 startMonth > endMonth 时）
+    const startDateStr = `${year}-${String(startMonth).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+    let endDateStr;
     if (startMonth > endMonth) {
-      endDate = new Date(year + 1, endMonth - 1, endDay);
+      endDateStr = `${year + 1}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+    } else {
+      endDateStr = `${year}-${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
     }
 
     // 找出该主题在 datesShown 中的开始和结束索引
     let firstIdx = -1, lastIdx = -1;
 
     for (let i = 0; i < datesShown.length; i++) {
-      const date = new Date(datesShown[i] + 'T00:00:00Z');
-      if (date >= startDate && date <= endDate) {
+      if (datesShown[i] >= startDateStr && datesShown[i] <= endDateStr) {
         if (firstIdx === -1) firstIdx = i;
         lastIdx = i;
       }
