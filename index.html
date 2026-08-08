@@ -1052,6 +1052,153 @@
       line-height: 1.5;
     }
 
+    /* ── Monthly Calendar Modal ── */
+    .monthly-calendar-modal {
+      position: relative;
+      background: #FBF7EE;
+      border-radius: 16px;
+      border: 2px solid #313131;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      max-width: 700px;
+      width: 90%;
+      max-height: 70vh;
+      overflow-y: auto;
+      z-index: 1001;
+      padding: 20px;
+    }
+    .monthly-calendar-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .calendar-left {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .calendar-nav-btn {
+      background: none;
+      border: 2px solid #313131;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #313131;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .calendar-nav-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+    .calendar-month-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #313131;
+      text-align: center;
+      flex: 1;
+    }
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .calendar-weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 6px 0;
+    }
+    .calendar-dates-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .calendar-date {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #F3EADC;
+      color: #313131;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .calendar-date:hover {
+      background: #E3DAC8;
+      border-color: #313131;
+    }
+    .calendar-date.empty {
+      background: transparent;
+      cursor: default;
+      color: transparent;
+    }
+    .calendar-date.empty:hover {
+      background: transparent;
+      border-color: transparent;
+    }
+    .calendar-events-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .calendar-event-block {
+      grid-column: span 7;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #313131;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.7;
+    }
+    .calendar-event-block:hover {
+      opacity: 1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .calendar-event-block.purple {
+      background: rgba(154, 115, 249, 0.3);
+    }
+    .calendar-event-block.gold {
+      background: rgba(240, 170, 94, 0.3);
+    }
+    .calendar-event-block.other {
+      background: rgba(120, 120, 120, 0.2);
+    }
+    .calendar-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .monthly-calendar-modal {
+        max-width: 90%;
+      }
+      .monthly-calendar-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
     /* ── Pool overview page ── */
     #view-pool { background: #FBC839; min-height: calc(100vh - 56px); }
     .pool-view { padding: 20px; max-width: 960px; margin: 0 auto; background: transparent; }
@@ -2142,7 +2289,7 @@
   <div class="pool-view">
 
     <div class="card">
-      <div class="card-title"><img src="assets/icon/card.png" alt="">皮卡月刊 / 随机商店时间轴 <button class="timeline-info-btn" onclick="openTimelineInfo()">ⓘ</button></div>
+      <div class="card-title"><img src="assets/icon/card.png" alt="">皮卡月刊 / 随机商店时间轴 <button class="timeline-info-btn" onclick="openTimelineInfo()">ⓘ</button><button class="timeline-info-btn" onclick="openMonthlyCalendar()" style="margin-left: 4px;">📅</button></div>
 
       <!-- 共享滚动容器 -->
       <div class="timeline-unified-scroll-wrapper">
@@ -5932,11 +6079,191 @@ function closeTimelineInfo() {
   if (modal) modal.style.display = 'none';
 }
 
+// 月刊日历弹窗状态
+let calendarState = {
+  currentMonth: new Date().getMonth(),
+  currentYear: new Date().getFullYear(),
+  selectedTheme: null,
+};
+
+function openMonthlyCalendar() {
+  const modal = document.getElementById('monthly-calendar-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    // 重置为当前月份
+    const now = new Date();
+    calendarState.currentMonth = now.getMonth();
+    calendarState.currentYear = now.getFullYear();
+    renderMonthlyCalendar();
+    // 设置初始主题为当前月份有效的第一个主题
+    for (const themeData of THEMES_RAW) {
+      const period = MONTHLY_PERIODS[themeData.theme];
+      if (period && period !== '-') {
+        selectThemeFromCalendar(themeData.theme);
+        break;
+      }
+    }
+  }
+}
+
+function closeMonthlyCalendar() {
+  const modal = document.getElementById('monthly-calendar-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function prevMonth() {
+  calendarState.currentMonth--;
+  if (calendarState.currentMonth < 0) {
+    calendarState.currentMonth = 11;
+    calendarState.currentYear--;
+  }
+  renderMonthlyCalendar();
+}
+
+function nextMonth() {
+  calendarState.currentMonth++;
+  if (calendarState.currentMonth > 11) {
+    calendarState.currentMonth = 0;
+    calendarState.currentYear++;
+  }
+  renderMonthlyCalendar();
+}
+
+function renderMonthlyCalendar() {
+  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+  const weekdayNames = ['一', '二', '三', '四', '五', '六', '日'];
+
+  document.getElementById('calendar-month-title').textContent = monthNames[calendarState.currentMonth];
+
+  const weekdaysContainer = document.getElementById('calendar-weekdays');
+  const datesContainer = document.getElementById('calendar-dates-grid');
+  const eventsContainer = document.getElementById('calendar-events-grid');
+
+  weekdaysContainer.innerHTML = '';
+  datesContainer.innerHTML = '';
+  eventsContainer.innerHTML = '';
+
+  // 添加周名
+  for (const day of weekdayNames) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-weekday';
+    dayEl.textContent = day;
+    weekdaysContainer.appendChild(dayEl);
+  }
+
+  // 获取该月的第一天
+  const firstDay = new Date(calendarState.currentYear, calendarState.currentMonth, 1);
+  const startDate = new Date(firstDay);
+  // 调整到当周的周一（getDay: 0=周日, 1=周一, ..., 6=周六）
+  const daysToSubtract = (firstDay.getDay() + 6) % 7; // 周日 -> 6, 周一 -> 0, ..., 周六 -> 5
+  startDate.setDate(startDate.getDate() - daysToSubtract);
+
+  // 生成日期网格
+  let currentDate = new Date(startDate);
+  const datesShown = [];
+
+  for (let i = 0; i < 35; i++) {
+    const dateStr = currentDate.toISOString().split('T')[0];
+    datesShown.push(dateStr);
+
+    if (currentDate.getMonth() === calendarState.currentMonth) {
+      const dateEl = document.createElement('div');
+      dateEl.className = 'calendar-date';
+      dateEl.textContent = currentDate.getDate();
+      dateEl.dataset.date = dateStr;
+      datesContainer.appendChild(dateEl);
+    } else {
+      const emptyEl = document.createElement('div');
+      emptyEl.className = 'calendar-date empty';
+      datesContainer.appendChild(emptyEl);
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // 生成事件块
+  const eventBlocks = generateEventBlocks(datesShown);
+
+  for (const block of eventBlocks) {
+    const blockEl = document.createElement('div');
+    blockEl.className = `calendar-event-block ${block.rarity}`;
+    blockEl.textContent = block.theme;
+    blockEl.style.gridColumnStart = block.startCol;
+    blockEl.style.gridColumnEnd = block.endCol + 1; // grid-column-end is exclusive
+    blockEl.onclick = () => selectThemeFromCalendar(block.theme);
+    eventsContainer.appendChild(blockEl);
+  }
+}
+
+function generateEventBlocks(datesShown) {
+  const blocks = [];
+  const dateStringSet = new Set(datesShown);
+
+  for (const themeData of THEMES_RAW) {
+    const period = MONTHLY_PERIODS[themeData.theme];
+    if (period === '-') continue;
+
+    const [startStr, endStr] = period.split('-');
+    const [startMonth, startDay] = startStr.split('.').map(Number);
+    const [endMonth, endDay] = endStr.split('.').map(Number);
+
+    // 计算该主题的时间范围
+    const year = calendarState.currentYear;
+    let startDate = new Date(year, startMonth - 1, startDay);
+    let endDate = new Date(year, endMonth - 1, endDay);
+
+    // 处理跨年情况（仅当 startMonth > endMonth 时）
+    if (startMonth > endMonth) {
+      endDate = new Date(year + 1, endMonth - 1, endDay);
+    }
+
+    // 找出该主题在 datesShown 中的开始和结束索引
+    let firstIdx = -1, lastIdx = -1;
+
+    for (let i = 0; i < datesShown.length; i++) {
+      const date = new Date(datesShown[i] + 'T00:00:00Z');
+      if (date >= startDate && date <= endDate) {
+        if (firstIdx === -1) firstIdx = i;
+        lastIdx = i;
+      }
+    }
+
+    // 如果找到了该主题在当前月份中的日期
+    if (firstIdx !== -1 && lastIdx !== -1) {
+      const rarity = themeData.suits[0]?.rarity || 'gold';
+      blocks.push({
+        theme: themeData.theme,
+        rarity,
+        startCol: firstIdx + 1, // grid-column-start 从 1 开始
+        endCol: lastIdx + 1,
+      });
+    }
+  }
+
+  return blocks;
+}
+
+function selectThemeFromCalendar(themeName) {
+  calendarState.selectedTheme = themeName;
+  const themeData = THEMES_RAW.find(t => t.theme === themeName);
+  const period = MONTHLY_PERIODS[themeName] || '-';
+
+  document.getElementById('calendar-theme-title').textContent = `${period} ${themeName}`;
+
+  // 生成海报路径
+  const posterPath = `assets/images/posters/${themeName}.png`;
+  document.getElementById('calendar-theme-poster').src = posterPath;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('timeline-info-modal');
   const backdrop = document.getElementById('timeline-info-backdrop');
   if (backdrop) {
     backdrop.addEventListener('click', closeTimelineInfo);
+  }
+
+  const calendarBackdrop = document.getElementById('monthly-calendar-backdrop');
+  if (calendarBackdrop) {
+    calendarBackdrop.addEventListener('click', closeMonthlyCalendar);
   }
 });
 </script>
@@ -5968,6 +6295,32 @@ document.addEventListener('DOMContentLoaded', () => {
           <li>两条时间轴同步滚动</li>
           <li>点击海报可放大查看</li>
         </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 月刊日历弹窗 -->
+<div id="monthly-calendar-modal" class="modal-overlay" style="display: none;">
+  <div id="monthly-calendar-backdrop" class="modal-backdrop"></div>
+  <div class="modal-content monthly-calendar-modal">
+    <button class="modal-close" onclick="closeMonthlyCalendar()">✕</button>
+    <div class="monthly-calendar-container">
+      <!-- 左侧：日历 -->
+      <div class="calendar-left">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" onclick="prevMonth()">‹</button>
+          <div class="calendar-month-title" id="calendar-month-title">8月</div>
+          <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
+        </div>
+        <div class="calendar-weekdays" id="calendar-weekdays"></div>
+        <div class="calendar-dates-grid" id="calendar-dates-grid"></div>
+        <div class="calendar-events-grid" id="calendar-events-grid"></div>
+      </div>
+      <!-- 右侧：主题详情 -->
+      <div class="calendar-right">
+        <div style="text-align: center; font-weight: 700; color: #313131; margin-bottom: 12px; font-size: 15px;" id="calendar-theme-title">当前主题</div>
+        <img id="calendar-theme-poster" src="" alt="主题海报" style="width: 100%; border-radius: 12px; margin-bottom: 12px;">
       </div>
     </div>
   </div>
