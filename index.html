@@ -381,8 +381,8 @@
 
     /* ── Notice ── */
     .notice {
-      background: #E3DAC8;
-      border: 1.5px solid #313131;
+      background: #FBC839;
+      border: none;
       border-radius: 10px;
       padding: 10px 36px 10px 14px;
       font-size: 12px;
@@ -394,10 +394,11 @@
     .notice-close {
       position: absolute; top: 8px; right: 10px;
       background: none; border: none; cursor: pointer;
-      font-size: 14px; color: #999; line-height: 1;
+      /* 原为 #999，在黄底上对比度不足，改用同系深色 */
+      font-size: 14px; color: rgba(49,49,49,0.55); line-height: 1;
       padding: 2px 4px; border-radius: 4px;
     }
-    .notice-close:hover { color: #555; }
+    .notice-close:hover { color: #313131; }
 
     /* ── Theme group ── */
     .theme-group { margin-bottom: 8px; }
@@ -781,7 +782,6 @@
 
     /* ── Noto Sans SC：结果区正文说明文字，统一 regular 字重 ── */
     .prob-detail,
-    .notice,
     .strat-note,
     .tip-box,
     .feas-box,
@@ -797,7 +797,6 @@
       font-weight: 400;
     }
     .prob-detail strong,
-    .notice strong,
     .strat-note strong,
     .tip-box strong,
     .feas-box strong,
@@ -2424,7 +2423,7 @@
 
     <!-- Step 1: Owned -->
     <div class="step-pane" id="sc-owned">
-      <div class="notice" id="notice-owned">展开套装 → 点「持有部分」→ 勾选已拥有的部件。已集齐整套可直接点「已集齐」，该套整体退出卡池。<button class="notice-close" onclick="dismissNotice('owned')">✕</button></div>
+      <div class="notice" id="notice-owned">点击卡片即可标记为已集齐，该套整体退出卡池。未集齐的套装可点卡片右下角 ⋯ 逐件勾选部件，或只填缺件数量。<button class="notice-close" onclick="dismissNotice('owned')">✕</button></div>
       <div id="owned-list"></div>
     </div>
 
@@ -2465,7 +2464,7 @@
           <input type="checkbox" id="today-completed" onchange="saveState()" style="width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:#FBC839;">
           <label for="today-completed" style="font-size:12px; color:#313131; cursor:pointer; flex:1; margin:0;">今日已完成收入</label>
         </div>
-        <div class="notice" id="notice-resources" style="margin-bottom:14px">⚡ 活动、任务等额外产出不计入，实际到手可能更快。<button class="notice-close" onclick="dismissNotice('resources')">✕</button></div>
+        <div class="notice" id="notice-resources" style="margin-bottom:14px">活动、任务等额外产出不计入，实际到手可能更快。<button class="notice-close" onclick="dismissNotice('resources')">✕</button></div>
         <button class="calc-btn" id="calc-btn" onclick="onCalc()">✨ 开始计算规划</button>
       </div>
     </div>
@@ -4468,7 +4467,7 @@ function renderTargetList() {
   if (byTheme.length === 0) {
     const done = document.createElement('div');
     done.className = 'notice';
-    done.textContent = '🎉 全部套装均已集齐，无需设定目标！';
+    done.textContent = '全部套装均已集齐，无需设定目标！';
     el.appendChild(done);
   }
 
