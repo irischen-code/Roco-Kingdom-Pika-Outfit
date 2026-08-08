@@ -6201,61 +6201,39 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
         </div>
 
         <div class="cl-section">
+          <div class="cl-section-title">🧩 填写流程改版：列表改为套装卡网格</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>第一步「已持有」</strong>：全部套装以立绘卡片平铺，不必再逐个展开专题。点一下卡片即「已集齐 / 未持有」，填写点击次数从数百次压缩到几十次。</span></div>
+            <div class="cl-item"><span><strong>保留精确填写</strong>：卡片右下角 <strong>⋯</strong> 可逐件勾选部件；也可只填「缺 N 件」，非目标套装用数量填写即可，计算结果完全不受影响。</span></div>
+            <div class="cl-item"><span><strong>第二步「目标套装」</strong>：同样改为卡片网格，点击选为目标，⋯ 可切换「整套 / 只要部分部件」。卡片上直接标注整套所需许愿星，便于取舍。</span></div>
+            <div class="cl-item"><span><strong>已选目标常驻顶部</strong>：选中的套装汇总为标签条吸附在顶部，向下浏览时也能随时确认和删除，标签可左右滑动查看。</span></div>
+            <div class="cl-item"><span><strong>异色可直接标记</strong>：第一步卡片上的异色按钮由预览切换升级为拥有标记，标记后卡面展示异色立绘，并与「我的衣橱」异色弹窗实时同步。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
           <div class="cl-section-title">🗓️ 新增：皮卡月刊上架日历</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>全新日历视图</strong>：时间轴大标题旁新增日历按钮，点击可查看每期月刊的上架区间，一屏纵览全月排期。</span></div>
-            <div class="cl-item"><span><strong>换档日重叠展示</strong>：上一期结束与下一期开始是同一天，两条色条在该日重叠、颜色加深，交接关系一目了然。</span></div>
-            <div class="cl-item"><span><strong>稀有度配色</strong>：色条按套装稀有度着色，金色套装用橙、紫色套装用紫。</span></div>
-            <div class="cl-item"><span><strong>点击查看详情</strong>：点击任意色条即可查看该期海报与日期区间，选中的色条会变为不透明高亮。</span></div>
-            <div class="cl-item"><span><strong>月份切换</strong>：支持左右翻阅任意月份；打开时默认停在当月，并自动选中当天正在上架的一期。</span></div>
-          </div>
-        </div>
-
-        <div class="cl-section">
-          <div class="cl-section-title">🧩 重构：第一步「已持有」改为套装卡网格</div>
-          <div class="cl-items">
-            <div class="cl-item"><span><strong>折叠列表改为卡面网格</strong>：全部 51 套以立绘卡片平铺展示，不必再逐个展开专题，扫视和查找效率大幅提升。</span></div>
-            <div class="cl-item"><span><strong>单击即可标记</strong>：点一下卡片就是「已集齐 / 未持有」切换，填写主流程从数百次点击压缩到几十次。</span></div>
-            <div class="cl-item"><span><strong>保留精确填写</strong>：卡片右下角 <strong>⋯</strong> 可展开抽屉，逐件勾选部件；也可只填「缺 N 件」，非目标套装用数量填写即可，计算结果完全不受影响。</span></div>
-            <div class="cl-item"><span><strong>状态一眼可辨</strong>：灰度为未持有，彩色加勾为已集齐，彩色加「缺 N 件」为部分持有；稀有度改用卡片描边颜色表示。</span></div>
-          </div>
-        </div>
-
-        <div class="cl-section">
-          <div class="cl-section-title">🎨 异色套装标记升级</div>
-          <div class="cl-items">
-            <div class="cl-item"><span><strong>异色按钮可直接标记拥有</strong>：原先只能切换立绘预览，现在点击即可标记为已拥有异色，标记后卡面自动展示异色立绘。</span></div>
-            <div class="cl-item"><span><strong>与我的衣橱双向同步</strong>：第一步的异色标记与衣橱页「异色拥有情况」弹窗共用同一份数据，任意一端修改都会实时同步。</span></div>
-            <div class="cl-item"><span>套装未集齐时异色按钮为锁定态，避免出现「套装没有、异色却有」的矛盾记录。</span></div>
+            <div class="cl-item"><span>时间轴标题旁新增日历按钮，可按月查看每期月刊的上架区间，一屏纵览全月排期，支持左右翻阅月份。</span></div>
+            <div class="cl-item"><span>色条按套装稀有度着色；上一期结束与下一期开始为同一天时，两条色条在该日重叠加深，交接关系一目了然。</span></div>
+            <div class="cl-item"><span>点击任意色条即可查看该期海报与日期区间；打开时默认停在当月并选中当天正在上架的一期。</span></div>
           </div>
         </div>
 
         <div class="cl-section">
           <div class="cl-section-title">📊 数据勘误</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>年轮诗社</strong>的<strong>画间法师手印象</strong>、<strong>画间沉铁兽印象</strong>原按 7 部件录入，实为 <strong>6 部件</strong>套装，现已更正。</span></div>
-            <div class="cl-item"><span>受此影响，卡池总卡数由 373 张更正为 <strong>371 张</strong>，全站部件总数由 322 件更正为 <strong>320 件</strong>。</span></div>
-            <div class="cl-item"><span>若你此前已填写过这两套的持有情况，其中「上衣 / 裤子」两项会自动清理（该套装现为「连体服装」），请重新确认一下这两套的部件勾选。</span></div>
+            <div class="cl-item"><span><strong>年轮诗社</strong>的<strong>画间法师手印象</strong>、<strong>画间沉铁兽印象</strong>原按 7 部件录入，实为 <strong>6 部件</strong>套装。卡池总卡数相应更正为 <strong>371 张</strong>，全站部件总数为 <strong>320 件</strong>。</span></div>
+            <div class="cl-item"><span>若你此前填写过这两套的持有情况，其中「上衣 / 裤子」会自动清理（该套装现为「连体服装」），<strong>请重新确认这两套的部件勾选</strong>。</span></div>
           </div>
         </div>
 
         <div class="cl-section">
-          <div class="cl-section-title">🔧 问题修复</div>
+          <div class="cl-section-title">🔧 修复与优化</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>修复海报放大失效</strong>：时间轴海报重新渲染后点击无法放大的问题已修复。</span></div>
-            <div class="cl-item"><span><strong>修复日历日期偏移</strong>：东八区下色条整体后移一天、换档重叠落错日期的问题已修复。</span></div>
-            <div class="cl-item"><span><strong>修复切换页签后定位错误</strong>：从其他页签进入卡池总览时，时间轴未定位到当天的问题已修复。</span></div>
-            <div class="cl-item"><span><strong>修复日历空白间隙</strong>：月末没有排期的周不再留出大段空白。</span></div>
-          </div>
-        </div>
-
-        <div class="cl-section">
-          <div class="cl-section-title">✨ 细节优化</div>
-          <div class="cl-items">
-            <div class="cl-item"><span><strong>弹窗关闭按钮统一</strong>：全站弹窗的关闭按钮改为统一样式与位置，在图片背景上也清晰可见，手机端点击区域更大。</span></div>
-            <div class="cl-item"><span><strong>说明按钮统一</strong>：各处的 ⓘ 说明图标改用统一的矢量图标，替换原先的字符与 emoji，各端显示一致。</span></div>
-            <div class="cl-item"><span>日历按钮紧邻标题，说明按钮移至卡片右上角，布局更清晰。</span></div>
-            <div class="cl-item"><span>第一步套装网格去掉主题名下方的分割线，视觉更简洁。</span></div>
+            <div class="cl-item"><span>修复时间轴海报点击无法放大、日历日期偏移一天、切换页签后时间轴未定位到当天等问题。</span></div>
+            <div class="cl-item"><span>修复手机浏览器上日历弹窗被地址栏、底部工具栏遮挡而显示不全的问题。</span></div>
+            <div class="cl-item"><span>全站弹窗的关闭按钮与说明图标统一样式和位置，在图片背景上也清晰可见，手机端点击区域更大。</span></div>
           </div>
         </div>
       </div>
