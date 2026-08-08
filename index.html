@@ -2720,8 +2720,8 @@ const THEMES_RAW = [
   { theme:'年轮诗社', date:'2026-09-25', direct:false, fieldType:true, suits:[
     {id:'s48', sub:'古卷执政官印象', rarity:'purple'},
     {id:'s49', sub:'古卷匣魔像印象', rarity:'purple'},
-    {id:'s50', sub:'画间法师手印象', rarity:'purple'},
-    {id:'s51', sub:'画间沉铁兽印象', rarity:'purple'},
+    {id:'s50', sub:'画间法师手印象', rarity:'purple', fieldType:false}, // 6 部件，非野外型
+    {id:'s51', sub:'画间沉铁兽印象', rarity:'purple', fieldType:false}, // 6 部件，非野外型
   ]},
 ];
 
@@ -2730,7 +2730,8 @@ const SUITS = [];
 for (const th of THEMES_RAW) {
   if (th.suspended) continue;
   for (const s of th.suits) {
-    const isField  = !!th.fieldType;
+    // fieldType 默认继承主题，但允许单套覆盖：同一期里可能混有 6 部件和 7 部件套装
+    const isField  = s.fieldType !== undefined ? !!s.fieldType : !!th.fieldType;
     const parts    = isField ? {...FIELD_PARTS} : (s.rarity === 'gold' ? {...GOLD_PARTS} : {...PURP_PARTS});
     const partNames = isField ? PART_NAMES_7 : PART_NAMES;
     const setPrice = s.rarity === 'gold' ? 195 : 98;
@@ -4573,8 +4574,12 @@ function renderTimeline() {
   const today = todayStr();
   let cumCards = 0;
   for (const th of THEMES_RAW) {
-    const cardsPerSuit = th.fieldType ? 8 : 7; // 7部件套装每套 8 张（7部件卡+1套装卡）
-    const cards = th.suits.length * cardsPerSuit;
+    // 逐套累加：同一期内可能混有 6 部件和 7 部件套装，不能按主题统一算
+    const cards = th.suits.reduce((sum, raw) => {
+      const s = SUITS.find(x => x.id === raw.id);
+      const n = (s?.partNames || PART_NAMES).length;
+      return sum + n + 1;   // n 张部件卡 + 1 张套装卡
+    }, 0);
     const inPool = th.date <= today;
     if (inPool) cumCards += cards;
     const item = document.createElement('div');
@@ -5351,8 +5356,16 @@ function loadState() {
     if (!raw) return false;
     const data = JSON.parse(raw);
 
+    // 只保留该套装当前确实存在的部件名。数据勘误可能改变部件构成
+    // （如年轮诗社两套由 7 部件更正为 6 部件，旧存档里会残留「上衣/裤子」），
+    // 残留名会虚增 owned.size、让衣橱进度和卡池张数都算错。
+    const validParts = sid => {
+      const s = SUITS.find(x => x.id === sid);
+      return new Set(s?.partNames || PART_NAMES);
+    };
     for (const [sid, parts] of Object.entries(data.owned || {})) {
-      st.owned[sid] = new Set(parts);
+      const ok = validParts(sid);
+      st.owned[sid] = new Set((parts || []).filter(p => ok.has(p)));
     }
     st.fullOwned = new Set(data.fullOwned || []);
     st.altOwned  = new Set(data.altOwned  || []);
@@ -5361,7 +5374,17 @@ function loadState() {
     st.approx    = new Set(data.approx    || []);
     for (const [sid, tval] of Object.entries(data.targets || {})) {
       if (tval === 'ALL')           st.targets[sid] = 'ALL';
-      else if (Array.isArray(tval)) st.targets[sid] = new Set(tval);
+      else if (Array.isArray(tval)) {
+        const ok = validParts(sid);
+        const kept = tval.filter(p => ok.has(p));
+        if (kept.length) st.targets[sid] = new Set(kept);
+      }
+    }
+    // 被标记为已集齐、但清洗后部件不全的套装（部件数由 7 改 6 时会发生），
+    // 补齐为当前完整部件集，避免 fullOwned 与 owned 不一致
+    for (const sid of st.fullOwned) {
+      const s = SUITS.find(x => x.id === sid);
+      if (s) st.owned[sid] = new Set(s.partNames || PART_NAMES);
     }
 
     const balEl = document.getElementById('star-balance');
