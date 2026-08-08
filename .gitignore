@@ -8,3 +8,6 @@ postsuit/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 第一步网格改版 demo（本地验证用，勿上线）
+_demo-*.html

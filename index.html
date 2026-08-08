@@ -459,6 +459,108 @@
     .own-btn.on-part  { background: #FBC839; border: none; color: #313131; font-weight: 600; }
     .own-btn.on-full  { background: #FBC839; border: none; color: #313131; font-weight: 600; }
 
+    /* ════ 第一步「已持有」套装卡网格 ════
+       只问 1 bit（集齐/未集齐）；「缺 N 件」与逐件精确填写收进 ⋯ 抽屉。
+       稀有度用描边颜色编码，替代原来的「紫色·98 / 金色·195」文字标签。 */
+    .og-theme-sec { margin-bottom: 14px; }
+    .og-theme-hd {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 7px; padding-bottom: 5px;
+      border-bottom: 1px solid rgba(49,49,49,0.15);
+    }
+    .og-theme-hd .nm { font-weight: 700; font-size: 13px; }
+    .og-theme-hd .dt { font-size: 10px; color: var(--text-muted); }
+    .og-theme-hd .pending {
+      font-size: 10px; padding: 1px 6px; border-radius: 4px;
+      background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border);
+    }
+    .og-all-btn {
+      margin-left: auto; font-size: 10px; padding: 3px 9px; border-radius: 20px;
+      border: 1.5px solid #313131; background: #FBF7EE; color: #313131;
+      cursor: pointer; white-space: nowrap; font-family: inherit; transition: all 0.15s;
+    }
+    .og-all-btn.on { background: #FBC839; font-weight: 700; }
+
+    .og-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .og-card {
+      position: relative; border-radius: 9px; overflow: hidden; cursor: pointer;
+      border: 2.5px solid #C9C2B4; background: #E3DAC8; transition: transform 0.15s;
+    }
+    .og-card:hover { transform: translateY(-2px); }
+    .og-art {
+      width: 100%; aspect-ratio: 150/168; object-fit: cover; display: block;
+      filter: grayscale(1) opacity(0.5); transition: filter 0.15s;
+    }
+    .og-nm {
+      font-size: 9px; text-align: center; padding: 3px 2px 4px; line-height: 1.25;
+      background: #FBF7EE; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 已集齐 / 部分持有 → 恢复彩色；描边按稀有度上色 */
+    .og-card.st-full .og-art, .og-card.st-part .og-art { filter: none; }
+    .og-card.st-full .og-nm,  .og-card.st-part .og-nm  { color: #313131; font-weight: 700; }
+    .og-card.st-full { background: #FBF7EE; }
+    .og-card.gold.st-full,   .og-card.gold.st-part   { border-color: #EC7900; }
+    .og-card.purple.st-full, .og-card.purple.st-part { border-color: #6037AD; }
+
+    /* 抽屉展开时高亮来源卡片（抽屉在网格末尾，需要视觉关联） */
+    .og-card.drawer-open { box-shadow: 0 0 0 3px #FBC839; }
+    .og-card.drawer-open .og-more { background: #FBC839; color: #313131; }
+
+    .og-badge { position: absolute; font-size: 9px; font-weight: 700; line-height: 1; border-radius: 20px; }
+    .og-check {
+      top: 3px; right: 3px; width: 17px; height: 17px; background: #FBC839;
+      border: 1.5px solid #313131; display: none;
+      align-items: center; justify-content: center; font-size: 10px;
+    }
+    .og-card.st-full .og-check { display: flex; }
+    .og-lack { top: 3px; right: 3px; padding: 3px 5px; background: #313131; color: #FBF7EE; display: none; }
+    .og-card.st-part .og-lack { display: block; }
+    .og-pending { top: 3px; left: 3px; padding: 2px 4px; background: rgba(240,170,94,0.95); color: #fff; }
+    .og-alt, .og-more {
+      position: absolute; bottom: 24px; width: 19px; height: 19px; border-radius: 50%;
+      background: rgba(0,0,0,0.55); border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .og-alt  { left: 3px; }
+    .og-alt img { width: 11px; height: 11px; }
+    .og-more { right: 3px; color: #fff; font-size: 11px; font-family: inherit; }
+    .og-alt:hover, .og-more:hover { background: rgba(0,0,0,0.78); }
+
+    /* 异色按钮三态：已拥有（黑）/ 可标记（默认）/ 套装未集齐（锁定） */
+    .og-alt.on {
+      background: #313131;
+      /* 描边用米色：未选中态是 55% 半透明黑，纯黑跟它在 19px 尺寸下几乎分不出，
+         靠这圈浅色描边把「已选中」拉开差异 */
+      box-shadow: 0 0 0 1.5px #FBF7EE;
+    }
+    .og-alt.on:hover { background: #313131; }
+    .og-alt.locked { background: rgba(0,0,0,0.28); cursor: not-allowed; }
+    .og-alt.locked img { opacity: 0.45; }
+    .og-alt.locked:hover { background: rgba(0,0,0,0.28); }
+    @keyframes og-shake {
+      0%,100% { transform: translateX(0); }
+      25%     { transform: translateX(-3px); }
+      75%     { transform: translateX(3px); }
+    }
+    .og-alt.shake { animation: og-shake 0.25s; }
+
+    /* ⋯ 抽屉：重度用户的精确填写入口 */
+    .og-drawer {
+      grid-column: 1 / -1; background: #F3EADC; border: 1.5px solid #313131;
+      border-radius: 10px; padding: 9px; margin: 2px 0 4px;
+    }
+    .og-drawer .dh { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .og-drawer .dh .close { margin-left: auto; border: none; background: none; cursor: pointer; font-size: 15px; color: #888; line-height: 1; }
+    .og-approx-tip { font-size: 10px; color: var(--amber); margin-bottom: 6px; line-height: 1.5; }
+    .og-stepper { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; flex-wrap: wrap; }
+    .og-stepper button {
+      width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #313131;
+      background: #FBF7EE; cursor: pointer; font-weight: 700; font-family: inherit; line-height: 1;
+    }
+    .og-stepper .val { min-width: 46px; text-align: center; font-weight: 700; }
+    .og-stepper .hint { color: var(--text-muted); font-size: 10px; }
+
     /* ── Parts grid ── */
     .parts-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-top: 8px; }
     .part-btn {
@@ -1688,12 +1790,15 @@
       .card { padding: 12px; margin-bottom: 8px; }
       .card-title { font-size: 14px; }
 
-      /* ── 步骤1 已持有：套装行 ── */
-      .suit-hdr { gap: 8px; }
-      .suit-img { width: 42px; }
-      .suit-name { font-size: 12px; }
+      /* ── 步骤1 已持有：套装卡网格 ── */
+      .og-grid { gap: 5px; }
+      .og-nm { font-size: 8px; padding: 2px 1px 3px; }
+      .og-theme-hd .nm { font-size: 12px; }
+      .og-all-btn { font-size: 9px; padding: 3px 7px; }
+      /* 角标在手机上放大一点，保证可点 */
+      .og-alt, .og-more { width: 22px; height: 22px; bottom: 22px; }
+      .og-more { font-size: 12px; }
       .rarity-tag { font-size: 10px; }
-      .own-btn { padding: 5px 6px; font-size: 10px; min-height: 32px; }
       .parts-grid { grid-template-columns: repeat(3, 1fr); gap: 3px; }
       .part-btn { font-size: 9px; padding: 5px 2px; min-height: 34px; }
 
@@ -2080,7 +2185,7 @@
     </button>
   </nav>
   <div class="header-badges">
-    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.5 ↗</span><span class="badge-short">v1.5 ↗</span></span>
+    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.6 ↗</span><span class="badge-short">v1.6 ↗</span></span>
     <span class="badge" style="cursor:pointer" onclick="switchView('pool');(function(){ const el=document.getElementById('pool-suits-card'); const headerH=document.querySelector('.header').offsetHeight; const top=el.getBoundingClientRect().top+window.scrollY-headerH-12; window.scrollTo({top,behavior:'smooth'}); })()"><span class="badge-long">51 套（含待入池）</span><span class="badge-short">51 套</span></span>
     <span style="cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center;" onclick="openFeedback()">💬</span>
   </div>
@@ -2663,6 +2768,10 @@ const st = {
   fullOwned: new Set(), // suitId fully collected
   targets:  {},   // suitId -> 'ALL' | Set<partName>  (undefined = not targeted)
   altOwned: new Set(), // suitId whose alt-color is owned
+  // 只填了「缺 N 件」、没指明是哪几件的套装。owned 里存的是占位部件，
+  // 保证 .size 正确（衣橱统计/衣橱长图/buildPool 只读数量），但具体部件不可信。
+  // 部件身份只在「目标套装的花费计算」用到，所以非目标套装填数量即可。
+  approx:   new Set(),
 };
 
 // ════════════════════════════════════════════════════
@@ -3894,55 +4003,210 @@ function renderOwnedList() {
     const th = THEMES_RAW[i];
     if (th.suspended) continue;
     const inPool = th.date <= today;
-    const wrap = document.createElement('div');
-    const isAllPurple = th.suits.every(r => SUITS.find(x => x.id === r.id)?.rarity === 'purple');
-    wrap.className = 'theme-group' + (isAllPurple ? ' theme-purple' : '');
-    const dateStr = th.date.slice(5).replace('-','/');
-    const pendingBadge = inPool ? '' : `<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);margin-left:4px">待入池</span>`;
-    wrap.innerHTML = `
-      <div class="theme-hdr" onclick="toggleBody(this)">
-        <span class="theme-toggle">▼</span>
-        <span class="theme-hdr-name">${th.theme}</span>
-        <span class="theme-hdr-date">${dateStr}</span>
-        ${pendingBadge}
-        <button id="thbtn-${i}" class="theme-all-btn" style="margin-left:auto" onclick="event.stopPropagation();setThemeAllFull('${th.theme}')">全 ${th.suits.length} 套已集齐</button>
+    const sec = document.createElement('div');
+    sec.className = 'og-theme-sec';
+    const dateStr = th.date.slice(5).replace('-', '/');
+    const allFull = th.suits.every(raw => st.fullOwned.has(raw.id));
+    sec.innerHTML = `
+      <div class="og-theme-hd">
+        <span class="nm">${th.theme}</span>
+        <span class="dt">${dateStr}</span>
+        ${inPool ? '' : '<span class="pending">待入池</span>'}
+        <button id="thbtn-${i}" class="og-all-btn${allFull ? ' on' : ''}"
+          onclick="setThemeAllFull('${th.theme}')">全 ${th.suits.length} 套已集齐</button>
       </div>
-      <div class="theme-body"></div>
-    `;
-    const body = wrap.querySelector('.theme-body');
+      <div class="og-grid" id="oggrid-${i}"></div>`;
+    const grid = sec.querySelector('.og-grid');
     for (const raw of th.suits) {
       const s = SUITS.find(x => x.id === raw.id);
-      const row = document.createElement('div');
-      row.className = 'suit-row';
-      if (!inPool) row.style.opacity = '0.7';
-      const rarityLabel = s.rarity==='gold'?'金色·195':'紫色·98';
-      const pendingSuitTag = inPool ? '' : `<span style="font-size:10px;color:var(--amber);margin-left:4px">待入池</span>`;
-      const altBadge = ALTS.has(s.sub) ? `<span class="alt-badge" id="alt-btn-${s.id}" onclick="toggleAltColor('${s.id}','${s.sub}')"><img src="assets/icon/variant.png" alt="">异色</span>` : '';
-      row.innerHTML = `
-        <div class="suit-hdr">
-          <div class="suit-img"><img id="sc-img-${s.id}" src="assets/images/suitcard/${s.sub}.png" alt="${s.sub}" onerror="this.parentElement.style.background='#E3DAC8'"></div>
-          <div class="suit-name-wrap">
-            <div class="suit-name">${s.sub}${pendingSuitTag}</div>
-            <span class="rarity-tag ${s.rarity}">${rarityLabel}</span>${altBadge}
-          </div>
-        </div>
-        <div class="own-sel">
-          <button class="own-btn on-none" data-sid="${s.id}" data-state="none"  onclick="setOwn('${s.id}','none')">未持有</button>
-          <button class="own-btn"          data-sid="${s.id}" data-state="part"  onclick="setOwn('${s.id}','part')">持有部分</button>
-          <button class="own-btn"          data-sid="${s.id}" data-state="full"  onclick="setOwn('${s.id}','full')">已集齐</button>
-        </div>
-        <div class="parts-grid" id="og-${s.id}" style="display:none">
-          ${(s.partNames || PART_NAMES).map(p=>`
-            <button class="part-btn" id="op-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleOwnPart('${s.id}','${p}')">
-              ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
-            </button>
-          `).join('')}
-        </div>
-      `;
-      body.appendChild(row);
+      grid.appendChild(buildOwnedCard(s, inPool));
     }
-    el.appendChild(wrap);
+    el.appendChild(sec);
   }
+}
+
+// 单张套装卡。状态全部从 st 读取，所以重建即等于刷新。
+function buildOwnedCard(s, inPool) {
+  const card = document.createElement('div');
+  card.id = 'ogc-' + s.id;
+  card.dataset.sid = s.id;
+  card.className = `og-card ${s.rarity} ${ownedCardState(s.id)}`;
+  card.title = s.sub;
+  const lack = ownedLackCount(s);
+  card.innerHTML = `
+    <img class="og-art" id="sc-img-${s.id}" src="${ownedCardArt(s)}" alt="${s.sub}"
+         loading="lazy" onerror="this.style.visibility='hidden'">
+    <div class="og-badge og-check">✓</div>
+    <div class="og-badge og-lack" id="oglack-${s.id}">缺${lack}件</div>
+    ${inPool ? '' : '<div class="og-badge og-pending">待入池</div>'}
+    ${ALTS.has(s.sub) ? `<button class="og-alt${altBtnCls(s.id)}" id="alt-btn-${s.id}" title="${altBtnTitle(s.id)}"
+        onclick="event.stopPropagation();toggleAltOwned('${s.id}')"><img src="assets/icon/variant.png" alt=""></button>` : ''}
+    <button class="og-more" title="精确填写部件"
+      onclick="event.stopPropagation();toggleOwnedDrawer('${s.id}')">⋯</button>
+    <div class="og-nm">${s.sub}</div>`;
+  // 单击 = 已集齐 / 未持有 二态切换（90% 的操作走这条路）
+  card.onclick = () => setOwn(s.id, st.fullOwned.has(s.id) ? 'none' : 'full');
+  return card;
+}
+
+// ── 异色：与衣橱页「异色拥有情况」弹窗共用同一份 st.altOwned ──
+// 既有规则：异色必须套装集齐才谈得上拥有（弹窗里 disabled=!suitOwned，
+// 衣橱长图里 altOwned = suitOwned && st.altOwned.has()）。这里同样遵守。
+function altBtnCls(sid) {
+  if (!st.fullOwned.has(sid)) return ' locked';
+  return st.altOwned.has(sid) ? ' on' : '';
+}
+function altBtnTitle(sid) {
+  if (!st.fullOwned.has(sid)) return '套装集齐后才能标记异色';
+  return st.altOwned.has(sid) ? '已拥有异色（点击取消）' : '标记为已拥有异色';
+}
+// 拥有异色时卡面直接换成异色立绘，省掉一个单独的预览开关
+function ownedCardArt(s) {
+  return st.altOwned.has(s.id)
+    ? `assets/images/suitcard-alt/${s.sub}.png`
+    : `assets/images/suitcard/${s.sub}.png`;
+}
+
+function toggleAltOwned(sid) {
+  if (!st.fullOwned.has(sid)) {
+    const btn = document.getElementById('alt-btn-' + sid);
+    if (btn) { btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake'); }
+    return;   // 套装未集齐，不可标记
+  }
+  st.altOwned.has(sid) ? st.altOwned.delete(sid) : st.altOwned.add(sid);
+  refreshOwnedCard(sid);
+  saveState();
+}
+
+function ownedCardState(sid) {
+  if (st.fullOwned.has(sid)) return 'st-full';
+  const p = st.owned[sid];
+  return (p && p.size > 0) ? 'st-part' : '';
+}
+
+function ownedLackCount(s) {
+  const total = (s.partNames || PART_NAMES).length;
+  const have  = (st.owned[s.id] && st.owned[s.id].size) || 0;
+  return Math.max(0, total - have);
+}
+
+// 只刷新一张卡，避免整列表重绘导致 51 张图闪烁
+function refreshOwnedCard(sid) {
+  const card = document.getElementById('ogc-' + sid);
+  if (!card) return;
+  const s = SUITS.find(x => x.id === sid);
+  const keepDrawer = card.classList.contains('drawer-open');   // 别把抽屉高亮冲掉
+  card.className = `og-card ${s.rarity} ${ownedCardState(sid)}${keepDrawer ? ' drawer-open' : ''}`;
+
+  const lackEl = document.getElementById('oglack-' + sid);
+  if (lackEl) lackEl.textContent = `缺${ownedLackCount(s)}件`;
+
+  const artEl = document.getElementById('sc-img-' + sid);
+  if (artEl) {
+    // 用 getAttribute 取原始相对路径；artEl.src 会被解析成绝对 URL 而比不上
+    const want = ownedCardArt(s);
+    if (artEl.getAttribute('src') !== want) artEl.src = want;
+  }
+  const altBtn = document.getElementById('alt-btn-' + sid);
+  if (altBtn) {
+    altBtn.className = 'og-alt' + altBtnCls(sid);
+    altBtn.title = altBtnTitle(sid);
+  }
+}
+
+// ⋯ 抽屉：逐件精确勾选 + 「缺 N 件」步进器
+function toggleOwnedDrawer(sid) {
+  const existing = document.getElementById('ogdrawer-' + sid);
+  document.querySelectorAll('.og-drawer').forEach(d => d.remove());
+  document.querySelectorAll('.og-card.drawer-open').forEach(c => c.classList.remove('drawer-open'));
+  if (existing) return;   // 再次点击 = 收起
+
+  const s = SUITS.find(x => x.id === sid);
+  const card = document.getElementById('ogc-' + sid);
+  if (!s || !card) return;
+
+  const isApprox = st.approx.has(sid);
+  const owned = st.owned[sid] || new Set();
+  const dr = document.createElement('div');
+  dr.id = 'ogdrawer-' + sid;
+  dr.className = 'og-drawer';
+  dr.onclick = e => e.stopPropagation();
+  dr.innerHTML = `
+    <div class="dh">${s.sub} · 精确填写
+      <button class="close" onclick="toggleOwnedDrawer('${sid}')">✕</button></div>
+    ${isApprox ? '<div class="og-approx-tip">当前是「缺 N 件」估算值。点击具体部件即可转为精确填写。</div>' : ''}
+    <div class="parts-grid">
+      ${(s.partNames || PART_NAMES).map(p => `
+        <button class="part-btn${(!isApprox && owned.has(p)) ? ' on' : ''}"
+          onclick="toggleOwnPart('${sid}','${p}')">
+          ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
+        </button>`).join('')}
+    </div>
+    <div class="og-stepper">
+      或只填数量：
+      <button onclick="stepLack('${sid}',-1)">−</button>
+      <span class="val" id="ogsv-${sid}">缺 ${ownedLackCount(s)} 件</span>
+      <button onclick="stepLack('${sid}',1)">+</button>
+      <span class="hint">非目标套装填数量就够</span>
+    </div>`;
+  // 追加到该主题网格末尾，而不是 card.after()。抽屉要占满 4 列，插在卡片中间
+  // 会让它之后的卡片全部被推到抽屉下一行，看起来像凭空消失。
+  card.parentElement.appendChild(dr);
+  card.classList.add('drawer-open');   // 标出抽屉属于哪张卡
+}
+
+// 「缺 N 件」：往 owned 里塞 (total-N) 个占位部件，保证 .size 正确 →
+// 衣橱统计、衣橱长图、buildPool 全部无需改动；并标记为估算值。
+function stepLack(sid, delta) {
+  const s = SUITS.find(x => x.id === sid);
+  if (!s) return;
+  const names = s.partNames || PART_NAMES;
+  const total = names.length;
+  const lack  = Math.max(0, Math.min(total, ownedLackCount(s) + delta));
+
+  if (lack === 0) {
+    setOwn(sid, 'full');
+  } else if (lack === total) {
+    setOwn(sid, 'none');
+  } else {
+    st.owned[sid] = new Set(names.slice(0, total - lack));   // 占位部件
+    st.approx.add(sid);
+    st.fullOwned.delete(sid);
+    st.altOwned.delete(sid);
+    refreshOwnedCard(sid);
+    updateThemeAllBtn(s.theme);
+    updatePoolStats();
+  }
+  syncOwnedDrawer(sid);
+}
+
+// 抽屉展开时，把它的部件勾选态 / 估算提示 / 缺件数就地同步到最新 st。
+// 卡片单击、步进器、逐件勾选都可能改状态，不同步会看到过期的抽屉。
+function syncOwnedDrawer(sid) {
+  const drawer = document.getElementById('ogdrawer-' + sid);
+  if (!drawer) return;
+  const s = SUITS.find(x => x.id === sid);
+  if (!s) return;
+  const names    = s.partNames || PART_NAMES;
+  const isApprox = st.approx.has(sid);
+  const owned    = st.owned[sid] || new Set();
+
+  drawer.querySelectorAll('.parts-grid .part-btn').forEach((b, i) => {
+    b.className = 'part-btn' + ((!isApprox && owned.has(names[i])) ? ' on' : '');
+  });
+
+  const tip = drawer.querySelector('.og-approx-tip');
+  if (isApprox && !tip) {
+    const el = document.createElement('div');
+    el.className = 'og-approx-tip';
+    el.textContent = '当前是「缺 N 件」估算值。点击具体部件即可转为精确填写。';
+    drawer.querySelector('.dh').after(el);
+  } else if (!isApprox && tip) {
+    tip.remove();
+  }
+
+  const valEl = document.getElementById('ogsv-' + sid);
+  if (valEl) valEl.textContent = `缺 ${ownedLackCount(s)} 件`;
 }
 
 function openAltOwnedModal() {
@@ -3996,23 +4260,15 @@ function closeAltOwnedModal() {
 }
 
 function confirmAltOwned() {
+  const before = new Set(st.altOwned);
   st.altOwned = new Set();
   document.querySelectorAll('#alt-owned-list [data-sid]').forEach(item => {
     if (item.style.boxShadow && item.style.boxShadow !== 'none') st.altOwned.add(item.dataset.sid);
   });
+  // 双向同步：弹窗里的改动回写到第一步的套装卡（异色按钮状态 + 卡面立绘）
+  new Set([...before, ...st.altOwned]).forEach(sid => refreshOwnedCard(sid));
   saveState();
   closeAltOwnedModal();
-}
-
-function toggleAltColor(sid, sub) {
-  const img = document.getElementById('sc-img-' + sid);
-  const btn = document.getElementById('alt-btn-' + sid);
-  if (!img || !btn) return;
-  const isAlt = btn.classList.contains('alt-on');
-  img.src = isAlt
-    ? `assets/images/suitcard/${sub}.png`
-    : `assets/images/suitcard-alt/${sub}.png`;
-  btn.classList.toggle('alt-on', !isAlt);
 }
 
 function setThemeAllFull(themeName) {
@@ -4263,46 +4519,49 @@ function toggleTargetPart(sid, part) {
 // ════════════════════════════════════════════════════
 
 function setOwn(sid, state) {
-  document.querySelectorAll(`[data-sid="${sid}"][data-state]`).forEach(b => {
-    b.className = 'own-btn' + (b.dataset.state === state ? ` on-${state}` : '');
-  });
-  const grid = document.getElementById('og-' + sid);
-
-  if (state === 'none') {
-    st.owned[sid] = new Set();
-    st.fullOwned.delete(sid);
-    st.altOwned.delete(sid);
-    grid.style.display = 'none';
-  } else if (state === 'part') {
-    st.owned[sid] = new Set();
-    st.fullOwned.delete(sid);
-    st.altOwned.delete(sid);
-    grid.style.display = 'grid';
-    document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
-  } else {
-    const sDataFull = SUITS.find(x => x.id === sid);
-    st.owned[sid] = new Set(sDataFull?.partNames || PART_NAMES);
+  const s = SUITS.find(x => x.id === sid);
+  if (state === 'full') {
+    st.owned[sid] = new Set(s?.partNames || PART_NAMES);
     st.fullOwned.add(sid);
-    st.targets[sid] = undefined; // no point targeting a fully-owned suit
-    grid.style.display = 'none';
-    document.querySelectorAll(`#og-${sid} .part-btn`).forEach(b => b.className = 'part-btn on');
+    st.approx.delete(sid);            // 集齐是确定信息，不是估算
+    st.targets[sid] = undefined;      // 已集齐的套装没必要再设为目标
+  } else {                            // 'none' / 'part' 都从空集开始
+    st.owned[sid] = new Set();
+    st.fullOwned.delete(sid);
+    st.altOwned.delete(sid);          // 未集齐不可能拥有异色
+    st.approx.delete(sid);
   }
+  refreshOwnedCard(sid);
+  if (s) updateThemeAllBtn(s.theme);
   updatePoolStats();
-  const sData = SUITS.find(x => x.id === sid);
-  if (sData) updateThemeAllBtn(sData.theme);
+  syncOwnedDrawer(sid);
 }
 
 function toggleOwnPart(sid, part) {
-  if (!st.owned[sid]) st.owned[sid] = new Set();
-  const btn = document.getElementById(`op-${sid}-${part}`);
-  if (st.owned[sid].has(part)) {
-    st.owned[sid].delete(part);
-    btn.className = 'part-btn';
-  } else {
-    st.owned[sid].add(part);
-    btn.className = 'part-btn on';
+  const s = SUITS.find(x => x.id === sid);
+  const names = s?.partNames || PART_NAMES;
+  // 从估算值转为精确填写：清掉占位部件，从这一次点击重新开始
+  if (st.approx.has(sid)) {
+    st.owned[sid] = new Set();
+    st.approx.delete(sid);
   }
+  if (!st.owned[sid]) st.owned[sid] = new Set();
+
+  const set = st.owned[sid];
+  set.has(part) ? set.delete(part) : set.add(part);
+
+  if (set.size === names.length) {
+    st.fullOwned.add(sid);
+    st.targets[sid] = undefined;
+  } else {
+    st.fullOwned.delete(sid);
+    st.altOwned.delete(sid);
+  }
+
+  refreshOwnedCard(sid);
+  if (s) updateThemeAllBtn(s.theme);
   updatePoolStats();
+  syncOwnedDrawer(sid);
 }
 
 // ════════════════════════════════════════════════════
@@ -5009,7 +5268,7 @@ function startRenameProfile(id, el) {
 function switchProfile(id, targetStep = 'owned') {
   saveState();
   _setActiveId(id);
-  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set();
+  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set(); st.approx = new Set();
   const loaded = loadState();
   renderOwnedList();
   if (loaded) {
@@ -5048,7 +5307,7 @@ function onCreateNewProfile() {
   _saveProfiles(profiles);
   saveState();
   _setActiveId(id);
-  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set();
+  st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set(); st.approx = new Set();
   document.getElementById('star-balance').value = '0';
   document.getElementById('daily-income').value = '25';
   renderOwnedList();
@@ -5070,6 +5329,7 @@ function saveState() {
       owned:     {},
       fullOwned: [...st.fullOwned],
       altOwned:  [...st.altOwned],
+      approx:    [...st.approx],
       targets:   {},
       balance:   document.getElementById('star-balance')?.value ?? '0',
       daily:     document.getElementById('daily-income')?.value ?? '25',
@@ -5096,6 +5356,9 @@ function loadState() {
     }
     st.fullOwned = new Set(data.fullOwned || []);
     st.altOwned  = new Set(data.altOwned  || []);
+    // 老存档没有 approx 字段 → 视为全部精确填写（老用户当年确实是逐件勾的），
+    // 不能默认成估算值，否则会把他们已填好的细节判成占位、反过来再追问一遍。
+    st.approx    = new Set(data.approx    || []);
     for (const [sid, tval] of Object.entries(data.targets || {})) {
       if (tval === 'ALL')           st.targets[sid] = 'ALL';
       else if (Array.isArray(tval)) st.targets[sid] = new Set(tval);
@@ -5112,29 +5375,9 @@ function loadState() {
 
 // renderOwnedList 每次都从头渲染（按钮默认全 none），
 // loadState 恢复了 st 之后需要把视觉状态补回来
-function applyOwnedDom(sid) {
-  const isFull = st.fullOwned.has(sid);
-  const ownedP = st.owned[sid];
-  const state   = isFull ? 'full' : (ownedP && ownedP.size > 0 ? 'part' : 'none');
-  if (state === 'none') return;
-
-  document.querySelectorAll(`[data-sid="${sid}"][data-state]`).forEach(b => {
-    b.className = 'own-btn' + (b.dataset.state === state ? ` on-${state}` : '');
-  });
-  const grid = document.getElementById('og-' + sid);
-  if (!grid) return;
-
-  if (state === 'part') {
-    grid.style.display = 'grid';
-    const sDataDom = SUITS.find(x => x.id === sid);
-    for (const p of (sDataDom?.partNames || PART_NAMES)) {
-      const btn = document.getElementById(`op-${sid}-${p}`);
-      if (btn) btn.className = 'part-btn' + (ownedP && ownedP.has(p) ? ' on' : '');
-    }
-  } else {
-    grid.querySelectorAll('.part-btn').forEach(b => b.className = 'part-btn on');
-  }
-}
+// 网格是直接从 st 渲染的，renderOwnedList() 本身就等于回填 UI。
+// 保留此函数只为兼容既有调用点（switchProfile 等）。
+function applyOwnedDom(sid) { refreshOwnedCard(sid); }
 
 // ════════════════════════════════════════════════════
 // INIT
@@ -5728,11 +5971,66 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     </div>
     <div class="cl-body">
 
+      <!-- v1.6 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge latest">v1.6</span>
+          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-date">2026 年 8 月 9 日</span>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🗓️ 新增：皮卡月刊上架日历</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>全新日历视图</strong>：时间轴大标题旁新增日历按钮，点击可查看每期月刊的上架区间，一屏纵览全月排期。</span></div>
+            <div class="cl-item"><span><strong>换档日重叠展示</strong>：上一期结束与下一期开始是同一天，两条色条在该日重叠、颜色加深，交接关系一目了然。</span></div>
+            <div class="cl-item"><span><strong>稀有度配色</strong>：色条按套装稀有度着色，金色套装用橙、紫色套装用紫。</span></div>
+            <div class="cl-item"><span><strong>点击查看详情</strong>：点击任意色条即可查看该期海报与日期区间，选中的色条会变为不透明高亮。</span></div>
+            <div class="cl-item"><span><strong>月份切换</strong>：支持左右翻阅任意月份；打开时默认停在当月，并自动选中当天正在上架的一期。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🧩 重构：第一步「已持有」改为套装卡网格</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>折叠列表改为卡面网格</strong>：全部 51 套以立绘卡片平铺展示，不必再逐个展开专题，扫视和查找效率大幅提升。</span></div>
+            <div class="cl-item"><span><strong>单击即可标记</strong>：点一下卡片就是「已集齐 / 未持有」切换，填写主流程从数百次点击压缩到几十次。</span></div>
+            <div class="cl-item"><span><strong>保留精确填写</strong>：卡片右下角 <strong>⋯</strong> 可展开抽屉，逐件勾选部件；也可只填「缺 N 件」，非目标套装用数量填写即可，计算结果完全不受影响。</span></div>
+            <div class="cl-item"><span><strong>状态一眼可辨</strong>：灰度为未持有，彩色加勾为已集齐，彩色加「缺 N 件」为部分持有；稀有度改用卡片描边颜色表示。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🎨 异色套装标记升级</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>异色按钮可直接标记拥有</strong>：原先只能切换立绘预览，现在点击即可标记为已拥有异色，标记后卡面自动展示异色立绘。</span></div>
+            <div class="cl-item"><span><strong>与我的衣橱双向同步</strong>：第一步的异色标记与衣橱页「异色拥有情况」弹窗共用同一份数据，任意一端修改都会实时同步。</span></div>
+            <div class="cl-item"><span>套装未集齐时异色按钮为锁定态，避免出现「套装没有、异色却有」的矛盾记录。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🔧 问题修复</div>
+          <div class="cl-items">
+            <div class="cl-item"><span><strong>修复海报放大失效</strong>：时间轴海报重新渲染后点击无法放大的问题已修复。</span></div>
+            <div class="cl-item"><span><strong>修复日历日期偏移</strong>：东八区下色条整体后移一天、换档重叠落错日期的问题已修复。</span></div>
+            <div class="cl-item"><span><strong>修复切换页签后定位错误</strong>：从其他页签进入卡池总览时，时间轴未定位到当天的问题已修复。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">✨ 细节优化</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>时间轴标题的说明与日历图标改用矢量图标，替换原先的字符与 emoji，各端显示一致。</span></div>
+            <div class="cl-item"><span>日历按钮紧邻标题，说明按钮移至卡片右上角，布局更清晰。</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- v1.5 -->
       <div class="cl-block">
         <div class="cl-version-row">
-          <span class="cl-badge latest">v1.5</span>
-          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-badge">v1.5</span>
           <span class="cl-date">2026 年 8 月 3 日</span>
         </div>
 
