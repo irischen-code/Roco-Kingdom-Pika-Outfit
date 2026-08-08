@@ -561,6 +561,134 @@
     .og-stepper .val { min-width: 46px; text-align: center; font-weight: 700; }
     .og-stepper .hint { color: var(--text-muted); font-size: 10px; }
 
+    /* ════ 第二步「目标套装」卡网格 ════
+       与第一步同一套视觉语言，但状态编码必须不同：
+       第二步展示的全部是「未持有」套装，若沿用第一步的灰度（灰=未持有）
+       来表示「未选中」会产生歧义。故此处未选中只降透明度、不转灰，
+       选中用黄环 + 勾（与全站选中语言一致）。 */
+    /* 已选目标标签条：只有这一条吸顶，工具栏照常滚动。
+       滚动容器是 .step-pane（桌面端与移动端 fixed-step-layout 都是它内部滚动）。
+       无边框无色块，但背景必须是不透明的面板底色，否则卡片会从底下透出来。 */
+    .tg-picked {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #FBF7EE;
+      padding: 4px 0 8px;
+      display: none;
+      /* 背景向左右各延伸 24px，盖住 .step-pane 的水平内边距。
+         选中卡片的 box-shadow 描边会画到盒子外、溢进内边距里，
+         只铺到内容盒边缘的话左右会漏出一道黄边。
+         用 box-shadow 而不是负 margin/绝对定位：它不参与布局、不产生横向滚动，
+         且 24px 同时覆盖桌面 16px 与移动端 12px 两种内边距，不必按断点同步数值。 */
+      box-shadow: -24px 0 0 #FBF7EE, 24px 0 0 #FBF7EE;
+    }
+    .tg-picked.show { display: block; }
+    /* 向上补齐 .step-pane 的 padding-top。
+       sticky 的包含块是父元素的「内容盒」，顶边比滚动视口低了一个 padding-top，
+       所以它顶不到最上面，那段 padding 区域会漏出滚动中的卡片。
+       伪元素是绝对定位、不受 sticky 约束，跟着条子一起把这段盖住。
+       高度与 .step-pane 的 padding-top、.target-toolbar 的 margin-bottom 一致，
+       未吸顶时正好填满工具栏与标签条之间的空隙，看不出来。 */
+    .tg-picked::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 100%;
+      height: 12px;
+      background: #FBF7EE;
+      box-shadow: -24px 0 0 #FBF7EE, 24px 0 0 #FBF7EE;   /* 同上，补齐左右内边距 */
+    }
+    /* 单行横向滚动：标签多了向右滑，不再往下堆成多行占掉可视区 */
+    .tg-picked .chips-wrap { position: relative; }
+    .tg-picked .chips {
+      display: flex; flex-wrap: nowrap; gap: 5px;
+      overflow-x: auto; overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;            /* Firefox */
+      -ms-overflow-style: none;
+    }
+    .tg-picked .chips::-webkit-scrollbar { display: none; }
+    /* 右侧渐变：不显示滚动条，靠它暗示「后面还有」，仅在真正溢出时出现。
+       色块去掉后，渐变要淡入面板底色 #FBF7EE */
+    .tg-picked .chips-wrap::after {
+      content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
+      background: linear-gradient(to right, rgba(251,247,238,0), #FBF7EE 78%);
+      pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    }
+    .tg-picked .chips-wrap.overflowing::after { opacity: 1; }
+    .tg-chip {
+      background: #FBC839; border: 1.5px solid #313131; border-radius: 20px;
+      padding: 3px 8px; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      flex-shrink: 0;              /* 不加会被压扁而不是溢出，横向滚动就失效了 */
+      white-space: nowrap;
+    }
+    .tg-chip .x { opacity: 0.55; }
+    .tg-chip:hover .x { opacity: 1; }
+
+    .tg-theme-sec { margin-bottom: 14px; }
+    .tg-theme-hd {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
+    }
+    .tg-theme-hd .nm { font-weight: 700; font-size: 13px; }
+    .tg-theme-hd .dt { font-size: 10px; color: var(--text-muted); }
+    .tg-theme-hd .pending {
+      font-size: 10px; padding: 1px 6px; border-radius: 4px;
+      background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border);
+    }
+
+    .tg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .tg-card {
+      position: relative; border-radius: 9px; overflow: hidden; cursor: pointer;
+      border: 2.5px solid #C9C2B4; background: #FBF7EE; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .tg-card:hover { transform: translateY(-2px); }
+    .tg-art { width: 100%; aspect-ratio: 150/168; object-fit: cover; display: block; transition: opacity 0.15s; }
+    .tg-nm {
+      font-size: 9px; text-align: center; padding: 3px 2px 4px; line-height: 1.25;
+      background: #FBF7EE; color: #313131; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tg-card.gold   { border-color: #EC7900; }
+    .tg-card.purple { border-color: #6037AD; }
+    .tg-card.sel    { box-shadow: 0 0 0 3px #FBC839; }
+    .tg-card:not(.sel) .tg-art { opacity: 0.55; }
+    .tg-card:not(.sel) .tg-nm  { color: var(--text-muted); font-weight: 500; }
+
+    .tg-badge { position: absolute; font-size: 9px; font-weight: 700; line-height: 1; border-radius: 20px; }
+    .tg-check {
+      top: 3px; right: 3px; width: 17px; height: 17px; background: #FBC839;
+      border: 1.5px solid #313131; display: none;
+      align-items: center; justify-content: center; font-size: 10px;
+    }
+    .tg-card.sel .tg-check { display: flex; }
+    /* 整套价格：第二步靠它做取舍，第一步不需要 */
+    .tg-cost { bottom: 24px; left: 3px; padding: 2px 5px; background: rgba(49,49,49,0.82); color: #FBF7EE; }
+    .tg-pending { top: 3px; left: 3px; padding: 2px 4px; background: rgba(240,170,94,0.95); color: #fff; }
+    .tg-partn { bottom: 24px; right: 3px; padding: 2px 5px; background: #6037AD; color: #fff; display: none; }
+    .tg-card.partial .tg-partn { display: block; }
+    .tg-more {
+      position: absolute; bottom: 24px; right: 3px; width: 19px; height: 19px;
+      border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; border: none;
+      cursor: pointer; font-size: 11px; font-family: inherit; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tg-more:hover { background: rgba(0,0,0,0.78); }
+    .tg-card.partial .tg-more { display: none; }
+    .tg-card.drawer-open { box-shadow: 0 0 0 3px #6037AD; }
+
+    .tg-drawer {
+      grid-column: 1 / -1; background: #F3EADC; border: 1.5px solid #313131;
+      border-radius: 10px; padding: 9px; margin: 2px 0 4px;
+    }
+    .tg-drawer .dh { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .tg-mode-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .tg-mode-btn {
+      flex: 1; font-size: 11px; padding: 6px; border-radius: 8px;
+      border: 1.5px solid #C9C2B4; background: #FBF7EE; cursor: pointer; font-family: inherit;
+    }
+    .tg-mode-btn.on { background: #FBC839; border-color: #313131; font-weight: 700; }
+
     /* ── Parts grid ── */
     .parts-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-top: 8px; }
     .part-btn {
@@ -877,7 +1005,8 @@
     /* ── Target toolbar ── */
     .target-toolbar {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px; padding: 0 2px;
+      /* 12px 与 .tg-picked::before 的高度对齐，避免未吸顶时伪元素压到工具栏 */
+      margin-bottom: 12px; padding: 0 2px;
     }
     .target-sel-count {
       font-size: 11px; color: var(--text-muted); font-weight: 500;
@@ -1094,10 +1223,17 @@
       left: 0;
       width: 100%;
       height: 100%;
+      /* iOS Safari 的 100%/100vh 按「无浏览器 UI」的最大视口算，
+         地址栏与底部工具栏会盖住弹窗上下两端；dvh 取当前可见高度 */
+      height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      /* 留出边距与刘海/home 条安全区，弹窗不会贴死屏幕边缘 */
+      padding: 12px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
     .modal-backdrop {
       position: absolute;
@@ -1116,7 +1252,7 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       max-width: 360px;
       width: 85%;
-      max-height: auto;
+      max-height: 100%;   /* 原为 auto —— 无效值会被丢弃，等于不限高 */
       overflow-y: auto;
       z-index: 1001;
     }
@@ -1185,7 +1321,9 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       max-width: 900px;
       width: 92%;
-      max-height: 92vh;
+      /* 用 100% 顶满 overlay（overlay 已扣掉 padding 与安全区），
+         比写死 vh 更可靠：vh 在移动端浏览器会算进被 UI 遮挡的区域 */
+      max-height: 100%;
       overflow: hidden;
       z-index: 1001;
       padding: 0;
@@ -1770,7 +1908,10 @@
       #view-planner.fixed-step-layout .step-tabs { flex-shrink: 0; }
       #view-planner.fixed-step-layout .step-pane {
         flex: 1; min-height: 0;
-        overflow-y: auto; -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        /* 不能加 -webkit-overflow-scrolling: touch：它在 iOS 上会让容器内的
+           position:sticky 抖动/错位，而第二步的已选标签条正依赖 sticky。
+           该属性自 iOS 13 起已无必要（惯性滚动是默认行为）。 */
       }
       #view-planner.fixed-step-layout .step-nav-btns { flex-shrink: 0; }
       .pool-stats-card { padding: 8px; gap: 6px; }
@@ -1808,13 +1949,15 @@
       .parts-grid { grid-template-columns: repeat(3, 1fr); gap: 3px; }
       .part-btn { font-size: 9px; padding: 5px 2px; min-height: 34px; }
 
-      /* ── 步骤2 目标套装 ── */
+      /* ── 步骤2 目标套装卡网格 ── */
       .target-toolbar { flex-wrap: wrap; gap: 6px; }
-      .target-row { padding: 8px 10px; }
-      .target-hdr { flex-wrap: wrap; gap: 4px; }
-      .target-name { font-size: 12px; }
-      .all-tag { font-size: 10px; padding: 3px 8px; min-height: 28px; }
-      .target-cb { width: 16px; height: 16px; }
+      .tg-grid { gap: 5px; }
+      .tg-nm { font-size: 8px; padding: 2px 1px 3px; }
+      .tg-theme-hd .nm { font-size: 12px; }
+      .tg-cost, .tg-partn { font-size: 8px; padding: 2px 4px; }
+      /* 角标在手机上放大一点，保证可点 */
+      .tg-more { width: 22px; height: 22px; bottom: 22px; font-size: 12px; }
+      .tg-mode-btn { font-size: 10px; padding: 7px 4px; }
 
       /* ── 步骤3 资源输入 ── */
       .res-label { width: 68px; font-size: 12px; }
@@ -2287,12 +2430,18 @@
 
     <!-- Step 2: Targets -->
     <div class="step-pane hidden" id="sc-targets">
-      <div class="notice" id="notice-targets">勾选想要的套装。默认选中「只看整套」目标；若只需要部分部件，请点击「只看整套」标签（取消选中状态），切换为「只要部分」模式。<button class="notice-close" onclick="dismissNotice('targets')">✕</button></div>
+      <div class="notice" id="notice-targets">点击卡片选为目标。默认按「整套」计算；若只需要部分部件，点卡片右下角 ⋯ 切换为「只要部分部件」。<button class="notice-close" onclick="dismissNotice('targets')">✕</button></div>
       <div class="target-toolbar">
         <span class="target-sel-count" id="target-sel-count">已选 0 套</span>
         <div style="display:flex;gap:6px">
           <button class="target-quick-btn" onclick="selectAllTargets()">全选未集齐</button>
           <button class="target-quick-btn ghost" onclick="clearAllTargets()">取消全选</button>
+        </div>
+      </div>
+      <!-- 已选目标标签条：单行横滑、吸顶。只粘这一条，工具栏照常随内容滚动 -->
+      <div class="tg-picked" id="target-picked">
+        <div class="chips-wrap">
+          <div class="chips" id="target-chips"></div>
         </div>
       </div>
       <div id="target-list"></div>
@@ -4302,35 +4451,46 @@ function renderTargetList() {
   el.innerHTML = '';
   const today = todayStr();
 
-  // Split suits into uncollected and fully-collected
-  const uncollected = [];
-  const collected   = [];
+  // 已集齐的套装没必要设为目标，单独归到底部折叠区
+  const collected = [];
+  const byTheme   = [];
   for (const th of THEMES_RAW) {
     if (th.suspended) continue;
+    const list = [];
     for (const raw of th.suits) {
       const s = SUITS.find(x => x.id === raw.id);
       if (st.fullOwned.has(s.id)) collected.push({ s, th });
-      else                         uncollected.push({ s, th });
+      else                        list.push(s);
     }
+    if (list.length) byTheme.push({ th, list, inPool: th.date <= today });
   }
 
-  // Flat list: uncollected suits (no collapsible)
-  if (uncollected.length === 0) {
+  if (byTheme.length === 0) {
     const done = document.createElement('div');
     done.className = 'notice';
     done.textContent = '🎉 全部套装均已集齐，无需设定目标！';
     el.appendChild(done);
-  } else {
-    for (const { s, th } of uncollected) {
-      el.appendChild(buildTargetRow(s, th, th.date <= today));
-    }
   }
 
-  // Already-collected section at bottom — collapsible
+  for (const { th, list, inPool } of byTheme) {
+    const sec = document.createElement('div');
+    sec.className = 'tg-theme-sec';
+    sec.innerHTML = `
+      <div class="tg-theme-hd">
+        <span class="nm">${th.theme}</span>
+        <span class="dt">${th.date.slice(5).replace('-', '/')}</span>
+        ${inPool ? '' : '<span class="pending">待入池</span>'}
+      </div>
+      <div class="tg-grid"></div>`;
+    const grid = sec.querySelector('.tg-grid');
+    for (const s of list) grid.appendChild(buildTargetCard(s, inPool));
+    el.appendChild(sec);
+  }
+
+  // 已集齐区（可折叠）
   if (collected.length > 0) {
     const list = document.createElement('div');
     list.style.display = 'none';
-
     for (const { s, th } of collected) {
       const item = document.createElement('div');
       item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:12px;color:var(--text-muted);border-radius:6px;';
@@ -4338,15 +4498,12 @@ function renderTargetList() {
         <span style="flex-shrink:0">✅</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.sub}</span>
         <span class="rarity-tag ${s.rarity}" style="font-size:9px">${s.rarity==='gold'?'金':'紫'}</span>
-        <span style="font-size:10px;color:var(--text-dim);flex-shrink:0">${th.theme}</span>
-      `;
+        <span style="font-size:10px;color:var(--text-dim);flex-shrink:0">${th.theme}</span>`;
       list.appendChild(item);
     }
-
     const arrow = document.createElement('span');
     arrow.textContent = '▶';
     arrow.style.cssText = 'font-size:9px;transition:transform 0.2s;display:inline-block;margin-right:4px;';
-
     const sep = document.createElement('div');
     sep.className = 'target-section-label';
     sep.style.cssText += ';cursor:pointer;display:flex;align-items:center;user-select:none;';
@@ -4357,51 +4514,153 @@ function renderTargetList() {
       list.style.display = open ? 'none' : 'block';
       arrow.style.transform = open ? '' : 'rotate(90deg)';
     };
-
     el.appendChild(sep);
     el.appendChild(list);
   }
 
   updateTargetSelCount();
+  renderTargetChips();
 }
 
-function buildTargetRow(s, th, inPool) {
-  const prev       = st.targets[s.id];
-  const isSelected = prev === 'ALL' || (prev instanceof Set);
-  const isAll      = prev === 'ALL' || prev === undefined;
+// 目标卡。状态全部读自 st.targets，重建即等于刷新。
+function buildTargetCard(s, inPool) {
+  const card = document.createElement('div');
+  card.id = 'tgc-' + s.id;
+  card.className = `tg-card ${s.rarity} ${targetCardState(s.id)}`;
+  card.title = s.sub;
+  const tval = st.targets[s.id];
+  const partN = (tval instanceof Set) ? tval.size : 0;
+  card.innerHTML = `
+    <img class="tg-art" src="assets/images/suitcard/${s.sub}.png" alt="${s.sub}"
+         loading="lazy" onerror="this.style.visibility='hidden'">
+    <div class="tg-badge tg-check">✓</div>
+    <div class="tg-badge tg-cost">${s.setPrice}★</div>
+    ${inPool ? '' : '<div class="tg-badge tg-pending">待入池</div>'}
+    <div class="tg-badge tg-partn" id="tgpn-${s.id}">${partN} 件</div>
+    <button class="tg-more" title="整套 / 只要部分部件"
+      onclick="event.stopPropagation();toggleTargetDrawer('${s.id}')">⋯</button>
+    <div class="tg-nm">${s.sub}</div>`;
+  card.onclick = () => toggleTargetCard(s.id);
+  return card;
+}
 
-  const row = document.createElement('div');
-  row.className = 'target-row' + (isSelected ? ' selected' : '');
-  row.id = 'tr-' + s.id;
-  if (!inPool) row.style.opacity = '0.7';
+function targetCardState(sid) {
+  const v = st.targets[sid];
+  if (v === 'ALL') return 'sel';
+  if (v instanceof Set && v.size > 0) return 'sel partial';
+  if (v instanceof Set) return 'partial';   // 已切到「只要部分」但还没选部件
+  return '';
+}
 
-  row.innerHTML = `
-    <div class="target-hdr">
-      <input type="checkbox" class="target-cb" id="tc-${s.id}"
-        ${isSelected ? 'checked' : ''}
-        onchange="toggleTarget('${s.id}', this.checked)">
-      <label class="target-name" for="tc-${s.id}">${s.sub}</label>
-      <span class="rarity-tag ${s.rarity}">${s.rarity==='gold'?'金':'紫'}</span>
-      ${!inPool ? `<span style="font-size:10px;color:var(--amber)">待入池</span>` : ''}
-      <button class="all-tag ${isAll ? 'on' : ''}" id="ta-${s.id}" onclick="toggleAllTag('${s.id}')">只看整套</button>
+function refreshTargetCard(sid) {
+  const card = document.getElementById('tgc-' + sid);
+  if (!card) return;
+  const s = SUITS.find(x => x.id === sid);
+  const keepDrawer = card.classList.contains('drawer-open');
+  card.className = `tg-card ${s.rarity} ${targetCardState(sid)}${keepDrawer ? ' drawer-open' : ''}`;
+  const pn = document.getElementById('tgpn-' + sid);
+  const v  = st.targets[sid];
+  if (pn) pn.textContent = `${(v instanceof Set) ? v.size : 0} 件`;
+}
+
+// 上方已选目标缩略条
+function renderTargetChips() {
+  const bar   = document.getElementById('target-picked');
+  const chips = document.getElementById('target-chips');
+  if (!bar || !chips) return;
+  const picked = SUITS.filter(s => {
+    const v = st.targets[s.id];
+    return !st.fullOwned.has(s.id) && (v === 'ALL' || (v instanceof Set && v.size > 0));
+  });
+  bar.classList.toggle('show', picked.length > 0);
+  chips.innerHTML = picked.map(s => {
+    const v = st.targets[s.id];
+    const suffix = (v instanceof Set) ? `·${v.size}件` : '';
+    return `<span class="tg-chip" onclick="toggleTargetCard('${s.id}')">${s.sub}${suffix}<span class="x">✕</span></span>`;
+  }).join('');
+
+  // 仅在真正横向溢出时才亮出右侧渐变提示
+  const wrap = chips.parentElement;
+  if (wrap) {
+    requestAnimationFrame(() => {
+      wrap.classList.toggle('overflowing', chips.scrollWidth > chips.clientWidth + 1);
+    });
+  }
+}
+
+// 单击卡片 = 选为目标 / 取消（整套）
+function toggleTargetCard(sid) {
+  const v = st.targets[sid];
+  const isOn = v === 'ALL' || (v instanceof Set && v.size > 0);
+  st.targets[sid] = isOn ? undefined : 'ALL';
+  refreshTargetCard(sid);
+  syncTargetDrawer(sid);
+  updateTargetSelCount();
+  renderTargetChips();
+  updatePoolStats();
+}
+
+// ⋯ 抽屉：整套 / 只要部分部件
+function toggleTargetDrawer(sid) {
+  const existing = document.getElementById('tgdrawer-' + sid);
+  document.querySelectorAll('.tg-drawer').forEach(d => d.remove());
+  document.querySelectorAll('.tg-card.drawer-open').forEach(c => c.classList.remove('drawer-open'));
+  if (existing) return;
+
+  const s = SUITS.find(x => x.id === sid);
+  const card = document.getElementById('tgc-' + sid);
+  if (!s || !card) return;
+
+  const dr = document.createElement('div');
+  dr.id = 'tgdrawer-' + sid;
+  dr.className = 'tg-drawer';
+  dr.onclick = e => e.stopPropagation();
+  dr.innerHTML = buildTargetDrawerHTML(s);
+  // 追加到网格末尾而非 card.after()：抽屉占满 4 列，插在卡片中间
+  // 会把其后的卡片全部挤到下一行
+  card.parentElement.appendChild(dr);
+  card.classList.add('drawer-open');
+}
+
+function buildTargetDrawerHTML(s) {
+  const v = st.targets[s.id];
+  const allMode = !(v instanceof Set);          // undefined 或 'ALL' 都按整套
+  const owned = st.owned[s.id] || new Set();
+  const names = s.partNames || PART_NAMES;
+  return `
+    <div class="dh">${s.sub} · 目标范围
+      <button class="modal-close-btn is-static" style="margin-left:auto"
+        onclick="toggleTargetDrawer('${s.id}')" aria-label="关闭">✕</button></div>
+    <div class="tg-mode-row">
+      <button class="tg-mode-btn ${allMode ? 'on' : ''}" onclick="setTargetMode('${s.id}','all')">整套（${s.setPrice}★）</button>
+      <button class="tg-mode-btn ${allMode ? '' : 'on'}" onclick="setTargetMode('${s.id}','part')">只要部分部件</button>
     </div>
-    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;padding-left:22px">${th.theme}</div>
-    <div class="parts-grid" id="tg-${s.id}" style="display:${!isAll ? 'grid' : 'none'};margin-top:8px">
-      ${(s.partNames || PART_NAMES).map(p => {
-        const ownedParts = st.owned[s.id] || new Set();
-        const isOwned  = ownedParts.has(p);
-        const targeted = !isOwned && prev instanceof Set && prev.has(p);
+    ${allMode ? '' : `<div class="parts-grid" id="tg-${s.id}">
+      ${names.map(p => {
+        const isOwned  = owned.has(p);
+        const targeted = (v instanceof Set) && v.has(p);
         return isOwned
-          ? `<button class="part-btn" id="tp-${s.id}-${p}" disabled title="已持有">
-               ${p}<br><span style="font-size:9px">已持有</span>
-             </button>`
-          : `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}" data-sid="${s.id}" data-part="${p}" onclick="toggleTargetPart('${s.id}','${p}')">
-               ${p}<br><span style="font-size:9px">${s.parts[p]}星</span>
-             </button>`;
+          ? `<button class="part-btn" disabled title="已持有">${p}<br><span style="font-size:9px">已持有</span></button>`
+          : `<button class="part-btn${targeted ? ' target' : ''}" id="tp-${s.id}-${p}"
+               onclick="toggleTargetPart('${s.id}','${p}')">${p}<br><span style="font-size:9px">${s.parts[p]}星</span></button>`;
       }).join('')}
-    </div>
-  `;
-  return row;
+    </div>`}`;
+}
+
+function syncTargetDrawer(sid) {
+  const dr = document.getElementById('tgdrawer-' + sid);
+  if (!dr) return;
+  const s = SUITS.find(x => x.id === sid);
+  if (s) dr.innerHTML = buildTargetDrawerHTML(s);
+}
+
+function setTargetMode(sid, mode) {
+  st.targets[sid] = (mode === 'all') ? 'ALL' : new Set();
+  refreshTargetCard(sid);
+  syncTargetDrawer(sid);
+  updateTargetSelCount();
+  renderTargetChips();
+  updatePoolStats();
 }
 
 // ════════════════════════════════════════════════════
@@ -4418,102 +4677,39 @@ function selectAllTargets() {
   for (const s of SUITS) {
     if (st.fullOwned.has(s.id)) continue;
     st.targets[s.id] = 'ALL';
-    const row = document.getElementById('tr-' + s.id);
-    if (!row) continue;
-    row.classList.add('selected');
-    const cb = document.getElementById('tc-' + s.id);
-    if (cb) cb.checked = true;
-    const ta = document.getElementById('ta-' + s.id);
-    if (ta) ta.classList.add('on');
-    const tg = document.getElementById('tg-' + s.id);
-    if (tg) tg.style.display = 'none';
+    refreshTargetCard(s.id);
   }
+  document.querySelectorAll('.tg-drawer').forEach(d => d.remove());
+  document.querySelectorAll('.tg-card.drawer-open').forEach(c => c.classList.remove('drawer-open'));
   updatePoolStats();
   updateTargetSelCount();
+  renderTargetChips();
 }
 
 function clearAllTargets() {
   for (const sid of Object.keys(st.targets)) {
     st.targets[sid] = undefined;
-    const row = document.getElementById('tr-' + sid);
-    if (!row) continue;
-    row.classList.remove('selected');
-    const cb = document.getElementById('tc-' + sid);
-    if (cb) cb.checked = false;
-    const ta = document.getElementById('ta-' + sid);
-    if (ta) ta.classList.add('on');
-    const tg = document.getElementById('tg-' + sid);
-    if (tg) {
-      tg.style.display = 'none';
-      tg.querySelectorAll('.part-btn').forEach(b => b.className = 'part-btn');
-    }
+    refreshTargetCard(sid);
   }
+  document.querySelectorAll('.tg-drawer').forEach(d => d.remove());
+  document.querySelectorAll('.tg-card.drawer-open').forEach(c => c.classList.remove('drawer-open'));
   updatePoolStats();
   updateTargetSelCount();
-}
-
-function toggleTarget(sid, checked) {
-  const row = document.getElementById('tr-' + sid);
-  if (checked) {
-    st.targets[sid] = 'ALL';
-    row.classList.add('selected');
-    document.getElementById('ta-' + sid).classList.add('on');
-    document.getElementById('tg-' + sid).style.display = 'none';
-  } else {
-    st.targets[sid] = undefined;
-    row.classList.remove('selected');
-    document.getElementById('tg-' + sid).style.display = 'none';
-    document.querySelectorAll(`#tg-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
-  }
-  updatePoolStats();
-  updateTargetSelCount();
-}
-
-function toggleAllTag(sid) {
-  const cb   = document.getElementById('tc-' + sid);
-  const tag  = document.getElementById('ta-' + sid);
-  const grid = document.getElementById('tg-' + sid);
-  const row  = document.getElementById('tr-' + sid);
-  const isAll = tag.classList.contains('on');
-  if (isAll) {
-    // 切换到"只要部分"模式——展开部件网格，但不自动勾选
-    // 等用户实际选了部件后再激活复选框
-    tag.classList.remove('on');
-    grid.style.display = 'grid';
-    st.targets[sid] = new Set();
-    cb.checked = false;
-    if (row) row.classList.remove('selected');
-    updateTargetSelCount();
-  } else {
-    // 切换回"只看整套"模式
-    tag.classList.add('on');
-    grid.style.display = 'none';
-    st.targets[sid] = 'ALL';
-    cb.checked = true;
-    if (row) row.classList.add('selected');
-    document.querySelectorAll(`#tg-${sid} .part-btn`).forEach(b => b.className = 'part-btn');
-  }
-  updatePoolStats();
+  renderTargetChips();
 }
 
 function toggleTargetPart(sid, part) {
-  if (!st.targets[sid] || st.targets[sid] === 'ALL') return;
-  if ((st.owned[sid] || new Set()).has(part)) return; // 已持有部件不可选为目标
+  if (!(st.targets[sid] instanceof Set)) return;
+  if ((st.owned[sid] || new Set()).has(part)) return;   // 已持有的部件不能设为目标
+  const set = st.targets[sid];
+  set.has(part) ? set.delete(part) : set.add(part);
+
   const btn = document.getElementById(`tp-${sid}-${part}`);
-  if (st.targets[sid].has(part)) {
-    st.targets[sid].delete(part);
-    btn.className = 'part-btn';
-  } else {
-    st.targets[sid].add(part);
-    btn.className = 'part-btn target';
-  }
-  // 有部件被选中才激活该套装的复选框；全部取消则反选
-  const hasAny = st.targets[sid].size > 0;
-  const cb  = document.getElementById('tc-' + sid);
-  const row = document.getElementById('tr-' + sid);
-  if (cb)  cb.checked = hasAny;
-  if (row) row.classList.toggle('selected', hasAny);
+  if (btn) btn.className = 'part-btn' + (set.has(part) ? ' target' : '');
+
+  refreshTargetCard(sid);
   updateTargetSelCount();
+  renderTargetChips();
   updatePoolStats();
 }
 
@@ -6443,6 +6639,7 @@ function updatePoolClearBudgetC2(suitId, isChecked, cost) {
   img.style.cssText = `
     max-width: 90vw;
     max-height: 90vh;
+    max-height: 90dvh;   /* 移动端 vh 含被浏览器 UI 遮挡的区域，会把图上下裁掉 */
     border-radius: 8px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
   `;
