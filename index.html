@@ -6150,6 +6150,14 @@ let calendarState = {
   selectedTheme: null,
 };
 
+// 按本地时区拼 YYYY-MM-DD。不能用 toISOString()：它按 UTC 输出，
+// 东八区的本地零点会退回前一天，导致日历格子的键比显示的日号早一天、色条整体后移。
+function toLocalDateStr(d) {
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0');
+}
+
 function openMonthlyCalendar() {
   const modal = document.getElementById('monthly-calendar-modal');
   if (modal) {
@@ -6159,9 +6167,7 @@ function openMonthlyCalendar() {
     calendarState.currentMonth = now.getMonth();
     calendarState.currentYear = now.getFullYear();
     // 默认选中「今天正在上架」的那一期，保证打开时高亮块就在当前月内可见
-    const today = now.getFullYear() + '-'
-      + String(now.getMonth() + 1).padStart(2, '0') + '-'
-      + String(now.getDate()).padStart(2, '0');
+    const today = toLocalDateStr(now);
     const bars = getMonthlyBars(now.getFullYear());
     const current = bars.find(b => today >= b.start && today <= b.end)
       || [...bars].reverse().find(b => b.start <= today)   // 空档期取最近一期
@@ -6220,7 +6226,7 @@ function renderMonthlyCalendar() {
   for (let week = 0; week < 6; week++) {
     const weekDates = [];
     for (let day = 0; day < 7; day++) {
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = toLocalDateStr(currentDate);
       datesShown.push(dateStr);
       weekDates.push({
         date: new Date(currentDate),
