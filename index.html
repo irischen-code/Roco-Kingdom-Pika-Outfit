@@ -2086,15 +2086,15 @@
     }
     /* ── standalone 模式（添加到主屏幕）移动端专属覆盖 ── */
     @media (max-width: 600px) and (display-mode: standalone) {
-      /* 这里原是 80px / 24px。相对普通移动端多出的 +16 / +14（合计约 30px），
-         是 env() 失效年代为 iOS home indicator 手工补的量。viewport-fit=cover
-         补上后 env() 已生效，再留着就会双重补偿、底部空出一大块。
-         现只保留图标放大（34→36）真正需要的那几像素。 */
-      .bottom-nav { height: calc(68px + env(safe-area-inset-bottom)); }
-      .bnav-item { padding-bottom: 12px; }
+      /* 80/24 是配合放大图标（34→36）的正常高度，不是安全区补偿。
+         实测安卓 PWA 里 env(safe-area-inset-*) 恒为 0（视口被夹在系统栏之间，
+         并未 edge-to-edge），iOS 下 env() 则由 .bottom-nav 自身的
+         padding-bottom 吸收，与这里的内容留白互不重叠。 */
+      .bottom-nav { height: calc(80px + env(safe-area-inset-bottom)); }
+      .bnav-item { padding-bottom: 24px; }
       #view-planner.fixed-step-layout .planner-screen {
-        height: calc(100vh - 132px - env(safe-area-inset-bottom));
-        height: calc(100dvh - 132px - env(safe-area-inset-bottom));
+        height: calc(100vh - 144px - env(safe-area-inset-bottom));
+        height: calc(100dvh - 144px - env(safe-area-inset-bottom));
       }
       .bnav-blob-wrap { width: 76px; height: 76px; bottom: 28px; }
       .bnav-item.active .bnav-blob-wrap { transform: translateY(-14px); }
