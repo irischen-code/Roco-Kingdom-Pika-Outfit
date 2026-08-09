@@ -6057,10 +6057,12 @@ function downloadWardrobeCard() {
     // iOS 浏览器模式：新标签页打开，用户长按「存储图像」
     const win = window.open('', '_blank');
     win.document.write(
-      '<html><head><title>长按图片 → 存储图像</title><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+      '<html><head><title>长按图片 → 存储图像<\/title><meta name="viewport" content="width=device-width,initial-scale=1"><\/head>' +
       '<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh">' +
       '<img src="' + _wardrobeDataUrl + '" style="max-width:100%;display:block">' +
-      '</body></html>'
+      // 用 <\/ 转义：字符串值不变，但源码里不再出现字面的 </body>，
+      // 否则 Live Server 之类的工具会把自动刷新脚本注入到这段 JS 字符串中间
+      '<\/body><\/html>'
     );
     win.document.close();
     return;
