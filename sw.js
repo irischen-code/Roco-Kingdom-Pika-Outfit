@@ -1,4 +1,4 @@
-const CACHE = 'pika-v21';
+const CACHE = 'pika-v22';
 // 相对路径：在 GitHub 子路径和自有服务器根目录下都会解析成各自正确的地址
 const PRECACHE = [
   './',
