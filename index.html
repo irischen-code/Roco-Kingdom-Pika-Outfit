@@ -1533,44 +1533,15 @@
     .theme-summary-date   { font-size: 11px; color: #313131; background: #E3DAC8; border-radius: 4px; padding: 2px 8px; }
     .theme-direct-yes     { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
     .theme-direct-no      { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
-    .theme-expand-btn {
-      margin-left: auto; padding: 3px 12px; border-radius: 12px;
-      font-size: 11px; font-weight: 600; cursor: pointer;
-      background: transparent; border: 1.5px solid #313131; color: #313131;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-    .theme-expand-btn:hover { background: #313131; color: #fff; }
-    .theme-suits-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .suit-card-wrap { display: flex; flex-direction: column; align-items: flex-start; }
-    .suit-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 20px;
-      font-size: 12px; font-weight: 500;
-      cursor: pointer; border: none; outline: none;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .suit-chip:active { transform: scale(0.96); }
-    .suit-chip.gold   { background: #F0AA5E; color: #fff; }
-    .suit-chip.purple { background: #9A73F9; color: #fff; }
-    .suit-chip::after { content: ' ▾'; font-size: 10px; opacity: 0.7; }
-    .suit-chip.open::after { content: ' ▴'; }
-    .suit-preview-drawer {
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
-      opacity: 0; margin-top: 0;
-    }
-    .suit-preview-drawer.open {
-      max-height: 220px; opacity: 1; margin-top: 6px;
-    }
-    .suit-preview-drawer img {
+    .theme-suits-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .suit-preview-img {
       width: 140px; height: auto; display: block;
       border-radius: 10px; border: 1.5px solid #313131;
       box-shadow: 2px 3px 8px rgba(0,0,0,0.13);
       cursor: zoom-in;
       transition: transform 0.15s, box-shadow 0.15s;
     }
-    .suit-preview-drawer img:hover {
+    .suit-preview-img:hover {
       transform: scale(1.04);
       box-shadow: 4px 6px 16px rgba(0,0,0,0.22);
     }
@@ -2030,10 +2001,7 @@
       .theme-summary-hdr { gap: 4px; }
       .theme-summary-name { font-size: 13px; }
       .theme-summary-date { font-size: 10px; }
-      .theme-expand-btn { padding: 3px 8px; font-size: 10px; }
-      .suit-chip { font-size: 11px; padding: 3px 8px; }
-      .suit-preview-drawer img { width: 100px; }
-      .suit-preview-drawer.open { max-height: 160px; }
+      .suit-preview-img { width: 100px; }
 
       /* ── Lightbox ── */
       .lightbox-inner img { max-width: 94vw; max-height: 82vh; }
@@ -4999,21 +4967,20 @@ function renderPoolThemes() {
     const dateStr = th.date.slice(5).replace('-', '/');
     const tagCls  = th.direct ? 'theme-direct-yes' : 'theme-direct-no';
     const tagTxt  = th.direct ? '直接入池' : '月刊下架后入池';
-    const chips = th.suits.map(s => `
-      <div class="suit-card-wrap">
-        <button class="suit-chip ${s.rarity} open" onclick="toggleSuitPreview(this)">${s.sub}</button>
-        <div class="suit-preview-drawer open">
-          <img src="assets/images/suit/${s.sub}.png" alt="${s.sub}" onclick="openLightbox(this.src,this.alt)">
-        </div>
-      </div>`).join('');
+    // 直接铺套装大图：卡面本身已印有套装名，原先的名称标签是重复信息；
+    // 折叠抽屉也不省流量（max-height:0 只是视觉隐藏，图片照样下载），故一并去掉。
+    // loading=lazy 是关键：58 张图共约 9.3MB，本视图默认 display:none，
+    // 不加 lazy 的话每个访客即使从不打开卡池总览也会把它们全部下载。
+    const suitImgs = th.suits.map(s => `
+      <img class="suit-preview-img" src="assets/images/suit/${s.sub}.png" alt="${s.sub}"
+           loading="lazy" onclick="openLightbox(this.src,this.alt)">`).join('');
     div.innerHTML = `
       <div class="theme-summary-hdr">
         <span class="theme-summary-name">${th.theme}</span>
         <span class="theme-summary-date">${dateStr} 入池</span>
         <span class="${tagCls}">${tagTxt}</span>
-        <button class="theme-expand-btn" onclick="toggleThemeAllPreviews(this)">收起全部</button>
       </div>
-      <div class="theme-suits-chips">${chips}</div>
+      <div class="theme-suits-grid">${suitImgs}</div>
     `;
     el.appendChild(div);
   }
@@ -5022,22 +4989,6 @@ function renderPoolThemes() {
 // ════════════════════════════════════════════════════
 // UI HELPERS
 // ════════════════════════════════════════════════════
-
-function toggleSuitPreview(btn) {
-  const drawer = btn.nextElementSibling;
-  const isOpen = drawer.classList.toggle('open');
-  btn.classList.toggle('open', isOpen);
-}
-
-function toggleThemeAllPreviews(btn) {
-  const card    = btn.closest('.theme-summary');
-  const drawers = card.querySelectorAll('.suit-preview-drawer');
-  const chips   = card.querySelectorAll('.suit-chip');
-  const allOpen = [...drawers].every(d => d.classList.contains('open'));
-  drawers.forEach(d => d.classList.toggle('open', !allOpen));
-  chips.forEach(c => c.classList.toggle('open', !allOpen));
-  btn.textContent = allOpen ? '展开全部' : '收起全部';
-}
 
 function toggleBody(hdr) {
   const body   = hdr.nextElementSibling;
