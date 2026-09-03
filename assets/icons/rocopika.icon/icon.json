@@ -1,0 +1,47 @@
+{
+  "fill" : "automatic",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : "none",
+          "image-name" : "key 2.png",
+          "name" : "key 2",
+          "position" : {
+            "scale" : 2.25,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "image-name" : "backtest 4.png",
+          "name" : "backtest 4",
+          "position" : {
+            "scale" : 3,
+            "translation-in-points" : [
+              -256,
+              -152.9770031782698
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
