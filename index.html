@@ -2313,7 +2313,7 @@
     </button>
   </nav>
   <div class="header-badges">
-    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.8 ↗</span><span class="badge-short">v1.8 ↗</span></span>
+    <span class="badge" style="cursor:pointer" onclick="openChangelog()"><span class="badge-long">数据快照 v1.9 ↗</span><span class="badge-short">v1.9 ↗</span></span>
     <span class="badge" style="cursor:pointer" onclick="switchView('pool');(function(){ const el=document.getElementById('pool-suits-card'); const headerH=document.querySelector('.header').offsetHeight; const top=el.getBoundingClientRect().top+window.scrollY-headerH-12; window.scrollTo({top,behavior:'smooth'}); })()"><span class="badge-long">65 套（含待入池）</span><span class="badge-short">65 套</span></span>
     <span style="cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center;" onclick="openFeedback()">💬</span>
   </div>
@@ -2380,7 +2380,7 @@
     <div class="pool-stats-card">
       <div class="ps-item"><div class="ps-lbl">卡池总卡数</div><div class="ps-val" id="stat-n">203</div></div>
       <div class="ps-item"><div class="ps-lbl">在池套装数</div><div class="ps-val" id="stat-suits">29</div></div>
-      <div class="ps-item"><div class="ps-lbl">每日翻牌</div><div class="ps-val">5</div></div>
+      <div class="ps-item"><div class="ps-lbl">每日翻牌</div><div class="ps-val" id="stat-flips">5</div></div>
       <div class="ps-item"><div class="ps-lbl">每日星上限</div><div class="ps-val">25</div></div>
     </div>
 
@@ -2447,6 +2447,10 @@
         <div class="res-row" style="align-items:center; gap:8px; padding:0 2px;">
           <input type="checkbox" id="today-completed" onchange="saveState()" style="width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:#FBC839;">
           <label for="today-completed" style="font-size:12px; color:#313131; cursor:pointer; flex:1; margin:0;">今日已完成收入</label>
+        </div>
+        <div class="res-row" style="align-items:center; gap:8px; padding:0 2px;">
+          <input type="checkbox" id="academy-joined" onchange="onAcademyToggle()" style="width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:#FBC839;">
+          <label for="academy-joined" style="font-size:12px; color:#313131; cursor:pointer; flex:1; margin:0;">已加入仪典学院（每日翻牌 10 次）</label>
         </div>
         <div class="notice" id="notice-resources" style="margin-bottom:14px">活动、任务等额外产出不计入，实际到手可能更快。<button class="notice-close" onclick="dismissNotice('resources')">✕</button></div>
         <button class="calc-btn" id="calc-btn" onclick="onCalc()">✨ 开始计算规划</button>
@@ -2952,13 +2956,22 @@ function comb(n, k) {
   return r;
 }
 
-function probAtLeast1(N, u) {
+// 每日翻牌次数：基础 5 次；加入「仪典学院」后翻倍为 10 次（永久玩法）。
+// 注意只有翻牌次数翻倍，许愿星每日收入不变——星星往往才是真正的瓶颈，
+// 所以勾选后天数的改善幅度可能不如直觉预期。
+const BASE_FLIPS = 5;
+function flipsPerDay() {
+  return document.getElementById('academy-joined')?.checked ? BASE_FLIPS * 2 : BASE_FLIPS;
+}
+
+function probAtLeast1(N, u, k = BASE_FLIPS) {
   if (N <= 0 || u <= 0) return 0;
   if (u >= N) return 1;
-  // P(at least 1 useful in 5 draws without replacement)
-  const total5 = comb(N, 5);
-  const none5  = comb(N - u, 5);
-  return Math.max(0, Math.min(1, 1 - none5 / total5));
+  if (k >= N) return 1;              // 翻牌数 ≥ 卡池张数，必中
+  // P(at least 1 useful in k draws without replacement)
+  const totalK = comb(N, k);
+  const noneK  = comb(N - u, k);
+  return Math.max(0, Math.min(1, 1 - noneK / totalK));
 }
 
 function shuffle(arr) {
@@ -3006,9 +3019,10 @@ function poolSize(ownedMap, fullOwnedSet, snapshotDate) {
 // MONTE CARLO
 // ════════════════════════════════════════════════════
 
-function runMC(targetSuits, ownedMap, fullOwnedSet, strategy, iters, snapshotDate, startBal, dayInc) {
+function runMC(targetSuits, ownedMap, fullOwnedSet, strategy, iters, snapshotDate, startBal, dayInc, flips = BASE_FLIPS) {
   // targetSuits: [{suitId, parts:'ALL'|Set<string>}]
   // startBal/dayInc: optional star budget tracking; omit for unlimited
+  // flips: 每日翻牌次数，加入仪典学院为 10，否则 5
   const tracked = Number.isFinite(startBal) && Number.isFinite(dayInc);
   const results = [];
 
@@ -3041,7 +3055,7 @@ function runMC(targetSuits, ownedMap, fullOwnedSet, strategy, iters, snapshotDat
       if (tracked) stars += dayInc; // earn today's income before shopping
       const pool = buildPool(curOwned, curFull, snapshotDate);
       if (!pool.length) break;
-      const drawn = shuffle(pool).slice(0, Math.min(5, pool.length));
+      const drawn = shuffle(pool).slice(0, Math.min(flips, pool.length));
 
       for (const card of drawn) {
         const sid = card.suitId;
@@ -3110,13 +3124,14 @@ function computePhase(targets, snapshotDate, startBal, dayInc) {
   }
   const u            = [...usefulIds].filter(id => poolIds.has(id) && !id.endsWith(':set')).length;
   const u_withSet    = [...usefulIds].filter(id => poolIds.has(id)).length;
-  const dailyProb    = probAtLeast1(N, u);            // 不含套装卡（大字展示）
-  const dailyProbAll = probAtLeast1(N_total, u_withSet); // 含套装卡（小字标注）
-  const expUseful = N > 0 ? 5 * u / N : 0;
+  const k            = flipsPerDay();
+  const dailyProb    = probAtLeast1(N, u, k);            // 不含套装卡（大字展示）
+  const dailyProbAll = probAtLeast1(N_total, u_withSet, k); // 含套装卡（小字标注）
+  const expUseful = N > 0 ? k * u / N : 0;
   const hasAll    = targets.some(t => t.parts === 'ALL');
-  const mcMixed   = runMC(targets, st.owned, st.fullOwned, 'mixed',    ITERS, snapshotDate, startBal, dayInc);
-  const mcParts   = runMC(targets, st.owned, st.fullOwned, 'partonly', ITERS, snapshotDate, startBal, dayInc);
-  const mcSet     = hasAll ? runMC(targets, st.owned, st.fullOwned, 'setonly', ITERS, snapshotDate, startBal, dayInc) : null;
+  const mcMixed   = runMC(targets, st.owned, st.fullOwned, 'mixed',    ITERS, snapshotDate, startBal, dayInc, k);
+  const mcParts   = runMC(targets, st.owned, st.fullOwned, 'partonly', ITERS, snapshotDate, startBal, dayInc, k);
+  const mcSet     = hasAll ? runMC(targets, st.owned, st.fullOwned, 'setonly', ITERS, snapshotDate, startBal, dayInc, k) : null;
   return { N, N_total, u, u_withSet, dailyProb, dailyProbAll, expUseful, hasAll, mcMixed, mcParts, mcSet };
 }
 
@@ -3211,7 +3226,8 @@ function buildStrategyPanels(p1Targets, today, totalCost = 0, incomeAtD = 0) {
   const allPadDao = buildPadDaoItems(targetedIds, today);
 
   // ──【新玩家阈值模式】计算"为了达到显著提升需要清的部件阈值"──
-  const A = probAtLeast1(N, u);
+  const _k = flipsPerDay();
+  const A = probAtLeast1(N, u, _k);
   const targetImprovement = 0.025; // 目标提升2.5%
   let thresholdPrice = 20;
   let thresholdItems = [];
@@ -3219,7 +3235,7 @@ function buildStrategyPanels(p1Targets, today, totalCost = 0, incomeAtD = 0) {
 
   for (const item of allPadDao) {
     accCount++;
-    const newProb = probAtLeast1(Math.max(0, N - accCount), u);
+    const newProb = probAtLeast1(Math.max(0, N - accCount), u, _k);
     const improvement = newProb - A;
     thresholdItems.push(item);
 
@@ -3236,7 +3252,7 @@ function buildStrategyPanels(p1Targets, today, totalCost = 0, incomeAtD = 0) {
   const M = topItems.reduce((s, c) => s + c.price, 0);
   const recDays = Math.ceil(M / 25);
 
-  const B = probAtLeast1(Math.max(0, N - kRem), u);
+  const B = probAtLeast1(Math.max(0, N - kRem), u, _k);
   const Apct = (A * 100).toFixed(1);
   const Bpct = (B * 100).toFixed(1);
   const Y = A > 0 ? (1 / A).toFixed(1) : null;
@@ -3487,7 +3503,8 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
   const allPadDao = buildPadDaoItems(targetedIds, today);
 
   // ──【新玩家阈值模式】基于当前卡池计算阈值──
-  const A_current = probAtLeast1(N, u_entry); // 当前卡池命中概率
+  const _k2 = flipsPerDay();
+  const A_current = probAtLeast1(N, u_entry, _k2); // 当前卡池命中概率
   const targetImprovement_c2 = 0.025;
   let thresholdPrice_c2 = 20;
   let thresholdItems_c2 = [];
@@ -3495,7 +3512,7 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
 
   for (const item of allPadDao) {
     accCount_c2++;
-    const newProb = probAtLeast1(Math.max(0, N - accCount_c2), u_entry);
+    const newProb = probAtLeast1(Math.max(0, N - accCount_c2), u_entry, _k2);
     const improvement = newProb - A_current;
     thresholdItems_c2.push(item);
 
@@ -3513,8 +3530,8 @@ function buildStrategyPanelsCase2(nearTargets, nearDate, waitDays, today, totalC
 
   // 入池当天卡池预测
   const N_entry_after = Math.max(0, N_entry - kRem);
-  const A_entry = probAtLeast1(N_entry, u_entry);
-  const B_entry = probAtLeast1(N_entry_after, u_entry);
+  const A_entry = probAtLeast1(N_entry, u_entry, _k2);
+  const B_entry = probAtLeast1(N_entry_after, u_entry, _k2);
   const Apct_e = (A_entry * 100).toFixed(1);
   const Bpct_e = (B_entry * 100).toFixed(1);
   const Y_entry = A_entry > 0 ? (1 / A_entry).toFixed(1) : null;
@@ -5052,6 +5069,19 @@ function animateStatCount(el, to) {
   _cntAnim[id] = requestAnimationFrame(tick);
 }
 
+// 勾选「仪典学院」后：顶部「每日翻牌」跟着变 5/10，并重算已有结果。
+// 走 saveState + maybeLiveRefreshStrategy，与其他资源输入的行为保持一致。
+function onAcademyToggle() {
+  syncFlipStat();
+  saveState();
+  maybeLiveRefreshStrategy();
+}
+
+function syncFlipStat() {
+  const el = document.getElementById('stat-flips');
+  if (el) el.textContent = flipsPerDay();
+}
+
 function updatePoolStats() {
   const today = todayStr();
   const pool  = buildPool(st.owned, st.fullOwned);
@@ -5468,6 +5498,13 @@ function switchProfile(id, targetStep = 'owned') {
   _setActiveId(id);
   st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set(); st.approx = new Set();
   const loaded = loadState();
+  // 该账号没有存档时 loadState 会提前返回，勾选框需在这里显式复位，
+  // 否则会残留上一个账号的「仪典学院」状态
+  if (!loaded) {
+    const _a = document.getElementById('academy-joined');
+    if (_a) _a.checked = false;
+    syncFlipStat();
+  }
   renderOwnedList();
   if (loaded) {
     for (const s of SUITS) applyOwnedDom(s.id);
@@ -5508,6 +5545,9 @@ function onCreateNewProfile() {
   st.owned = {}; st.fullOwned = new Set(); st.targets = {}; st.altOwned = new Set(); st.approx = new Set();
   document.getElementById('star-balance').value = '0';
   document.getElementById('daily-income').value = '25';
+  const _aca = document.getElementById('academy-joined');
+  if (_aca) _aca.checked = false;
+  syncFlipStat();
   renderOwnedList();
   renderTargetList();
   updatePoolStats();
@@ -5531,6 +5571,7 @@ function saveState() {
       targets:   {},
       balance:   document.getElementById('star-balance')?.value ?? '0',
       daily:     document.getElementById('daily-income')?.value ?? '25',
+      academy:   !!document.getElementById('academy-joined')?.checked,
     };
     for (const [sid, parts] of Object.entries(st.owned)) {
       if (parts && parts.size > 0) data.owned[sid] = [...parts];
@@ -5584,6 +5625,9 @@ function loadState() {
     const dlyEl = document.getElementById('daily-income');
     if (balEl && data.balance != null) balEl.value = data.balance;
     if (dlyEl && data.daily  != null) dlyEl.value = data.daily;
+    const acaEl = document.getElementById('academy-joined');
+    if (acaEl) acaEl.checked = !!data.academy;   // 旧存档无此字段 → false（基础 5 次）
+    syncFlipStat();
 
     return true;
   } catch(e) { return false; }
@@ -5612,6 +5656,7 @@ renderDualTimeline();
 renderPoolThemes();
 updatePoolStats();
 updateAccountDisplay();
+syncFlipStat();                  // 无存档时 loadState 不会调用，这里兜底
 updateHistPanel();               // PC 端未计算前右侧展示历史
 
 // All theme bodies collapsed by default
@@ -6189,11 +6234,28 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
     </div>
     <div class="cl-body">
 
+      <!-- v1.9 -->
+      <div class="cl-block">
+        <div class="cl-version-row">
+          <span class="cl-badge latest">v1.9</span>
+          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-date">2026 年 9 月 26 日</span>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">✨ 新增：仪典学院状态</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>第三步「许愿星资源」新增 <strong>「已加入仪典学院」</strong> 选项。勾选后每日翻牌由 5 次变为 <strong>10 次</strong>，顶部「每日翻牌」同步显示。</span></div>
+            <div class="cl-item"><span>该状态会<strong>参与全部计算</strong>：集齐天数、今日命中率、策略对比与垫刀建议都会按 10 次重新计算，勾选后结果立即刷新，无需重新点击计算。</span></div>
+            <div class="cl-item"><span>实测在常见目标下，集齐天数约可<strong>缩短一半</strong>（注意许愿星每日收入不翻倍）。</span></div>
+            <div class="cl-item"><span>勾选状态<strong>按账号分别保存</strong>，洛克1 / 洛克2 可各自设置；未勾选时的计算结果与旧版完全一致。</span></div>
+          </div>
+        </div>
+      </div>
       <!-- v1.8 -->
       <div class="cl-block">
         <div class="cl-version-row">
-          <span class="cl-badge latest">v1.8</span>
-          <span class="cl-tag-current">当前版本</span>
+          <span class="cl-badge">v1.8</span>
           <span class="cl-date">2026 年 9 月 26 日</span>
         </div>
 
