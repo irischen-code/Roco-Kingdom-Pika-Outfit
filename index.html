@@ -2368,6 +2368,13 @@
          用户就卡在这个页面退不出去。 */
       padding: calc(32px + env(safe-area-inset-top, 0px)) 16px 0;
     }
+    /* 弹窗自带的 ✕ 与预览图一起下移：.modal-close-btn 是绝对定位的公共样式
+       （top:14px），不跟随上面的 padding，否则会停在状态栏里、
+       和宿主自己的关闭按钮叠在一起。这里只覆盖本弹窗，不动公共规则。 */
+    .wardrobe-modal .modal-close-btn {
+      top: calc(14px + env(safe-area-inset-top, 0px));
+      right: 20px;
+    }
     /* 图片区：占满剩余高度并单独滚动 */
     .wardrobe-preview-scroll {
       flex: 1; min-height: 0; overflow-y: auto;
