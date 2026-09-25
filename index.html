@@ -2386,17 +2386,20 @@
     }
     .wardrobe-modal-btns button:hover { opacity: 0.85; }
     .wardrobe-modal-btns .share-btn { background: #FBF7EE; }
-    /* 滚动提示：图片没看完时，在按钮区上方浮出一条渐变，暗示还能往下滑 */
+    /* 滚动提示：图片没看完时，在按钮区上方提示还能往下滑。
+       按正常流排在按钮之前（flex 兄弟节点），不用绝对定位：
+       按钮行高度随安全区变化，写死 bottom 值会在有安全区的设备上压住按钮。 */
     .wardrobe-scroll-hint {
-      position: absolute; left: 0; right: 0; bottom: 64px; height: 56px;
-      pointer-events: none; opacity: 1; transition: opacity 0.25s;
-      background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.55));
-      display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+      flex-shrink: 0; pointer-events: none;
+      opacity: 1; max-height: 28px; overflow: hidden;
+      transition: opacity 0.25s, max-height 0.25s;
+      display: flex; align-items: center; justify-content: center;
+      padding: 4px 0 2px;
     }
-    .wardrobe-scroll-hint.hidden { opacity: 0; }
+    .wardrobe-scroll-hint.hidden { opacity: 0; max-height: 0; padding: 0; }
     .wardrobe-scroll-hint span {
-      font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 700;
+      letter-spacing: 0.5px; white-space: nowrap;
     }
     /* 生成中遮罩 */
     .wardrobe-generating {
