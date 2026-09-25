@@ -2152,6 +2152,44 @@
       cursor: pointer; font-family: inherit; color: #313131; transition: opacity 0.15s;
     }
     .wardrobe-gen-btn:hover { opacity: 0.85; }
+    /* 生成设置：账号 / 异色 / 过滤三项都决定「图里放什么」，是生成前的前置设置。
+       账号与异色并排成两个方块（省一行高度），过滤单独一行配滑块。
+       三者均为浅描边的轻量控件，与下方唯一的粗黑边黄色按钮形成「设置 → 执行」层次。 */
+    .wg-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .wg-box-wrap { position: relative; display: block; }
+    .wg-box {
+      width: 100%; box-sizing: border-box;
+      border: 1.5px solid #E2DACB; border-radius: 12px; background: #FBF7EE;
+      padding: 10px 12px; text-align: left; cursor: pointer;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .wg-box:hover { border-color: #B5AC9C; }
+    .wg-box-k {
+      font-size: 10px; color: #A8A49C; font-weight: 700; letter-spacing: 0.5px;
+      margin-bottom: 3px; display: flex; align-items: center; gap: 4px; min-height: 13px;
+    }
+    .wg-box-ic { width: 13px; height: 13px; display: block; flex-shrink: 0; }
+    .wg-box-v {
+      font-size: 14px; font-weight: 800; color: #313131;
+      display: flex; align-items: center; justify-content: space-between; gap: 4px;
+    }
+    .wg-caret { color: #B5B0A7; font-size: 13px; font-weight: 400; }
+    .wg-full {
+      border: 1.5px solid #E2DACB; border-radius: 12px; background: #FBF7EE;
+      padding: 11px 12px; margin-bottom: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .wg-full-l { font-size: 13px; font-weight: 700; color: #4A4744; }
+    /* 滑块：比勾选框点击热区更大，状态也更直观 */
+    .wg-sw { position: relative; width: 40px; height: 23px; flex-shrink: 0; cursor: pointer; display: inline-block; }
+    .wg-sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .wg-sw-track { position: absolute; inset: 0; background: #D5CCBD; border-radius: 999px; transition: background 0.2s; }
+    .wg-sw-thumb { position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .wg-sw input:checked ~ .wg-sw-track { background: #FBC839; }
+    .wg-sw input:checked ~ .wg-sw-thumb { transform: translateX(17px); }
     .wardrobe-hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; }
     .wardrobe-beta-notice {
       background: rgba(0,0,0,0.12); border-radius: 10px;
@@ -2164,24 +2202,123 @@
       position: absolute; left: -9999px; top: 0;
       width: 750px; pointer-events: none;
     }
-    .wc-bg { background: #F4EEE1; padding: 44px 40px 36px; font-family: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif; }
-    .wc-title-area { text-align: center; margin-bottom: 16px; }
-    .wc-title-img { height: 110px; width: auto; display: block; margin: 0 auto; }
+    .wc-root { width:750px; background:#F9EDE1;
+      font-family:'LuokeFont','PingFang SC',-apple-system,'Hiragino Sans GB',sans-serif; }
+
+    /* ── 顶栏：黑底 + logo + 标题 ── */
+    /* 顶栏比例参照设计稿：logo 约为图宽的 6%（750 → 46px），
+       条高约为 logo 的 1.5 倍，整条比正文区更紧凑 */
+    .wc-topbar {
+      background:#131313; display:flex; align-items:center; gap:14px;
+      padding:14px 28px;
+    }
+    .wc-logo { width:46px; height:46px; border-radius:11px; display:block; flex-shrink:0; }
+    .wc-topbar-title { color:#fff; font-size:23px; font-weight:800; letter-spacing:0.5px; }
+
+    .wc-body { padding:30px 40px 30px; }
+
+    /* ── 紫色缎带标题（整图素材）── */
+    .wc-ribbon { display:block; height:64px; width:auto; margin:0 0 6px -14px; }
+
+    /* ── 统计区：图标 + 文字 + 百分比徽章 ── */
+    /* 布局：三列不等分，各列按自身内容取宽（flex:0 0 auto），整体居中。
+       等分会让「19/19」那两列白占宽度，而最长的「406/406 100%」列不够用；
+       按内容分配后三列合计约 642px，在 670px 内容区里还富余约 28px，
+       因此百分比徽章能与数字同排，且不必牺牲图标尺寸。 */
     .wc-stats-row {
-      display: flex; align-items: center;
-      padding: 16px 0; margin-bottom: 28px;
+      display:flex; align-items:center; justify-content:center;
+      padding:8px 0 4px; margin-bottom:24px;
     }
-    .wc-stat-col {
-      flex: 1; display: flex; flex-direction: row;
-      align-items: center; gap: 12px; padding: 0 12px;
-      background: transparent;
+    .wc-stat-col { flex:0 0 auto; display:flex; flex-direction:row; align-items:center; gap:8px; padding:0; }
+    .wc-stat-icon { height:48px; width:auto; display:block; flex-shrink:0; }
+    /* 按「最坏情况」固定文字块宽度：数字行最宽 = 分子分母等长 + 100% 徽章。
+       宽度写在这一层，内部元素左对齐，于是：
+       徽章紧跟数字（不再有空档），整列宽度又恒定，布局不随进度漂移。 */
+    .wc-stat-text { display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
+    .wc-stat-label { font-size:17px; color:#62605E; font-weight:700; white-space:nowrap; }
+    /* 数字与徽章始终同排：nowrap 明确禁止换行 */
+    .wc-stat-numrow { display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; }
+    /* tabular-nums：数字等宽，1 和 4 占位一致，避免 19→406 时宽度跳动 */
+    .wc-stat-num {
+      font-size:22px; font-weight:800; color:#131313; line-height:1.15; white-space:nowrap;
+      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
     }
-    .wc-stat-icon { height: 68px; width: auto; display: block; }
-    .wc-stat-text { display: flex; flex-direction: column; gap: 3px; background: transparent; }
-    .wc-stat-label { font-size: 20px; color: #62605E; font-weight: 500; }
-    .wc-stat-num { font-size: 20px; font-weight: 700; color: #131313; line-height: 1.2; }
-    .wc-stat-total { font-size: 20px; font-weight: 400; color: #62605E; }
-    .wc-stat-sep { width: 1px; background: #C8BFB2; align-self: stretch; margin: 6px 0; flex-shrink: 0; }
+    /* 数字块不预留宽度，徽章紧贴数字；
+       固定宽度改由 .wc-stat-text 承担（见下），这样徽章跟着数字走，
+       而整列宽度仍不随收集进度变化。 */
+    .wc-stat-numbox { display:inline-block; }
+    .wc-stat-total { font-size:22px; font-weight:500; color:#8b8781; }
+    /* 徽章按「100%」的宽度预留，0%/47% 时靠居中占位，不改变整列宽度 */
+    .wc-pct {
+      background:#FBC839; color:#313131; font-size:16px; font-weight:800;
+      padding:3px 9px; border-radius:999px; line-height:1.3; white-space:nowrap;
+      flex-shrink:0; box-sizing:border-box;
+      min-width:62px; text-align:center;
+      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
+    }
+    .wc-stat-sep { width:1px; background:#C8BFB2; align-self:stretch; margin:6px 6px; flex-shrink:0; }
+
+    /* ── 卡片网格：每行 8 张 ── */
+    .wc-section { margin-bottom:22px; }
+    .wc-section:last-of-type { margin-bottom:8px; }
+    .wc-rarity-grid { display:flex; flex-wrap:wrap; gap:9px; }
+
+    /* ── 分区小标题：金/紫用同色圆点，异色用 variant.png ── */
+    .wc-sec-title {
+      display:flex; align-items:center; gap:9px;
+      font-size:19px; font-weight:800; color:#1F1C19;
+      margin:0 0 11px 2px;
+    }
+    .wc-sec-dot { width:15px; height:15px; border-radius:50%; flex-shrink:0; }
+    .wc-sec-dot.gold   { background:#F27F01; }
+    .wc-sec-dot.purple { background:#613AB3; }
+    .wc-sec-icon { width:21px; height:21px; display:block; flex-shrink:0; }
+    .wc-card-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; width:calc((100% - 63px) / 8); }
+    /* 彩色底板：金=橙，紫=紫 */
+    .wc-card-item {
+      position:relative; width:100%; aspect-ratio:150/168; border-radius:10px;
+      overflow:hidden; background:#E3DAC8;
+    }
+    .wc-card-item.gold   { background:#DE8001; }
+    .wc-card-item.purple { background:#5932A3; }
+    .wc-card-item img { width:100%; height:100%; object-fit:cover; display:block; position:relative; z-index:1; }
+    .wc-card-item.unowned img { filter:grayscale(1); }
+    /* 未集齐时底板压暗，避免亮橙/亮紫在灰度图后面反而更扎眼 */
+    .wc-card-item.unowned { background:#B9B1A4; }
+
+    /* 开关打开但一套未集齐时的占位文案 */
+    .wc-empty {
+      text-align:center; padding:48px 0 40px;
+      font-size:17px; font-weight:700; color:#A8A49C;
+    }
+    .wc-card-name { font-size:10px; color:#5f5b55; text-align:center; line-height:1.3; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* 未持有遮罩 + 进度（沿用线上逻辑） */
+    .wc-overlay {
+      position:absolute; inset:0; z-index:2;
+      background:rgba(0,0,0,0.52); border-radius:10px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    }
+    .wc-progress-text { color:#fff; font-size:12px; font-weight:700; line-height:1.15; text-align:center; }
+    .wc-progress-bar-bg { width:64%; height:3px; background:rgba(255,255,255,0.3); border-radius:2px; }
+    .wc-progress-fill { height:100%; background:#fff; border-radius:2px; }
+
+    /* ── 页脚：用户名 + 域名 + 日期 ── */
+    /* 页脚已在 .wc-body 内，左右缩进由 body 的 padding 提供，这里不再加 margin */
+    .wc-footer {
+      position:relative;
+      display:flex; justify-content:space-between; align-items:baseline;
+      padding:18px 0 4px; border-top:1px solid #C8BFB2;
+    }
+    .wc-username { font-size:21px; font-weight:800; color:#313131; }
+    .wc-date { font-size:18px; color:#97938C; letter-spacing:0.5px; }
+    /* 域名绝对居中：用 position 而非 flex 居中，保证它始终在图片正中，
+       不受左侧用户名长短影响（昵称字数不固定）。 */
+    .wc-domain {
+      position:absolute; left:50%; transform:translateX(-50%);
+      font-size:18px; color:#A8A49C; letter-spacing:0.5px;
+    }
+
     /* 衣橱页顶部统计条（页面用，比长图内的紧凑） */
     .wp-stats-row { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 6px 0 18px; }
     .wp-stat-col { flex: 1; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; padding: 0 4px; }
@@ -2191,45 +2328,36 @@
     .wp-stat-num { font-size: 15px; font-weight: 700; color: #131313; line-height: 1.15; }
     .wp-stat-total { font-size: 12px; font-weight: 400; color: #62605E; }
     .wp-stat-sep { width: 1px; height: 26px; background: #C8BFB2; flex-shrink: 0; }
-    /* 按稀有度分区，每行最多 8 张 */
-    .wc-section { margin-bottom: 24px; }
-    .wc-rarity-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .wc-card-wrap {
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      width: calc((100% - 56px) / 8);
-    }
-    .wc-card-item { position: relative; width: 100%; aspect-ratio: 150/168; border-radius: 7px; overflow: hidden; background: #E3DAC8; }
-    .wc-card-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .wc-card-item.unowned img { filter: grayscale(1); }
-    .wc-card-name { font-size: 9px; color: #6b6660; text-align: center; line-height: 1.3; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    /* 未持有遮罩 + 进度 */
-    .wc-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.52); border-radius: 7px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 5px;
-    }
-    .wc-progress-text { color: #fff; font-size: 12px; font-weight: 700; line-height: 1; text-align: center; }
-    .wc-progress-bar-bg { width: 64%; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; }
-    .wc-progress-fill { height: 100%; background: #fff; border-radius: 2px; }
-    .wc-footer {
-      display: flex; justify-content: space-between; align-items: center;
-      padding-top: 16px; border-top: 1px solid #C8BFB2;
-    }
-    .wc-username { font-size: 20px; font-weight: 700; color: #313131; }
-    .wc-date { font-size: 18px; color: #97938C; }
-
     /* ── 衣橱预览弹窗 ── */
+    /* 衣橱长图高宽比约 1:2.8，在 420px 宽的弹窗里高度超过 1100px。
+       按钮若跟在图片后面，就被推到近两屏之外，用户第一眼看不到。
+       因此：图片区独立滚动，按钮固定在弹窗底部，始终可见。 */
     .wardrobe-modal {
       position: fixed; inset: 0; background: rgba(0,0,0,0.82);
       z-index: 1001; display: none; flex-direction: column;
       align-items: center; justify-content: flex-start;
-      padding: 32px 16px 48px; overflow-y: auto;
+      padding: 0; overflow: hidden;
     }
     .wardrobe-modal.open { display: flex; }
-    .wardrobe-modal-box { width: 100%; max-width: 420px; position: relative; }
+    .wardrobe-modal-box {
+      width: 100%; max-width: 420px; position: relative;
+      display: flex; flex-direction: column;
+      height: 100%; padding: 32px 16px 0; box-sizing: border-box;
+    }
+    /* 图片区：占满剩余高度并单独滚动 */
+    .wardrobe-preview-scroll {
+      flex: 1; min-height: 0; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .wardrobe-preview-scroll::-webkit-scrollbar { display: none; }
     .wardrobe-preview-img { width: 100%; border-radius: 12px; display: block; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
-    .wardrobe-modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+    /* 按钮区：固定在底部，不参与滚动 */
+    .wardrobe-modal-btns {
+      display: flex; gap: 10px; flex-shrink: 0;
+      padding: 12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+    }
     .wardrobe-modal-btns button {
       flex: 1; padding: 13px; border-radius: 12px;
       border: 2px solid #313131; font-size: 14px; font-weight: 700;
@@ -2239,6 +2367,18 @@
     }
     .wardrobe-modal-btns button:hover { opacity: 0.85; }
     .wardrobe-modal-btns .share-btn { background: #FBF7EE; }
+    /* 滚动提示：图片没看完时，在按钮区上方浮出一条渐变，暗示还能往下滑 */
+    .wardrobe-scroll-hint {
+      position: absolute; left: 0; right: 0; bottom: 64px; height: 56px;
+      pointer-events: none; opacity: 1; transition: opacity 0.25s;
+      background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.55));
+      display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    }
+    .wardrobe-scroll-hint.hidden { opacity: 0; }
+    .wardrobe-scroll-hint span {
+      font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 700;
+      letter-spacing: 0.5px;
+    }
     /* 生成中遮罩 */
     .wardrobe-generating {
       position: fixed; inset: 0; background: rgba(0,0,0,0.65);
@@ -2625,11 +2765,31 @@
     <div class="wardrobe-input-card">
       <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wardrobe-title-banner">
       <div class="wp-stats-row" id="wardrobe-page-stats"></div>
-      <div style="text-align:center; font-size:15px; color:#888; margin-bottom:16px; position:relative;">
-        当前账号：<span id="wardrobe-account-label" style="font-weight:800; color:#555;"></span><button onclick="toggleWardrobeDropdown(event)" id="wardrobe-dropdown-btn" style="background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:0 0 0 5px;line-height:1;vertical-align:middle;">▾</button>
-        <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:130px;z-index:100;overflow:hidden;"></div>
+      <!-- 生成设置：账号 / 异色 / 过滤，三项都决定「图里放什么」。
+           账号与异色并排省高度，过滤单独一行用滑块。 -->
+      <div class="wg-grid">
+        <!-- 下拉菜单放在按钮外、包一层定位容器：若嵌在按钮内部，
+             点菜单项会冒泡回按钮再次触发 toggle，菜单会立刻被关掉 -->
+        <div class="wg-box-wrap">
+          <button class="wg-box" onclick="toggleWardrobeDropdown(event)" id="wardrobe-dropdown-btn">
+            <span class="wg-box-k">账号</span>
+            <span class="wg-box-v"><span id="wardrobe-account-label"></span><span class="wg-caret">▾</span></span>
+          </button>
+          <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:130px;z-index:100;overflow:hidden;"></div>
+        </div>
+        <button class="wg-box" onclick="openAltOwnedModal()">
+          <span class="wg-box-k"><img src="assets/icon/variant.png" class="wg-box-ic" alt="">异色套装</span>
+          <span class="wg-box-v">去填写<span class="wg-caret">›</span></span>
+        </button>
       </div>
-      <button class="wardrobe-gen-btn" style="background:#F4EEE1; margin-bottom:8px;" onclick="openAltOwnedModal()">异色拥有情况（选填）</button>
+      <label class="wg-full" for="only-owned-toggle">
+        <span class="wg-full-l">只显示已集齐的套装</span>
+        <span class="wg-sw">
+          <input type="checkbox" id="only-owned-toggle" onchange="saveState()">
+          <span class="wg-sw-track"></span><span class="wg-sw-thumb"></span>
+        </span>
+      </label>
+
       <button class="wardrobe-gen-btn" onclick="generateWardrobeCard()">生成我的衣橱长图</button>
       <div class="wardrobe-hint">根据「已持有」填写情况自动生成 · 请先完成第一步填写</div>
     </div>
@@ -2674,7 +2834,10 @@
 <div id="wardrobe-modal" class="wardrobe-modal" onclick="closeWardrobeModal()">
   <div class="wardrobe-modal-box" onclick="event.stopPropagation()">
     <button class="modal-close-btn" onclick="closeWardrobeModal()" aria-label="关闭">✕</button>
-    <img id="wardrobe-preview-img" class="wardrobe-preview-img" src="" alt="我的衣橱">
+    <div class="wardrobe-preview-scroll" id="wardrobe-preview-scroll" onscroll="onPreviewScroll(this)">
+      <img id="wardrobe-preview-img" class="wardrobe-preview-img" src="" alt="我的衣橱">
+    </div>
+    <div class="wardrobe-scroll-hint" id="wardrobe-scroll-hint"><span>↓ 上滑查看完整长图</span></div>
     <div class="wardrobe-modal-btns">
       <button onclick="downloadWardrobeCard()">下载图片</button>
       <button id="wardrobe-share-btn" class="share-btn" onclick="shareWardrobeCard()" style="display:none">分享</button>
@@ -4408,24 +4571,26 @@ function openAltOwnedModal() {
     if (aOwned !== bOwned) return aOwned - bOwned;
     return (a.rarity === 'gold' ? 0 : 1) - (b.rarity === 'gold' ? 0 : 1);
   });
-  list.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:10px;';
+  // 5 列：卡片约 64×72px，17 套排 4 行（4 列时 81×91、5 行需要滚动）。
+  // 再窄到 6 列立绘就看不清了，5 列是「不滚动」与「看得清」的平衡点。
+  list.style.cssText = 'display:grid; grid-template-columns:repeat(5,1fr); gap:8px;';
   altSuits.forEach(s => {
     const suitOwned = st.fullOwned.has(s.id);
     const selected  = st.altOwned.has(s.id);
     const disabled  = !suitOwned;
     const item = document.createElement('div');
     item.dataset.sid = s.id;
-    item.style.cssText = `position:relative; border-radius:7px; overflow:hidden; aspect-ratio:150/168; box-shadow:${selected ? '0 0 0 3px #FBC839' : 'none'}; transition:box-shadow 0.15s; cursor:${disabled ? 'not-allowed' : 'pointer'};`;
+    item.style.cssText = `position:relative; border-radius:6px; overflow:hidden; aspect-ratio:150/168; box-shadow:${selected ? '0 0 0 2.5px #FBC839' : 'none'}; transition:box-shadow 0.15s; cursor:${disabled ? 'not-allowed' : 'pointer'};`;
     item.innerHTML = `
       <img src="assets/images/suitcard-alt/${s.sub}.png" style="width:100%;height:100%;object-fit:cover;display:block;filter:${disabled ? 'grayscale(1)' : 'none'}">
       <div class="alt-mask" style="position:absolute;inset:0;background:rgba(0,0,0,${disabled ? '0.55' : '0.35'});display:${(selected && !disabled) ? 'none' : 'block'};"></div>
-      ${disabled ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:9px;font-weight:700;text-align:center;line-height:1.4;">套装<br>未集齐</span></div>` : ''}
-      <div class="alt-check" style="position:absolute;top:4px;right:4px;width:18px;height:18px;background:#FBC839;border-radius:50%;display:${(selected && !disabled) ? 'flex' : 'none'};align-items:center;justify-content:center;font-size:11px;font-weight:700;">✓</div>
+      ${disabled ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:8px;font-weight:700;text-align:center;line-height:1.35;">套装<br>未集齐</span></div>` : ''}
+      <div class="alt-check" style="position:absolute;top:3px;right:3px;width:15px;height:15px;background:#FBC839;border-radius:50%;display:${(selected && !disabled) ? 'flex' : 'none'};align-items:center;justify-content:center;font-size:9px;font-weight:700;">✓</div>
     `;
     if (!disabled) {
       item.onclick = () => {
         const isNowSelected = item.style.boxShadow && item.style.boxShadow !== 'none';
-        item.style.boxShadow = isNowSelected ? 'none' : '0 0 0 3px #FBC839';
+        item.style.boxShadow = isNowSelected ? 'none' : '0 0 0 2.5px #FBC839';
         item.querySelector('.alt-mask').style.display = isNowSelected ? 'block' : 'none';
         item.querySelector('.alt-check').style.display = isNowSelected ? 'none' : 'flex';
       };
@@ -5503,6 +5668,8 @@ function switchProfile(id, targetStep = 'owned') {
   if (!loaded) {
     const _a = document.getElementById('academy-joined');
     if (_a) _a.checked = false;
+    const _o = document.getElementById('only-owned-toggle');
+    if (_o) _o.checked = false;
     syncFlipStat();
   }
   renderOwnedList();
@@ -5547,6 +5714,8 @@ function onCreateNewProfile() {
   document.getElementById('daily-income').value = '25';
   const _aca = document.getElementById('academy-joined');
   if (_aca) _aca.checked = false;
+  const _oo = document.getElementById('only-owned-toggle');
+  if (_oo) _oo.checked = false;
   syncFlipStat();
   renderOwnedList();
   renderTargetList();
@@ -5572,6 +5741,7 @@ function saveState() {
       balance:   document.getElementById('star-balance')?.value ?? '0',
       daily:     document.getElementById('daily-income')?.value ?? '25',
       academy:   !!document.getElementById('academy-joined')?.checked,
+      onlyOwned: !!document.getElementById('only-owned-toggle')?.checked,
     };
     for (const [sid, parts] of Object.entries(st.owned)) {
       if (parts && parts.size > 0) data.owned[sid] = [...parts];
@@ -5627,6 +5797,8 @@ function loadState() {
     if (dlyEl && data.daily  != null) dlyEl.value = data.daily;
     const acaEl = document.getElementById('academy-joined');
     if (acaEl) acaEl.checked = !!data.academy;   // 旧存档无此字段 → false（基础 5 次）
+    const ooEl = document.getElementById('only-owned-toggle');
+    if (ooEl) ooEl.checked = !!data.onlyOwned;   // 旧存档无此字段 → false（显示全部）
     syncFlipStat();
 
     return true;
@@ -5750,8 +5922,10 @@ function buildWardrobeCardDOM(username) {
         <div class="wc-progress-bar-bg"><div class="wc-progress-fill" style="width:${pct}%"></div></div>
       </div>` : '';
     const shortName = suit.sub.replace('印象', '');
+    // 已集齐按稀有度上色（金=橙底/紫=紫底），未集齐统一压暗
+    const tone = isOwned ? (suit.rarity === 'gold' ? ' gold' : ' purple') : ' unowned';
     return `<div class="wc-card-wrap">
-      <div class="wc-card-item${isOwned ? '' : ' unowned'}">
+      <div class="wc-card-item${tone}">
         <img src="assets/images/suitcard/${suit.sub}.png" alt="${suit.sub}">
         ${overlay}
       </div>
@@ -5776,10 +5950,11 @@ function buildWardrobeCardDOM(username) {
   function renderAltCard(suit) {
     const suitOwned  = st.fullOwned.has(suit.id);
     const altOwned   = suitOwned && st.altOwned.has(suit.id); // 未集齐套装不可能拥有异色
-    const imgSrc     = altOwned
-      ? `assets/images/suitcard-alt/${suit.sub}.png`
-      : `assets/images/suitcard/${suit.sub}.png`;
-    const grayed     = !altOwned ? ' unowned' : '';
+    // 异色区一律用异色立绘：未解锁时也该展示「你还没拿到的这张异色卡长什么样」，
+    // 回退成普通立绘会让这一区看起来和上面的普通套装重复。
+    // ALTS 里的套装都保证有 suitcard-alt 图（加入名单前需先补图）。
+    const imgSrc     = `assets/images/suitcard-alt/${suit.sub}.png`;
+    const grayed     = altOwned ? (suit.rarity === 'gold' ? ' gold' : ' purple') : ' unowned';
     const label   = suit.sub.replace('印象', '') + '-异色';
     const overlay = !altOwned ? `
       <div class="wc-overlay">
@@ -5794,48 +5969,83 @@ function buildWardrobeCardDOM(username) {
     </div>`;
   }
 
-  const goldHtml   = goldSuits.map(renderCard).join('');
-  const purpleHtml = purpleSuits.map(renderCard).join('');
-  const altHtml    = altSuits.map(renderAltCard).join('');
+  // 「只显示已集齐」开关：过滤掉未集齐的普通套装与未拥有的异色。
+  // 统计区的 X/Y 与百分比不受影响——那是收集进度，隐藏卡片不代表没有这些套装。
+  const onlyOwned = !!document.getElementById('only-owned-toggle')?.checked;
+  const goldList   = onlyOwned ? goldSuits.filter(x => st.fullOwned.has(x.id))   : goldSuits;
+  const purpleList = onlyOwned ? purpleSuits.filter(x => st.fullOwned.has(x.id)) : purpleSuits;
+  const altList    = onlyOwned
+    ? altSuits.filter(x => st.fullOwned.has(x.id) && st.altOwned.has(x.id))
+    : altSuits;
 
-  document.getElementById('wardrobe-card').innerHTML = `
-    <div class="wc-bg">
-      <div class="wc-title-area">
-        <img src="assets/images/wardrobe/wardrobe-title.png" alt="我的衣橱" class="wc-title-img">
-      </div>
-      <div class="wc-stats-row">
-        <div class="wc-stat-col">
-          <img src="assets/icon/wardrobe-theme.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-text">
-            <div class="wc-stat-label">已集齐主题</div>
-            <div class="wc-stat-num">${stats.ownedThemes}<span class="wc-stat-total">/${stats.totalThemes}</span></div>
-          </div>
+  const goldHtml   = goldList.map(renderCard).join('');
+  const purpleHtml = purpleList.map(renderCard).join('');
+  const altHtml    = altList.map(renderAltCard).join('');
+
+  // 分区为空时整块不渲染，避免标题悬空（开关打开且该稀有度一套未集齐时会发生）
+  const section = (titleHTML, cardsHTML, list) => list.length === 0 ? '' : `
+        <div class="wc-section">
+          <div class="wc-sec-title">${titleHTML}</div>
+          <div class="wc-rarity-grid">${cardsHTML}</div>
+        </div>`;
+  const sectionsHTML =
+      section('<span class="wc-sec-dot gold"></span>金色套装', goldHtml, goldList)
+    + section('<span class="wc-sec-dot purple"></span>紫色套装', purpleHtml, purpleList)
+    + section('<img src="assets/icon/variant.png" class="wc-sec-icon" alt="">异色套装', altHtml, altList);
+  // 开关打开但一套都没集齐：给一句占位，避免长图只剩页眉页脚显得像出错
+  const emptyHTML = (onlyOwned && !goldList.length && !purpleList.length && !altList.length)
+    ? `<div class="wc-empty">还没有集齐的套装，继续加油！</div>` : '';
+
+  const statCol = (icon, label, n, t) => `
+    <div class="wc-stat-col">
+      <img src="assets/icon/${icon}" class="wc-stat-icon" alt="">
+      <div class="wc-stat-text" style="width:${statTextWidth(t)}px">
+        <div class="wc-stat-label">${label}</div>
+        <div class="wc-stat-numrow">
+          <div class="wc-stat-num"><span class="wc-stat-numbox">${n}<span class="wc-stat-total">/${t}</span></span></div>
+          <span class="wc-pct">${wcPct(n, t)}%</span>
         </div>
-        <div class="wc-stat-sep"></div>
-        <div class="wc-stat-col">
-          <img src="assets/icon/wardrobe-suit.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-text">
-            <div class="wc-stat-label">已集齐套装</div>
-            <div class="wc-stat-num">${stats.ownedSuits}<span class="wc-stat-total">/${stats.totalSuits}</span></div>
-          </div>
-        </div>
-        <div class="wc-stat-sep"></div>
-        <div class="wc-stat-col">
-          <img src="assets/icon/wardrobe-part.png" class="wc-stat-icon" alt="">
-          <div class="wc-stat-text">
-            <div class="wc-stat-label">已收集部件</div>
-            <div class="wc-stat-num">${stats.ownedParts}<span class="wc-stat-total">/${stats.totalParts}</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="wc-section"><div class="wc-rarity-grid">${goldHtml}</div></div>
-      <div class="wc-section"><div class="wc-rarity-grid">${purpleHtml}</div></div>
-      <div class="wc-section"><div class="wc-rarity-grid">${altHtml}</div></div>
-      <div class="wc-footer">
-        <span class="wc-username">${username}</span>
-        <span class="wc-date">${dateStr}</span>
       </div>
     </div>`;
+
+  document.getElementById('wardrobe-card').innerHTML = `
+    <div class="wc-root">
+      <div class="wc-topbar">
+        <img src="assets/icons/apple-touch-icon.png" class="wc-logo" alt="">
+        <div class="wc-topbar-title">皮卡随机商店 · 规划助手</div>
+      </div>
+      <div class="wc-body">
+        <img src="assets/images/wardrobe/wardrobe-title1.png" class="wc-ribbon" alt="我的服装收集进度">
+        <div class="wc-stats-row">
+          ${statCol('wardrobe-theme.png', '已集齐主题', stats.ownedThemes, stats.totalThemes)}
+          <div class="wc-stat-sep"></div>
+          ${statCol('wardrobe-suit.png', '已集齐套装', stats.ownedSuits, stats.totalSuits)}
+          <div class="wc-stat-sep"></div>
+          ${statCol('wardrobe-part.png', '已收集部件', stats.ownedParts, stats.totalParts)}
+        </div>
+
+        <img src="assets/images/wardrobe/wardrobe-title2.png" class="wc-ribbon" alt="服装收集一览图">
+        <div style="height:14px"></div>
+        ${sectionsHTML}${emptyHTML}
+
+        <div class="wc-footer">
+          <span class="wc-username">${username}</span>
+          <span class="wc-domain">rocopika.com</span>
+          <span class="wc-date">${dateStr}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// 衣橱长图统计区：百分比，以及文字块的固定宽度。
+// 固定宽度按「最坏情况」预留（分子与分母等长 + 100% 徽章），
+// 使布局不随收集进度变化——否则 0/19 0% 时整行元素会相对全集齐状态漂移。
+function wcPct(n, t) { return t > 0 ? Math.round(n / t * 100) : 0; }
+function statTextWidth(total) {
+  const digits = String(total).length;
+  const numW   = (digits * 2 + 1) * 22 * 0.62;   // 22px 数字，字符约 0.62em
+  const pctW   = 4 * 16 * 0.72 + 18;             // 16px 徽章「100%」+ 左右内边距
+  return Math.ceil(Math.max(6 * 17, numW + 8 + pctW));
 }
 
 function _setGenLabel(label) {
@@ -6046,6 +6256,15 @@ function generateWardrobeCard() {
         setTimeout(() => {
           document.getElementById('wardrobe-generating').classList.remove('show');
           document.getElementById('wardrobe-modal').classList.add('open');
+          // 每次打开都回到顶部并重新显示滚动提示（上一次可能已滚到底）
+          const sc = document.getElementById('wardrobe-preview-scroll');
+          if (sc) sc.scrollTop = 0;
+          const hint = document.getElementById('wardrobe-scroll-hint');
+          if (hint) {
+            hint.classList.remove('hidden');
+            // 图片短到不需要滚动时，不显示提示
+            if (sc && sc.scrollHeight <= sc.clientHeight + 24) hint.classList.add('hidden');
+          }
         }, 300);
       }).catch(err => {
         _stopAllAnim();
@@ -6062,6 +6281,14 @@ function generateWardrobeCard() {
     document.getElementById('wardrobe-generating').classList.remove('show');
     alert('图片生成库加载较慢，可能网络不稳。请稍等几秒后再点一次「生成」，或刷新页面重试。');
   });
+}
+
+// 预览图滚到底部后隐藏「上滑查看」提示，避免一直挡在按钮上方
+function onPreviewScroll(el) {
+  const hint = document.getElementById('wardrobe-scroll-hint');
+  if (!hint) return;
+  const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
+  hint.classList.toggle('hidden', atEnd);
 }
 
 function closeWardrobeModal() {
@@ -6259,6 +6486,26 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
             <div class="cl-item"><span>该状态会<strong>参与全部计算</strong>：集齐天数、今日命中率、策略对比与垫刀建议都会按 10 次重新计算，勾选后结果立即刷新，无需重新点击计算。</span></div>
             <div class="cl-item"><span>实测在常见目标下，集齐天数约可<strong>缩短一半</strong>（注意许愿星每日收入不翻倍）。</span></div>
             <div class="cl-item"><span>勾选状态<strong>按账号分别保存</strong>，洛克1 / 洛克2 可各自设置；未勾选时的计算结果与旧版完全一致。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">🎨 衣橱长图改版</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>长图整体重做：新增<strong>品牌顶栏</strong>、紫色缎带标题，统计区增加<strong>百分比徽章</strong>，全站统一使用洛克官方字体。</span></div>
+            <div class="cl-item"><span>卡片按稀有度上色（<strong>金色橙底 / 紫色紫底</strong>），并按「金色套装 / 紫色套装 / 异色套装」<strong>分区展示</strong>，每区带独立标题。</span></div>
+            <div class="cl-item"><span>修复<strong>异色区未解锁卡片显示普通立绘</strong>的问题，现在无论是否解锁都展示异色立绘。</span></div>
+            <div class="cl-item"><span>统计区改为固定宽度布局，<strong>不同收集进度下元素位置不再偏移</strong>。</span></div>
+          </div>
+        </div>
+
+        <div class="cl-section">
+          <div class="cl-section-title">⚙️ 衣橱体验优化</div>
+          <div class="cl-items">
+            <div class="cl-item"><span>新增 <strong>「只显示已集齐的套装」</strong> 开关：隐藏灰色未集齐卡片，长图更短更清爽，适合分享。设置按账号保存。</span></div>
+            <div class="cl-item"><span>预览弹窗的<strong>「下载图片」按钮固定在底部</strong>，不再需要滑动到长图末尾才能找到；未看完时顶部提示可继续上滑。</span></div>
+            <div class="cl-item"><span>生成前的账号、异色、过滤三项重新整理为<strong>并排设置区</strong>，与生成按钮层次更分明。</span></div>
+            <div class="cl-item"><span>异色套装弹窗由 4 列改为 <strong>5 列</strong>，卡片更紧凑，手机上一屏可见无需滚动。</span></div>
           </div>
         </div>
       </div>
