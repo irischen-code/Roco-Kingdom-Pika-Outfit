@@ -2361,7 +2361,12 @@
     .wardrobe-modal-box {
       width: 100%; max-width: 420px; position: relative;
       display: flex; flex-direction: column;
-      height: 100%; padding: 32px 16px 0; box-sizing: border-box;
+      height: 100%; box-sizing: border-box;
+      /* 顶部要让开状态栏与宿主的关闭/分享按钮：
+         PWA 独立窗口和小红书容器里这一区是被系统占用的，
+         只给固定 32px 会让预览图顶到状态栏下面，宿主的关闭按钮点不到，
+         用户就卡在这个页面退不出去。 */
+      padding: calc(32px + env(safe-area-inset-top, 0px)) 16px 0;
     }
     /* 图片区：占满剩余高度并单独滚动 */
     .wardrobe-preview-scroll {
