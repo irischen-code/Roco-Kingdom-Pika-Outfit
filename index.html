@@ -1111,6 +1111,7 @@
 
     /* 共享滚动容器：两条时间轴共享同一个水平滚动 */
     .timeline-unified-scroll-wrapper {
+      flex: 1; min-width: 0;
       overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth;
       padding: 8px 0; -webkit-overflow-scrolling: touch;
       scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.2) transparent;
@@ -1126,6 +1127,24 @@
       background: rgba(0,0,0,0.2); border-radius: 2px;
     }
 
+    /* 左侧竖排标签：标明上行=月刊上架、下行=随机商店入池。
+       放在滚动容器外，因此横向滚动时固定不动。
+       高度取海报高度（200 × 9/16 = 112.5px），并按轨道节奏排布：
+       第一个标签下方留出「图文间距 8 + 文字区约 31 + 轨道间距 12」，
+       使每个标签正对自己那一行的海报顶部，而不是被 flex 拉伸成等高。 */
+    .timeline-body { display: flex; gap: 10px; align-items: flex-start; }
+    .timeline-labels {
+      flex-shrink: 0; display: flex; flex-direction: column;
+      padding: 8px 0; gap: 0;
+    }
+    .timeline-lab {
+      width: 26px; height: 112px; box-sizing: border-box; flex-shrink: 0;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; letter-spacing: 2px;
+      writing-mode: vertical-rl; text-orientation: upright;
+    }
+    .timeline-lab.monthly { background: #3D3596; color: #fff; margin-bottom: 51px; }
+    .timeline-lab.pool    { background: #FBC839; color: #313131; }
     .timeline-track {
       display: grid; grid-auto-flow: column; grid-auto-columns: 216px;
       gap: 0; padding: 0; align-items: start; flex-shrink: 0;
@@ -2740,10 +2759,17 @@
     <div class="card">
       <div class="card-title"><img src="assets/icon/card.png" alt="">皮卡月刊 / 随机商店时间轴 <button class="info-btn timeline-cal-btn" onclick="openMonthlyCalendar()" aria-label="月刊上架日历" title="月刊上架日历"><svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-160 0q-17 0-28.5-11.5T280-440q0-17 11.5-28.5T320-480q17 0 28.5 11.5T360-440q0 17-11.5 28.5T320-400Zm320 0q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-160 0q-17 0-28.5-11.5T280-280q0-17 11.5-28.5T320-320q17 0 28.5 11.5T360-280q0 17-11.5 28.5T320-240Zm320 0q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z"/></svg></button><button class="info-btn is-right" onclick="openTimelineInfo()" aria-label="时间轴说明" title="时间轴说明"><svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg></button></div>
 
-      <!-- 共享滚动容器 -->
-      <div class="timeline-unified-scroll-wrapper">
-        <div class="timeline-track monthly-track" id="monthlyTrack"></div>
-        <div class="timeline-track pool-track" id="poolTrack"></div>
+      <!-- 左侧标签列固定在滚动容器之外，横向滚动时不移动；
+           两条轨道仍共用同一个滚动容器，自动定位逻辑不受影响 -->
+      <div class="timeline-body">
+        <div class="timeline-labels">
+          <div class="timeline-lab monthly">月刊</div>
+          <div class="timeline-lab pool">入池</div>
+        </div>
+        <div class="timeline-unified-scroll-wrapper">
+          <div class="timeline-track monthly-track" id="monthlyTrack"></div>
+          <div class="timeline-track pool-track" id="poolTrack"></div>
+        </div>
       </div>
     </div>
 
@@ -2775,7 +2801,7 @@
             <span class="wg-box-k">账号</span>
             <span class="wg-box-v"><span id="wardrobe-account-label"></span><span class="wg-caret">▾</span></span>
           </button>
-          <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:130px;z-index:100;overflow:hidden;"></div>
+          <div id="wardrobe-account-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#FBF7EE;border:1.5px solid #e0d9cc;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100;overflow:hidden;"></div>
         </div>
         <button class="wg-box" onclick="openAltOwnedModal()">
           <span class="wg-box-k"><img src="assets/icon/variant.png" class="wg-box-ic" alt="">异色套装</span>
@@ -6472,40 +6498,34 @@ function _lbKey(e) { if (e.key === 'Escape') closeLightbox(); }
         <div class="cl-section">
           <div class="cl-section-title">🚀 数据更新：新增 2 期月刊</div>
           <div class="cl-items">
-            <div class="cl-item"><span><strong>宇宙拓荒者</strong>（月刊 9.10–9.25，11/6 入池）：新增寂灭骨龙印象、星星眼印象、智辉章脑印象，共 3 套<strong>金色 6 部件</strong>套装。</span></div>
-            <div class="cl-item"><span><strong>天空邮局</strong>（月刊 9.25–10.9，11/20 入池）：新增友爱星飞印象、星云旅者印象、小皮球印象、玳塔印象，共 4 套<strong>紫色 6 部件</strong>套装。</span></div>
-            <div class="cl-item"><span><strong>异色新增</strong>：星星眼印象、智辉章脑印象、小皮球印象。</span></div>
-            <div class="cl-item"><span>全站收录时装总数更新至 <strong>65 套</strong>（含待入池），部件总数 <strong>406 件</strong>。</span></div>
-            <div class="cl-item"><span>两期均尚未入池，<strong>不影响当前的卡池张数与集齐天数计算</strong>；可在第一步提前标记月刊期间已入手的套装。</span></div>
+            <div class="cl-item"><span><strong>宇宙拓荒者</strong>（月刊 9.10–9.25，11/6 入池）：寂灭骨龙、星星眼、智辉章脑，3 套<strong>金色</strong>套装。</span></div>
+            <div class="cl-item"><span><strong>天空邮局</strong>（月刊 9.25–10.9，11/20 入池）：友爱星飞、星云旅者、小皮球、玳塔，4 套<strong>紫色</strong>套装。</span></div>
+            <div class="cl-item"><span>收录总数更新至 <strong>65 套 / 406 件</strong>；新增异色：星星眼、智辉章脑、小皮球。两期尚未入池，不影响当前计算。</span></div>
           </div>
         </div>
+
         <div class="cl-section">
           <div class="cl-section-title">✨ 新增：仪典学院状态</div>
           <div class="cl-items">
-            <div class="cl-item"><span>第三步「许愿星资源」新增 <strong>「已加入仪典学院」</strong> 选项。勾选后每日翻牌由 5 次变为 <strong>10 次</strong>，顶部「每日翻牌」同步显示。</span></div>
-            <div class="cl-item"><span>该状态会<strong>参与全部计算</strong>：集齐天数、今日命中率、策略对比与垫刀建议都会按 10 次重新计算，勾选后结果立即刷新，无需重新点击计算。</span></div>
-            <div class="cl-item"><span>实测在常见目标下，集齐天数约可<strong>缩短一半</strong>（注意许愿星每日收入不翻倍）。</span></div>
-            <div class="cl-item"><span>勾选状态<strong>按账号分别保存</strong>，洛克1 / 洛克2 可各自设置；未勾选时的计算结果与旧版完全一致。</span></div>
+            <div class="cl-item"><span>第三步新增 <strong>「已加入仪典学院」</strong> 选项，每日翻牌由 5 次变为 <strong>10 次</strong>。</span></div>
+            <div class="cl-item"><span>该状态<strong>参与全部计算</strong>——集齐天数、命中率、策略与垫刀建议均按 10 次重算，勾选后结果立即刷新。实测集齐天数约可<strong>缩短一半</strong>（许愿星收入不翻倍）。</span></div>
           </div>
         </div>
 
         <div class="cl-section">
           <div class="cl-section-title">🎨 衣橱长图改版</div>
           <div class="cl-items">
-            <div class="cl-item"><span>长图整体重做：新增<strong>品牌顶栏</strong>、紫色缎带标题，统计区增加<strong>百分比徽章</strong>，全站统一使用洛克官方字体。</span></div>
-            <div class="cl-item"><span>卡片按稀有度上色（<strong>金色橙底 / 紫色紫底</strong>），并按「金色套装 / 紫色套装 / 异色套装」<strong>分区展示</strong>，每区带独立标题。</span></div>
-            <div class="cl-item"><span>修复<strong>异色区未解锁卡片显示普通立绘</strong>的问题，现在无论是否解锁都展示异色立绘。</span></div>
-            <div class="cl-item"><span>统计区改为固定宽度布局，<strong>不同收集进度下元素位置不再偏移</strong>。</span></div>
+            <div class="cl-item"><span>长图整体重做：新增品牌顶栏与缎带标题，统计区加<strong>百分比</strong>，卡片按稀有度上色并分「金色 / 紫色 / 异色」三区展示。</span></div>
+            <div class="cl-item"><span>新增 <strong>「只显示已集齐的套装」</strong> 开关，隐藏灰色卡片，长图更适合分享。</span></div>
+            <div class="cl-item"><span>预览弹窗的<strong>下载按钮固定在底部</strong>，不必滑到长图末尾；生成前的设置项重新排布，异色弹窗改为 5 列。</span></div>
+            <div class="cl-item"><span>修复异色区未解锁卡片错误显示普通立绘的问题。</span></div>
           </div>
         </div>
 
         <div class="cl-section">
-          <div class="cl-section-title">⚙️ 衣橱体验优化</div>
+          <div class="cl-section-title">🗓️ 时间轴优化</div>
           <div class="cl-items">
-            <div class="cl-item"><span>新增 <strong>「只显示已集齐的套装」</strong> 开关：隐藏灰色未集齐卡片，长图更短更清爽，适合分享。设置按账号保存。</span></div>
-            <div class="cl-item"><span>预览弹窗的<strong>「下载图片」按钮固定在底部</strong>，不再需要滑动到长图末尾才能找到；未看完时顶部提示可继续上滑。</span></div>
-            <div class="cl-item"><span>生成前的账号、异色、过滤三项重新整理为<strong>并排设置区</strong>，与生成按钮层次更分明。</span></div>
-            <div class="cl-item"><span>异色套装弹窗由 4 列改为 <strong>5 列</strong>，卡片更紧凑，手机上一屏可见无需滚动。</span></div>
+            <div class="cl-item"><span>卡池总览的时间轴左侧新增 <strong>「月刊 / 入池」</strong> 标签，清楚区分上行为皮卡月刊上架、下行为随机商店入池。</span></div>
           </div>
         </div>
       </div>
